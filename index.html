@@ -1990,21 +1990,25 @@ async function runDiagnostics(){
     const fbG=snapG.val()?Object.keys(snapG.val()).length:0;
     const fbU=snapU.val()?Object.keys(snapU.val()).length:0;
     const fbD=snapD.val()?Object.keys(snapD.val()).length:0;
-    const colorG=fbG>0?'var(--green)':'var(--red)';
-    const colorU=fbU>0?'var(--green)':'var(--txt3)';
+    const colorD=fbD>0?'var(--green)':'var(--txt3)';
+    const fbS=await db.ref(settingsPath()).once('value');
+    const rawS=fbS.val();
+    const fbAccounts=rawS?.accounts?.length||0;
     let msg='';
-    if(fbG>expenses.length) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Hay más datos en Firebase que en pantalla — cerrá sesión, volvé a entrar</div>';
-    else if(fbG===0&&expenses.length===0) msg='<div style="color:var(--red);font-size:11px;margin-top:6px">❌ Sin datos — revisá que sea la cuenta correcta</div>';
-    else if(fbG>0&&expenses.length===0) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Datos en Firebase pero no cargados — cerrá sesión y volvé a entrar</div>';
-    else msg='<div style="color:var(--green);font-size:11px;margin-top:6px">✅ Datos sincronizados correctamente</div>';
+    if(fbG>expenses.length) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Hay más gastos en Firebase que en pantalla — cerrá sesión, volvé a entrar</div>';
+    else if(fbG===0&&expenses.length===0) msg='<div style="color:var(--red);font-size:11px;margin-top:6px">❌ Sin gastos — revisá que sea la cuenta correcta</div>';
+    else if(fbG>0&&expenses.length===0) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Gastos en Firebase pero no cargados — cerrá sesión y volvé a entrar</div>';
+    else msg='<div style="color:var(--green);font-size:11px;margin-top:6px">✅ Todo sincronizado</div>';
     el.innerHTML=`<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-top:8px;font-size:12px;line-height:2">
-      <div>🔑 UID: <code style="font-size:10px;color:var(--txt3)">${uid.substring(0,16)}…</code></div>
       <div>📧 Email: <b>${esc(email)}</b></div>
-      <div>☁️ Gastos en Firebase: <b style="color:${colorG}">${fbG}</b></div>
-      <div>💵 USD en Firebase: <b style="color:${colorU}">${fbU}</b></div>
-      <div>🤝 Deudas en Firebase: <b style="color:var(--txt3)">${fbD}</b></div>
-      <div>📱 Gastos en pantalla: <b>${expenses.length}</b></div>
+      <div>🔑 UID: <code style="font-size:10px;color:var(--txt3)">${uid.substring(0,20)}…</code></div>
+      <div style="margin-top:4px;border-top:0.5px solid var(--bdr);padding-top:4px">
+      <div>☁️ Gastos Firebase: <b style="color:${colorG}">${fbG}</b> · pantalla: <b>${expenses.length}</b></div>
+      <div>🤝 Deudas Firebase: <b style="color:${colorD}">${fbD}</b> · pantalla: <b>${debts.length}</b></div>
+      <div>💼 Cuentas Firebase: <b style="color:${fbAccounts>0?'var(--green)':'var(--red)'}">${fbAccounts}</b> · pantalla: <b>${accounts.length}</b></div>
+      <div>💵 USD Firebase: <b>${fbU}</b></div>
       <div>🌐 Online: <b style="color:${fbOnline?'var(--green)':'var(--red)'}">${fbOnline?'Sí':'No'}</b></div>
+      </div>
       ${msg}
     </div>`;
   }catch(e){
