@@ -481,7 +481,7 @@
     ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
     @media(min-width:560px){.modal{border-radius:26px;margin-bottom:20px}}
 
-    /* ════ DESKTOP LAYOUT ════ */
+    /* ==== DESKTOP LAYOUT ==== */
     @media(min-width:900px){
       body{overflow-x:hidden}
       #app{max-width:100%;padding-bottom:0;display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
@@ -1393,14 +1393,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ══════════════════════════════════
-   FIREBASE CONFIG
-══════════════════════════════════ */
+// --- FIREBASE CONFIG ---
 const FB_CONFIG={apiKey:"AIzaSyAMUb7e_ngGiTc9lRTazNf290bKKRGvZN0",authDomain:"gastos-pache.firebaseapp.com",databaseURL:"https://gastos-pache-default-rtdb.firebaseio.com",projectId:"gastos-pache",storageBucket:"gastos-pache.firebasestorage.app",messagingSenderId:"151998147367",appId:"1:151998147367:web:6918969bcadef03048d702"};
 
-/* ══════════════════════════════════
-   CONSTANTS
-══════════════════════════════════ */
+// --- CONSTANTS ---
 const SK='gp_expenses_v2',CK='gp_cats_v2',PQ='gp_pending_v2';
 const USK='gp_usd_v1',UPQ='gp_upending_v1';
 const DSK='gp_debts_v1',DPQ='gp_dpending_v1';
@@ -1419,9 +1415,7 @@ const COLORS=['#667eea','#a78bfa','#f093fb','#f87171','#4ade80','#fbbf24','#60a5
 // No default persons — each user creates their own contacts
 const DEF_PERSONS=[];
 
-/* ══════════════════════════════════
-   STATE
-══════════════════════════════════ */
+// --- STATE ---
 let expenses=[],usdTx=[],debts=[],persons=[];
 let cats=[],pendingQ=[],usdPendQ=[],debtPendQ=[];
 let hiddenCats=new Set();   // default cats hidden by user
@@ -1439,14 +1433,10 @@ let arsListener=null,usdListener=null,debtListener=null;
 let splitRows=[]; // [{personId, personName, emoji, amount}]
 let splitPanelOpen=false;
 
-/* ══════════════════════════════════
-   HAPTIC
-══════════════════════════════════ */
+// --- HAPTIC ---
 function haptic(p=[50]){if(navigator.vibrate)navigator.vibrate(p);}
 
-/* ══════════════════════════════════
-   LOCAL STORAGE
-══════════════════════════════════ */
+// --- LOCAL STORAGE ---
 function lsKey(b){return currentUID?`${b}_${currentUID}`:b;}
 function loadLocal(){
   try{expenses=JSON.parse(localStorage.getItem(lsKey(SK)))||[];}catch{expenses=[];}
@@ -1487,9 +1477,7 @@ function saveLocal(){
   }catch(e){console.warn('localStorage error:',e);}
 }
 
-/* ══════════════════════════════════
-   FIREBASE PATHS
-══════════════════════════════════ */
+// --- FIREBASE PATHS ---
 function arsPath(id){return`usuarios/${currentUID}/gastos/${id}`;}
 function usdPath(id){return`usuarios/${currentUID}/usd/${id}`;}
 function debtPath(id){return`usuarios/${currentUID}/debts/${id}`;}
@@ -1497,9 +1485,7 @@ function arsBase(){return`usuarios/${currentUID}/gastos`;}
 function usdBase(){return`usuarios/${currentUID}/usd`;}
 function debtBase(){return`usuarios/${currentUID}/debts`;}
 function settingsPath(){return`usuarios/${currentUID}/settings`;}
-/* ══════════════════════════════════
-   SYNC STATUS
-══════════════════════════════════ */
+// --- SYNC STATUS ---
 function setStatus(state,label){
   const pill=document.getElementById('sync-pill');
   const span=document.getElementById('sync-label');
@@ -1513,15 +1499,11 @@ function setStatus(state,label){
   }
 }
 
-/* ══════════════════════════════════
-   FIREBASE OPS
-══════════════════════════════════ */
+// --- FIREBASE OPS ---
 async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data);return true;}catch(e){console.warn('fbSet',path,e);return false;}}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
-/* ══════════════════════════════════
-   QUEUE HELPERS
-══════════════════════════════════ */
+// --- QUEUE HELPERS ---
 function enqueue(q,op,path,data){
   let arr=q==='ars'?pendingQ:q==='usd'?usdPendQ:debtPendQ;
   arr=arr.filter(p=>p.path!==path);
@@ -1546,9 +1528,7 @@ async function flushQueueFor(q){
   if(!pendingQ.length&&!usdPendQ.length&&!debtPendQ.length){setStatus('online','● Sincronizado');if(snap.length>0)toast('☁️ Cambios offline sincronizados');}
 }
 
-/* ══════════════════════════════════
-   PERSIST
-══════════════════════════════════ */
+// --- PERSIST ---
 async function persistArs(exp,removeId){
   saveLocal();
   if(!fbOnline||!currentUID){if(removeId)enqueue('ars','remove',arsPath(removeId),null);else if(exp)enqueue('ars','set',arsPath(exp.id),exp);return;}
@@ -1614,9 +1594,7 @@ async function persistDebt(debt,removeId){  saveLocal();
   else{if(removeId)enqueue('debt','remove',debtPath(removeId),null);else if(debt)enqueue('debt','set',debtPath(debt.id),debt);setStatus('offline','⚠ Offline');}
 }
 
-/* ══════════════════════════════════
-   AUTH
-══════════════════════════════════ */
+// --- AUTH ---
 function loginGoogle(){
   const provider=new firebase.auth.GoogleAuthProvider();
   // Use redirect on mobile/PWA (popup gets blocked), popup on desktop
@@ -1648,9 +1626,7 @@ function doLogout(){
   auth.signOut();
 }
 
-/* ══════════════════════════════════
-   FIREBASE INIT + LISTENERS
-══════════════════════════════════ */
+// --- FIREBASE INIT + LISTENERS ---
 function attachListeners(){
   if(!db||!currentUID)return;
   if(arsListener)db.ref(arsBase()).off('value',arsListener);
@@ -2072,9 +2048,7 @@ function openHelpModal(){document.getElementById('help-overlay').classList.add('
 function closeHelpModal(){document.getElementById('help-overlay').classList.remove('on');}
 function helpOverlayClick(ev){if(ev.target===document.getElementById('help-overlay'))closeHelpModal();}
 
-/* ══════════════════════════════════
-   HELPERS
-══════════════════════════════════ */
+// --- HELPERS ---
 function fmt(n){return'$'+Math.round(Math.abs(n)).toLocaleString('es-AR');}
 function fmtU(n){return'U$S '+(Math.round(n*100)/100).toLocaleString('es-AR');}
 function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
@@ -2138,9 +2112,7 @@ function confirmDeleteCat(name){
 }
 function personById(id){return persons.find(p=>p.id===id);}
 
-/* ══════════════════════════════════
-   CALC ARS
-══════════════════════════════════ */
+// --- CALC ARS ---
 function calcSummary(mk){
   const rows=expenses.filter(e=>monthKey(e.date)===mk);
   let ing=0,pag=0,real=0;
@@ -2153,9 +2125,7 @@ function calcByCat(mk){
   return map;
 }
 
-/* ══════════════════════════════════
-   CALC DEBTS
-══════════════════════════════════ */
+// --- CALC DEBTS ---
 function personBalance(personId){
   // positive = they owe me, negative = I owe them
   return debts.filter(d=>d.personId===personId&&!d.settled).reduce((s,d)=>s+d.amount,0);
@@ -2163,9 +2133,7 @@ function personBalance(personId){
 function personDebtsActive(personId){return debts.filter(d=>d.personId===personId&&!d.settled).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);}
 function personDebtsSettled(personId){return debts.filter(d=>d.personId===personId&&d.settled).sort((a,b)=>(b.settledDate||'').localeCompare(a.settledDate||'')||0);}
 
-/* ══════════════════════════════════
-   RENDER ALL
-══════════════════════════════════ */
+// --- RENDER ALL ---
 function renderAll(){renderDashboard();renderListSec();renderUsdTab();renderSaldosTab();if(activeTab==='cuentas')renderCuentasTab();try{renderPatrimonioCard();}catch(e){}}
 
 function getDashMk(){
@@ -2316,9 +2284,7 @@ function renderTcChart(){
   tcChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'TC',data:tcs,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',borderWidth:2.5,pointBackgroundColor:'#f59e0b',pointRadius:5,pointHoverRadius:7,fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmtTC(c.raw)}/U$S`,afterLabel:c=>{const v=ventas[c.dataIndex];return`  ${fmtU(v.usdAmount)} → ${fmt(v.arsAmount)}`;}},bodyFont:{family:'JetBrains Mono',size:12},backgroundColor:chartBgColor(),borderColor:'rgba(245,158,11,.4)',borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'JetBrains Mono',size:11},callback:v=>'$'+Math.round(v/1000)+'k'}}}}});
 }
 
-/* ══════════════════════════════════
-   RENDER SALDOS TAB
-══════════════════════════════════ */
+// --- RENDER SALDOS TAB ---
 function renderSaldosTab(){
   // Summary
   let meDeben=0,yoDebo=0;
@@ -2454,9 +2420,7 @@ function toggleZeroPersons(){
   if(el){el.style.display=el.style.display==='none'?'block':'none';}
 }
 
-/* ══════════════════════════════════
-   EXPENSE HTML
-══════════════════════════════════ */
+// --- EXPENSE HTML ---
 function expHTML(e,actions){
   const ing=e.type==='Ingreso';
   const hasSplit=e.splits&&e.splits.length>0;
@@ -2499,9 +2463,7 @@ function usdTxHTML(t){
   </div>`;
 }
 
-/* ══════════════════════════════════
-   SPLIT PANEL
-══════════════════════════════════ */
+// --- SPLIT PANEL ---
 function toggleSplitPanel(){
   splitPanelOpen=!splitPanelOpen;
   document.getElementById('split-panel').classList.toggle('on',splitPanelOpen);
@@ -2590,9 +2552,7 @@ function addDebtPersonPrompt(forSplit=false){
   openAddContactModal(null, forSplit);
 }
 
-/* ══════════════════════════════════
-   CONTACTS MANAGER
-══════════════════════════════════ */
+// --- CONTACTS MANAGER ---
 let _contactForSplit=false; // flag: opened from split panel
 
 function openContactsModal(){
@@ -2723,9 +2683,7 @@ function saveContact(){
   toast(`✅ Contacto "${name}" ${id?'actualizado':'agregado'}`);
 }
 
-/* ══════════════════════════════════
-   MODAL GASTOS ARS
-══════════════════════════════════ */
+// --- MODAL GASTOS ARS ---
 function onAmtOrCurrencyChange(){
   const currency=document.getElementById('f-currency').value;
   const amt=parseFloat(document.getElementById('f-amt').value)||0;
@@ -2989,9 +2947,7 @@ function toggleHideCat(cat){
   saveLocal();skipNextSettings=true;pushSettings();buildCatSelect(null);renderCatManager();
 }
 
-/* ══════════════════════════════════
-   SAVE EXPENSE  (with split logic)
-══════════════════════════════════ */
+// --- SAVE EXPENSE  (with split logic) ---
 async function saveExpense(){
   const id=document.getElementById('f-id').value;
   const type=document.getElementById('f-type').value;
@@ -3062,9 +3018,7 @@ async function saveExpense(){
   }
 }
 
-/* ══════════════════════════════════
-   MODAL USD
-══════════════════════════════════ */
+// --- MODAL USD ---
 function openUsdModal(data){
   document.getElementById('usd-m-title').textContent=data?'Editar movimiento USD':'Nuevo movimiento USD';
   document.getElementById('uf-id').value=data?.id||'';
@@ -3143,9 +3097,7 @@ async function saveUsdTx(){
   skipNextUsd=fbOnline;await persistUsd(tx,null);
 }
 
-/* ══════════════════════════════════
-   MODAL DEUDA MANUAL
-══════════════════════════════════ */
+// --- MODAL DEUDA MANUAL ---
 function openDebtModal(data){
   document.getElementById('df-id').value=data?.id||'';
   document.getElementById('df-date').value=data?.date||new Date().toISOString().split('T')[0];
@@ -3206,9 +3158,7 @@ function deleteDebt(id,ev){
   document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
-/* ══════════════════════════════════
-   SETTLE MODAL
-══════════════════════════════════ */
+// --- SETTLE MODAL ---
 function openSettleModal(personId){
   const p=personById(personId);
   if(!p)return;
@@ -3289,9 +3239,7 @@ async function doSettle(){
   toast(`✅ Saldo con ${p.name} saldado${bal>0&&type==='transfer'?` · Ingreso${accLabel} creado`:''}`);
 }
 
-/* ══════════════════════════════════
-   EDIT / DELETE ARS & USD
-══════════════════════════════════ */
+// --- EDIT / DELETE ARS & USD ---
 function editExp(id,ev){ev?.stopPropagation();const e=expenses.find(x=>x.id===id);if(e)openModal(e);}
 function delExp(id,ev){
   ev?.stopPropagation();pendingDel={type:'ars',id};
@@ -3352,9 +3300,7 @@ async function doDelete(){
   }
 }
 
-/* ══════════════════════════════════
-   TAB SWITCH
-══════════════════════════════════ */
+// --- TAB SWITCH ---
 function switchTab(t){
   activeTab=t;
   document.querySelectorAll('.tab').forEach((b,i)=>{
@@ -3376,15 +3322,11 @@ function switchTab(t){
   if(t==='cuentas'){loadAccounts();renderCuentasTab();}
 }
 
-/* ══════════════════════════════════
-   TOAST
-══════════════════════════════════ */
+// --- TOAST ---
 let toastTimer;
 function toast(msg,ms=2500){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),ms);}
 
-/* ══════════════════════════════════
-   MIGRATION
-══════════════════════════════════ */
+// --- MIGRATION ---
 async function checkMigration(){
   if(!db||!currentUID)return;
   try{
@@ -3408,17 +3350,13 @@ async function runMigration(){
 }
 function dismissMigration(){document.getElementById('mig-banner').classList.remove('on');}
 
-/* ══════════════════════════════════
-   KEYBOARD
-══════════════════════════════════ */
+// --- KEYBOARD ---
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();closeAdjustModal();}
   if(e.key==='Enter'&&(document.activeElement.id==='login-email'||document.activeElement.id==='login-pass'))loginEmail();
 });
 
-/* ══════════════════════════════════
-   THEME TOGGLE
-══════════════════════════════════ */
+// --- THEME TOGGLE ---
 function toggleTheme(){
   const light=document.body.classList.toggle('light');
   document.getElementById('btn-theme').textContent=light?'☀️':'🌙';
@@ -3429,9 +3367,7 @@ function loadTheme(){
   if(t==='light'){document.body.classList.add('light');document.getElementById('btn-theme').textContent='☀️';}
 }
 
-/* ══════════════════════════════════
-   MAGIC LINK
-══════════════════════════════════ */
+// --- MAGIC LINK ---
 async function sendMagicLink(){
   const email=document.getElementById('login-email').value.trim();
   if(!email){document.getElementById('login-err').textContent='Escribí tu email primero.';return;}
@@ -3454,9 +3390,7 @@ function checkMagicLink(){
   }
 }
 
-/* ══════════════════════════════════
-   EXPORT CSV
-══════════════════════════════════ */
+// --- EXPORT CSV ---
 function exportCSV(){
   const mk=document.getElementById('fil-month')?.value||nowKey();
   const rows=expenses.filter(e=>monthKey(e.date)===mk);
@@ -3481,9 +3415,7 @@ function exportCSV(){
   toast('📥 CSV descargado');
 }
 
-/* ══════════════════════════════════
-   RECURRING REMINDERS
-══════════════════════════════════ */
+// --- RECURRING REMINDERS ---
 // Track which recurring items were skipped this month
 const SKIP_SK='gp_skipped_rec_v1';
 function skippedRecurring(){
@@ -3525,7 +3457,7 @@ function renderRecurringReminders(){
 
   let html='';
 
-  // ── Wallet recurring ──
+  // --- Wallet recurring ---
   if(walletMissing.length){
     html+=`<div style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:14px 16px;margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🔁 Movimientos recurrentes pendientes</div>
@@ -3533,7 +3465,7 @@ function renderRecurringReminders(){
     </div>`;
   }
 
-  // ── CC fijos ──
+  // --- CC fijos ---
   const allCCItems=[...ccMissing,...ccFijos];
   if(allCCItems.length){
     // Group by card
@@ -3636,9 +3568,7 @@ function preloadRecurring(templateId){
   openModal({...tmpl,id:null,date:new Date().toISOString().split('T')[0]});
 }
 
-/* ══════════════════════════════════
-   MONTH COMPARISON CHART
-══════════════════════════════════ */
+// --- MONTH COMPARISON CHART ---
 // monthlyChart declared in state above
 function renderMonthlyChart(){
   const months=[];
@@ -3671,9 +3601,7 @@ function renderMonthlyChart(){
   });
 }
 
-/* ══════════════════════════════════
-   PROJECTION CARD
-══════════════════════════════════ */
+// --- PROJECTION CARD ---
 function renderProjection(){
   const mk=getDashMk();
   const cur=nowKey();
@@ -3696,9 +3624,7 @@ function renderProjection(){
   projHint.textContent=`~${fmt(remaining)} más hasta fin de mes`;
 }
 
-/* ══════════════════════════════════
-   OLD DEBT NOTIFICATIONS
-══════════════════════════════════ */
+// --- OLD DEBT NOTIFICATIONS ---
 function oldDebtAlerts(){
   const thirtyDaysAgo=new Date();thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
   return debts.filter(d=>{
@@ -3708,9 +3634,7 @@ function oldDebtAlerts(){
   });
 }
 
-/* ══════════════════════════════════
-   GLOBAL SEARCH
-══════════════════════════════════ */
+// --- GLOBAL SEARCH ---
 function openGlobalSearch(){
   document.getElementById('gsearch-overlay').classList.add('on');history.pushState({modal:true},'');
   document.getElementById('gsearch-inp').value='';
@@ -3753,9 +3677,7 @@ function runGlobalSearch(){
   el.innerHTML=html;
 }
 
-/* ══════════════════════════════════
-   SWIPE TO DELETE
-══════════════════════════════════ */
+// --- SWIPE TO DELETE ---
 let _swipeEl=null,_swipeStartX=0,_swipeCurX=0;
 document.addEventListener('touchstart',ev=>{
   const el=ev.target.closest('.swipeable');
@@ -3785,9 +3707,7 @@ document.addEventListener('touchend',()=>{
   _swipeEl=null;
 });
 
-/* ══════════════════════════════════
-   SERVICE WORKER (PWA)
-══════════════════════════════════ */
+// --- SERVICE WORKER (PWA) ---
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').then(reg=>{
@@ -3811,9 +3731,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-/* ══════════════════════════════════
-   ACCOUNTS (CUENTAS)
-══════════════════════════════════ */
+// --- ACCOUNTS (CUENTAS) ---
 const ACC_SK='gp_accounts_v1', TRF_SK='gp_transfers_v1';
 const ACC_EMOJIS=['🏦','💳','💵','📱','🏧','💰','🪙','🏠','✈️','💻'];
 const DEF_ACCOUNTS=[
@@ -4033,7 +3951,7 @@ function confirmDeleteAccount(id,ev){
   document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
-// ── CC PAYMENT MODAL ──
+// --- CC PAYMENT MODAL ---
 function setCCPayMode(mode){
   document.getElementById('ccp-pay-mode').value=mode;
   document.getElementById('ccp-btn-ars').className='type-btn'+(mode==='ars'?' ai':'');
@@ -4204,9 +4122,7 @@ function deleteTransfer(id,ev){
   document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
-/* ══════════════════════════════════
-   BUDGETS (PRESUPUESTOS)
-══════════════════════════════════ */
+// --- BUDGETS (PRESUPUESTOS) ---
 const BDG_SK='gp_budgets_v1';
 let budgets={};
 function loadBudgets(){try{budgets=JSON.parse(localStorage.getItem(lsKey(BDG_SK)))||{};}catch{budgets={};}}
@@ -4238,9 +4154,7 @@ function saveBudget(){
   budgets[cat]=amt;saveBudgets();skipNextSettings=true;pushSettings();closeBudgetModal();renderBudgetsSection();haptic();toast(`✅ Presupuesto de ${fmt(amt)}/mes para ${cat}`);
 }
 
-/* ══════════════════════════════════
-   GOALS (METAS)
-══════════════════════════════════ */
+// --- GOALS (METAS) ---
 const GOAL_SK='gp_goals_v1';
 const GOAL_EMOJIS=['🎯','✈️','🏠','🚗','💻','📱','🏖️','🎓','💍','🏋️','🐾','🎸','🏡','⛵','🛍️'];
 let goals=[];
@@ -4294,9 +4208,7 @@ function deleteGoal(id){
   document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
 }
 
-/* ══════════════════════════════════
-   STATS
-══════════════════════════════════ */
+// --- STATS ---
 function renderStats(mk){
   const rows=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso');
   if(!rows.length){document.getElementById('stats-grid').style.display='none';return;}
@@ -4312,9 +4224,7 @@ function renderStats(mk){
   document.getElementById('st-topcat').textContent=topCat?icon(topCat[0]):'—';
 }
 
-/* ══════════════════════════════════
-   QUICK ADD
-══════════════════════════════════ */
+// --- QUICK ADD ---
 let _qaCat='';
 function openQuickAdd(){
   document.getElementById('qa-amt').value='';_qaCat='';
@@ -4465,9 +4375,7 @@ async function saveAdjust(){
   skipNextArs = fbOnline; await persistArs(exp, null);
 }
 
-/* ══════════════════════════════════
-   INIT
-══════════════════════════════════ */
+// --- INIT ---
 initFirebase();
 setTimeout(checkMagicLink,500);
 </script>
