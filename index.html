@@ -1903,7 +1903,10 @@ function openProfilePanel(){
     </button>
     <div id="diag-result"></div>
     <div class="profile-sec-lbl">Cuenta</div>
-    <button class="profile-action-row" onclick="doLogout()" style="color:var(--red)">
+    <button class="profile-action-row" onclick="confirmResetAll()" style="color:var(--red)">
+      <span class="par-ico">🗑️</span>Borrar todos mis datos<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="doLogout()" style="color:var(--txt3)">
       <span class="par-ico">⏏</span>Cerrar sesión<span class="par-chevron">›</span>
     </button>
   `;
@@ -1975,7 +1978,56 @@ async function forceSyncSettings(btn){
   }
 }
 
-async function runDiagnostics(){
+function confirmResetAll(){
+  closeProfilePanel();
+  // First confirmation
+  showConf(
+    '🗑️',
+    'Borrar todos mis datos',
+    'Esto eliminará TODOS tus gastos, ingresos, deudas, billeteras y configuración.\n\nEsta acción no se puede deshacer.',
+    ()=>{
+      // Second confirmation with typed word
+      const word=prompt('Para confirmar, escribí exactamente: BORRAR');
+      if(word?.trim().toUpperCase()==='BORRAR'){
+        resetAllData();
+      } else if(word!==null){
+        toast('❌ Cancelado — palabra incorrecta');
+      }
+    },
+    'Sí, borrar todo',
+    'Cancelar'
+  );
+}
+
+async function resetAllData(){
+  setStatus('syncing','🗑️ Borrando…');
+  try{
+    if(db&&currentUID){
+      // Delete all Firebase data for this user
+      await db.ref(`usuarios/${currentUID}`).remove();
+    }
+    // Clear all localStorage keys for this user
+    const keysToRemove=Object.keys(localStorage).filter(k=>k.includes(currentUID)||k.includes('gp_'));
+    keysToRemove.forEach(k=>localStorage.removeItem(k));
+    toast('✅ Todos los datos eliminados');
+    // Logout so they start fresh
+    setTimeout(()=>doLogout(),1000);
+  }catch(e){
+    toast('❌ Error al borrar: '+e.message);
+    setStatus('online','● Sincronizado');
+  }
+}
+
+function showConf(ico,title,msg,onConfirm,confirmLabel='Confirmar',cancelLabel='Cancelar'){
+  document.getElementById('conf-ico').textContent=ico;
+  document.getElementById('conf-ttl').textContent=title;
+  document.getElementById('conf-txt').textContent=msg;
+  document.getElementById('conf-btns').innerHTML=`
+    <button class="btn-no" onclick="closeConf()">${esc(cancelLabel)}</button>
+    <button class="btn-yes" onclick="closeConf();(${onConfirm.toString()})()">${esc(confirmLabel)}</button>`;
+  document.getElementById('conf-overlay').classList.add('on');
+  history.pushState({modal:true},'');
+}
   const el=document.getElementById('diag-result');
   if(!el)return;
   el.innerHTML='<div style="color:var(--txt3);font-size:12px;padding:8px 0">⏳ Consultando Firebase…</div>';
