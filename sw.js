@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v2.5';
+const CACHE = 'gastos-v2.6';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
@@ -29,17 +29,26 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Firebase / auth requests — always go to network
-  if (e.request.url.includes('firebase') || e.request.url.includes('googleapis.com/identitytoolkit')) {
-    return;
+  const url = e.request.url;
+
+  // Never intercept: Firebase, Google auth, or any URL with auth params
+  if (url.includes('firebase') ||
+      url.includes('googleapis.com') ||
+      url.includes('accounts.google.com') ||
+      url.includes('__/auth/') ||
+      url.includes('apiKey=') ||
+      url.includes('oauthToken=') ||
+      url.includes('identitytoolkit')) {
+    return; // Let network handle it
   }
-  if (e.request.mode === 'navigate' || e.request.url.endsWith('/AppGastos/') || e.request.url.endsWith('/AppGastos/index.html')) {
+
+  if (e.request.mode === 'navigate' || url.endsWith('/AppGastos/') || url.endsWith('/AppGastos/index.html')) {
     e.respondWith(
       fetch(e.request).then(res => {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return res;
-      }).catch(() => caches.match(e.request).then(cached => cached || caches.match('/AppGastos/index.html')))
+      }).catch(() => caches.match('/AppGastos/index.html'))
     );
     return;
   }
@@ -47,13 +56,12 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        // Cache successful GET responses
         if (e.request.method === 'GET' && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => cached); // Fallback to cache if offline
+      }).catch(() => cached);
     })
   );
 });
