@@ -1759,6 +1759,8 @@ function initFirebase(){
         try{renderAll();}catch(e){console.error('[render] Error on auth load:',e);}
         attachListeners();
         showApp(user);
+        // Push a state now that we're inside the app — back button stays here
+        history.replaceState({app:true}, '');
         setTimeout(checkMigration,1500);
         // Only push settings on login if there are LOCAL changes pending upload
         // (don't push on every login — it would overwrite Firebase with stale local data
@@ -1815,7 +1817,9 @@ function popModalState(){
 }
 
 window.addEventListener('popstate', e => {
-  // If a modal is open, close it instead of going back
+  // Only handle back button when user is logged in
+  if(!currentUID){ return; }
+
   const anyOpen = [
     'm-overlay','usd-overlay','debt-overlay','settle-overlay',
     'cat-overlay','contacts-overlay','add-contact-overlay',
@@ -1825,33 +1829,28 @@ window.addEventListener('popstate', e => {
   ].some(id => document.getElementById(id)?.classList.contains('on'));
 
   if(anyOpen){
-    // Close whatever is open
     closeModal();closeUsdModal();closeDebtModal();closeSettleModal();
     closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
     closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
     closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
     closeHelpModal();closeAdjustModal();
-    // Re-push state so next back also gets caught
     history.pushState({modal:true}, '');
-    _modalOpen = true;
     return;
   }
 
-  // No modal open — double-back to exit
+  // No modal — double-back to exit
   if(_backExitTimer){
-    // Second back within 2s — let the app close
     clearTimeout(_backExitTimer);
     _backExitTimer = null;
     return;
   }
-  // First back — show toast and push state back
   toast('↩ Tocá atrás de nuevo para salir', 2000);
-  history.pushState({}, '');
+  history.pushState({app:true}, '');
   _backExitTimer = setTimeout(() => { _backExitTimer = null; }, 2000);
 });
 
-// Push initial state so the first back is caught
-history.pushState({}, '');
+// Replace (not push) initial state — avoids adding login to history stack
+history.replaceState({app:true}, '');
 
 
 function openProfilePanel(){
