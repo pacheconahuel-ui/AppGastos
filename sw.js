@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v2.6';
+const CACHE = 'gastos-v2.7';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
@@ -11,11 +11,11 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => {
-      // Cache what we can, ignore failures for CDN assets
-      return Promise.allSettled(ASSETS.map(url => c.add(url).catch(() => {})));
-    })
+    caches.open(CACHE).then(c =>
+      Promise.allSettled(ASSETS.map(url => c.add(url).catch(() => {})))
+    )
   );
+  // Take control immediately — don't wait for old SW to die
   self.skipWaiting();
 });
 
@@ -23,9 +23,8 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim()) // Take control of all open tabs immediately
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {

@@ -3790,9 +3790,24 @@ document.addEventListener('touchend',()=>{
 ══════════════════════════════════ */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js')
-      .then(()=>console.log('[PWA] SW registered'))
-      .catch(e=>console.warn('[PWA] SW error:',e));
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('[PWA] SW registered');
+      // When a new SW takes over, reload the page to get fresh assets
+      reg.addEventListener('updatefound',()=>{
+        const newWorker=reg.installing;
+        newWorker.addEventListener('statechange',()=>{
+          if(newWorker.state==='activated'&&navigator.serviceWorker.controller){
+            console.log('[PWA] New SW activated — reloading for fresh version');
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(e=>console.warn('[PWA] SW error:',e));
+
+    // Also reload if the controller changes (another tab updated the SW)
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      window.location.reload();
+    });
   });
 }
 
