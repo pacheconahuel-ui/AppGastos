@@ -3304,21 +3304,33 @@ function deleteDebt(id,ev){
 // --- SETTLE MODAL ---
 function openSettleModal(personId){
   const p=personById(personId);
-  if(!p)return;
+  if(!p){
+    // Person deleted but debts remain — show settle anyway using debt data
+    const activeDebts=debts.filter(d=>d.personId===personId&&!d.settled);
+    if(!activeDebts.length){toast('No hay deudas activas para saldar');return;}
+    const name=activeDebts[0]?.personName||'Desconocido';
+    const total=activeDebts.reduce((s,d)=>s+d.amount,0);
+    toast(`⚠️ Persona no encontrada (${esc(name)}). Eliminá las deudas manualmente desde cada tarjeta.`);
+    return;
+  }
   const bal=personBalance(personId);
-  if(bal===0){toast('Saldo en cero, no hay nada que saldar');return;}
+  const activeDebts=personDebtsActive(personId);
+  // Allow settling even if net balance is 0, as long as there are active debts
+  if(bal===0&&activeDebts.length===0){toast('Saldo en cero, no hay nada que saldar');return;}
   document.getElementById('settle-pid').value=personId;
   document.getElementById('settle-ava').textContent=p.emoji;
   document.getElementById('settle-name').textContent=p.name;
-  document.getElementById('settle-bal-txt').textContent=bal>0?`Te debe ${fmt(bal)}`:`Le debés ${fmt(Math.abs(bal))}`;
-  document.getElementById('settle-amt').value=Math.abs(bal);
+  document.getElementById('settle-bal-txt').textContent=
+    bal>0?`Te debe ${fmt(bal)}`:
+    bal<0?`Le debés ${fmt(Math.abs(bal))}`:
+    `${activeDebts.length} deuda${activeDebts.length!==1?'s':''} activa${activeDebts.length!==1?'s':''} (saldo neto $0)`;
+  document.getElementById('settle-amt').value=Math.abs(bal)||activeDebts.reduce((s,d)=>s+Math.abs(d.amount),0);
   document.getElementById('settle-date').value=new Date().toISOString().split('T')[0];
-  // Populate account selector — only show if they owe me (money is coming in)
   const accSel=document.getElementById('settle-acc');
   const accWrap=document.getElementById('settle-acc-wrap');
-  if(bal>0&&accounts&&accounts.length>0){
+  if(bal>=0&&arsWallets().length>0){
     accSel.innerHTML='<option value="">— Sin asignar —</option>'+
-      accounts.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
+      arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
     accWrap.style.display='block';
   } else { accWrap.style.display='none'; }
   setSettleType('transfer');
