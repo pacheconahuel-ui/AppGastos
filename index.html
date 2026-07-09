@@ -1596,6 +1596,7 @@ async function persistDebt(debt,removeId){  saveLocal();
 
 // --- AUTH ---
 function loginGoogle(){
+  if(!auth){toast('⚠️ Firebase no inicializado, recargá la página');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
   // Use redirect on mobile/PWA (popup gets blocked), popup on desktop
   const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -1607,6 +1608,7 @@ function loginGoogle(){
   }
 }
 function loginEmail(){
+  if(!auth){toast('⚠️ Firebase no inicializado, recargá la página');return;}
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
   const errEl=document.getElementById('login-err');errEl.textContent='';
@@ -2003,6 +2005,8 @@ function showConf(ico,title,msg,onConfirm,confirmLabel='Confirmar',cancelLabel='
   document.getElementById('conf-overlay').classList.add('on');
   history.pushState({modal:true},'');
 }
+
+async function runDiagnostics(){
   const el=document.getElementById('diag-result');
   if(!el)return;
   el.innerHTML='<div style="color:var(--txt3);font-size:12px;padding:8px 0">⏳ Consultando Firebase…</div>';
@@ -3710,24 +3714,9 @@ document.addEventListener('touchend',()=>{
 // --- SERVICE WORKER (PWA) ---
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').then(reg=>{
-      console.log('[PWA] SW registered');
-      // When a new SW takes over, reload the page to get fresh assets
-      reg.addEventListener('updatefound',()=>{
-        const newWorker=reg.installing;
-        newWorker.addEventListener('statechange',()=>{
-          if(newWorker.state==='activated'&&navigator.serviceWorker.controller){
-            console.log('[PWA] New SW activated — reloading for fresh version');
-            window.location.reload();
-          }
-        });
-      });
-    }).catch(e=>console.warn('[PWA] SW error:',e));
-
-    // Also reload if the controller changes (another tab updated the SW)
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{
-      window.location.reload();
-    });
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>console.log('[PWA] SW registered'))
+      .catch(e=>console.warn('[PWA] SW error:',e));
   });
 }
 
