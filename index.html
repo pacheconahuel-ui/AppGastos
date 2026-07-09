@@ -914,8 +914,9 @@
     <div class="f-grp">
       <label class="f-lbl">Tipo</label>
       <div class="type-tog">
-        <button class="type-btn au" id="ubtn-in"   onclick="setUsdType('ingreso')">📥 Ingreso USD</button>
-        <button class="type-btn"   id="ubtn-sell"  onclick="setUsdType('venta')">💸 Venta USD</button>
+        <button class="type-btn au" id="ubtn-in"   onclick="setUsdType('ingreso')">📥 Ingreso</button>
+        <button class="type-btn"   id="ubtn-buy"   onclick="setUsdType('compra')">🏦 Compra</button>
+        <button class="type-btn"   id="ubtn-sell"  onclick="setUsdType('venta')">💸 Venta</button>
       </div>
       <input type="hidden" id="uf-type" value="ingreso">
     </div>
@@ -929,33 +930,41 @@
         <input type="number" class="f-ctrl gold-focus" id="uf-usd" placeholder="0" inputmode="decimal" step="any" min="0" oninput="calcTC()">
       </div>
     </div>
+    <!-- ARS pagados — for compra and venta -->
     <div id="uf-ars-wrap" style="display:none">
       <div class="f-grp">
-        <label class="f-lbl">ARS recibidos</label>
-        <input type="number" class="f-ctrl gold-focus" id="uf-ars" placeholder="ej: 405000" inputmode="decimal" step="any" min="0" oninput="calcTC()">
+        <label class="f-lbl" id="uf-ars-lbl">ARS recibidos</label>
+        <input type="number" class="f-ctrl gold-focus" id="uf-ars" placeholder="ej: 142500" inputmode="decimal" step="any" min="0" oninput="calcTC()">
       </div>
       <div class="tc-preview" id="tc-preview">
         <div class="tc-preview-lbl">Tipo de cambio implícito</div>
         <div class="tc-preview-val" id="tc-val">—</div>
         <div class="tc-preview-sub" id="tc-sub">—</div>
       </div>
-      <div class="sh-row" style="margin-bottom:12px">
+      <div class="sh-row" style="margin-bottom:12px" id="uf-autoars-wrap">
         <label class="tog"><input type="checkbox" id="uf-autoars" checked><div class="tog-track"></div><div class="tog-knob"></div></label>
-        <span class="sh-lbl" style="font-size:13px">Registrar ARS como Ingreso automático</span>
+        <span class="sh-lbl" id="uf-autoars-lbl" style="font-size:13px">Registrar ARS como Ingreso automático</span>
       </div>
     </div>
     <div class="f-grp">
       <label class="f-lbl">Descripción</label>
       <input type="text" class="f-ctrl gold-focus" id="uf-desc" placeholder="ej: Sueldo Wise, Venta P2P Binance…">
     </div>
-    <!-- Account for ingreso USD -->
+    <!-- Ingreso USD: destination wallet -->
     <div class="f-grp" id="uf-acc-ingreso-wrap">
-      <label class="f-lbl">💼 Acreditar en</label>
+      <label class="f-lbl">💼 Acreditar USD en</label>
       <select class="f-ctrl gold-focus" id="uf-acc-ingreso">
         <option value="">— Sin asignar —</option>
       </select>
     </div>
-    <!-- Account for venta: ARS destination -->
+    <!-- Compra USD: ARS origin wallet -->
+    <div class="f-grp" id="uf-acc-compra-wrap" style="display:none">
+      <label class="f-lbl">💼 ARS salen de</label>
+      <select class="f-ctrl gold-focus" id="uf-acc-compra">
+        <option value="">— Sin asignar —</option>
+      </select>
+    </div>
+    <!-- Venta USD: ARS destination wallet -->
     <div class="f-grp" id="uf-acc-venta-wrap" style="display:none">
       <label class="f-lbl">💼 ARS llegan a</label>
       <select class="f-ctrl gold-focus" id="uf-acc-venta">
@@ -2494,17 +2503,25 @@ function expHTML(e,actions){
 
 function usdTxHTML(t){
   const isIn=t.type==='ingreso';
-  const badge=isIn?'<span class="badge usd-in">📥 Ingreso</span>':'<span class="badge usd-sell">💸 Venta</span>';
-  const tc=!isIn&&t.arsAmount&&t.usdAmount?`<span>TC: ${fmtTC(t.arsAmount/t.usdAmount)}</span>`:'';
-  const arsLine=!isIn&&t.arsAmount?`<div class="exp-amt-sub">→ ${fmt(t.arsAmount)} ARS</div>`:'';
+  const isBuy=t.type==='compra';
+  const isSell=t.type==='venta';
+  const badge=isIn?'<span class="badge usd-in">📥 Ingreso</span>':
+               isBuy?'<span class="badge" style="background:rgba(96,165,250,.12);color:var(--blue);border-color:rgba(96,165,250,.3)">🏦 Compra</span>':
+               '<span class="badge usd-sell">💸 Venta</span>';
+  const tc=(isSell||isBuy)&&t.arsAmount&&t.usdAmount?`<span>TC: ${fmtTC(t.arsAmount/t.usdAmount)}</span>`:'';
+  const arsLine=isSell&&t.arsAmount?`<div class="exp-amt-sub">→ ${fmt(t.arsAmount)} ARS</div>`:
+                isBuy&&t.arsAmount?`<div class="exp-amt-sub">← ${fmt(t.arsAmount)} ARS</div>`:'';
+  const ico=isIn?'💵':isBuy?'🏦':'🔄';
+  const amtClass=isIn?'gold':isBuy?'r':'r';
+  const amtSign=isIn?'+':'-';
   return`<div class="exp-item" onclick="editUsdTx('${t.id}',event)">
-    <div class="exp-ico gold-bg">${isIn?'💵':'🔄'}</div>
+    <div class="exp-ico gold-bg">${ico}</div>
     <div class="exp-info">
-      <div class="exp-desc">${esc(t.description||(isIn?'Ingreso USD':'Venta USD'))}</div>
+      <div class="exp-desc">${esc(t.description||(isIn?'Ingreso USD':isBuy?'Compra USD':'Venta USD'))}</div>
       <div class="exp-meta"><span>${fmtDate(t.date)}</span><span style="color:var(--txt3)">·</span>${badge}${tc}</div>
     </div>
     <div class="exp-right">
-      <div><div class="exp-amt ${isIn?'gold':'r'}">${isIn?'+':'-'}${fmtU(t.usdAmount)}</div>${arsLine}</div>
+      <div><div class="exp-amt ${amtClass}">${amtSign}${fmtU(t.usdAmount)}</div>${arsLine}</div>
       <div class="exp-actions"><button class="btn-ico edit" onclick="editUsdTx('${t.id}',event)">✏️</button><button class="btn-ico del" onclick="delUsdTx('${t.id}',event)">🗑️</button></div>
     </div>
   </div>`;
@@ -3074,13 +3091,23 @@ function openUsdModal(data){
   document.getElementById('uf-ars').value=data?.arsAmount||'';
   document.getElementById('uf-desc').value=data?.description||'';
   document.getElementById('uf-autoars').checked=true;
-  // Populate account selectors
+  // Populate account selectors — wallets only
+  const wallets=walletAccounts();
   const accOpts='<option value="">— Sin asignar —</option>'+
-    (accounts||[]).map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
+    wallets.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
   document.getElementById('uf-acc-ingreso').innerHTML=accOpts;
+  document.getElementById('uf-acc-compra').innerHTML=accOpts;
   document.getElementById('uf-acc-venta').innerHTML=accOpts;
   document.getElementById('uf-acc-ingreso').value=data?.accountId||'';
+  document.getElementById('uf-acc-compra').value=data?.arsAccountId||'';
   document.getElementById('uf-acc-venta').value=data?.arsAccountId||'';
+  // Default wallet from last used
+  const lastAcc=localStorage.getItem(lsKey('gp_last_acc'))||'';
+  if(lastAcc&&!data){
+    document.getElementById('uf-acc-ingreso').value=lastAcc;
+    document.getElementById('uf-acc-compra').value=lastAcc;
+    document.getElementById('uf-acc-venta').value=lastAcc;
+  }
   setUsdType(data?.type||'ingreso');calcTC();
   document.getElementById('usd-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('uf-usd').focus(),200);
@@ -3090,10 +3117,21 @@ function usdOverlayClick(ev){if(ev.target===document.getElementById('usd-overlay
 function setUsdType(t){
   document.getElementById('uf-type').value=t;
   document.getElementById('ubtn-in').className='type-btn'+(t==='ingreso'?' au':'');
+  document.getElementById('ubtn-buy').className='type-btn'+(t==='compra'?' au':'');
   document.getElementById('ubtn-sell').className='type-btn'+(t==='venta'?' av':'');
-  document.getElementById('uf-ars-wrap').style.display=t==='venta'?'block':'none';
-  // Show the right account selector for each type
+  // ARS field: show for compra and venta
+  document.getElementById('uf-ars-wrap').style.display=(t==='venta'||t==='compra')?'block':'none';
+  // Label changes based on type
+  if(t==='compra'){
+    document.getElementById('uf-ars-lbl').textContent='ARS pagados';
+    document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Egreso automático';
+  } else {
+    document.getElementById('uf-ars-lbl').textContent='ARS recibidos';
+    document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Ingreso automático';
+  }
+  // Account selectors
   document.getElementById('uf-acc-ingreso-wrap').style.display=t==='ingreso'?'block':'none';
+  document.getElementById('uf-acc-compra-wrap').style.display=t==='compra'?'block':'none';
   document.getElementById('uf-acc-venta-wrap').style.display=t==='venta'?'block':'none';
   calcTC();
 }
@@ -3112,35 +3150,67 @@ async function saveUsdTx(){
   const ars=parseFloat(document.getElementById('uf-ars').value);
   const desc=document.getElementById('uf-desc').value.trim();
   const autoArs=document.getElementById('uf-autoars').checked;
-  const accountId=type==='ingreso'
-    ? (document.getElementById('uf-acc-ingreso')?.value||null)
-    : null; // for venta, USD doesn't go to an ARS account
   const arsAccountId=type==='venta'
     ? (document.getElementById('uf-acc-venta')?.value||null)
+    : type==='compra'
+    ? (document.getElementById('uf-acc-compra')?.value||null)
+    : null;
+  const accountId=type==='ingreso'
+    ? (document.getElementById('uf-acc-ingreso')?.value||null)
     : null;
   if(!date){toast('⚠️ Completá la fecha');return;}
   if(!usd||usd<=0||isNaN(usd)){toast('⚠️ Ingresá los USD');return;}
-  if(type==='venta'&&(!ars||ars<=0||isNaN(ars))){toast('⚠️ Ingresá los ARS recibidos');return;}
-  const tx={id:id||newId(),type,date,usdAmount:usd,arsAmount:type==='venta'?ars:null,exchangeRate:type==='venta'?Math.round(ars/usd):null,description:desc||(type==='ingreso'?'Ingreso USD':'Venta USD P2P'),linkedArsId:null,accountId:accountId||null,arsAccountId:arsAccountId||null,createdAt:id?(usdTx.find(t=>t.id===id)?.createdAt||Date.now()):Date.now(),updatedAt:Date.now()};
+  if((type==='venta'||type==='compra')&&(!ars||ars<=0||isNaN(ars))){
+    toast(`⚠️ Ingresá los ARS ${type==='compra'?'pagados':'recibidos'}`);return;
+  }
+  const tx={
+    id:id||newId(),type,date,
+    usdAmount:usd,
+    arsAmount:(type==='venta'||type==='compra')?ars:null,
+    exchangeRate:(type==='venta'||type==='compra')?Math.round(ars/usd):null,
+    description:desc||(type==='ingreso'?'Ingreso USD':type==='compra'?'Compra USD':'Venta USD P2P'),
+    linkedArsId:null,accountId:accountId||null,arsAccountId:arsAccountId||null,
+    createdAt:id?(usdTx.find(t=>t.id===id)?.createdAt||Date.now()):Date.now(),
+    updatedAt:Date.now()
+  };
   if(id){const prev=usdTx.find(t=>t.id===id);tx.linkedArsId=prev?.linkedArsId||null;}
+
+  // Venta: create ARS ingreso
   if(type==='venta'&&autoArs){
     let arsId=tx.linkedArsId||newId();tx.linkedArsId=arsId;
     const arsEntry={id:arsId,type:'Ingreso',date,category:'Venta USD',
       description:`Venta ${fmtU(usd)} @ ${fmtTC(ars/usd)}`,
       amount:ars,myAmount:ars,shared:false,sharedPercent:100,
-      accountId:arsAccountId||null, // ARS go to the chosen account
+      accountId:arsAccountId||null,
       createdAt:expenses.find(e=>e.id===arsId)?.createdAt||Date.now(),
       updatedAt:Date.now(),autoGenerated:true};
     const ei=expenses.findIndex(e=>e.id===arsId);if(ei>-1)expenses[ei]=arsEntry;else expenses.push(arsEntry);
     skipNextArs=fbOnline;await persistArs(arsEntry,null);
-  }else if(type==='ingreso'&&tx.linkedArsId){
-    expenses=expenses.filter(e=>e.id!==tx.linkedArsId);const lid=tx.linkedArsId;tx.linkedArsId=null;
+
+  // Compra: create ARS egreso (pesos that left the wallet)
+  } else if(type==='compra'&&autoArs){
+    let arsId=tx.linkedArsId||newId();tx.linkedArsId=arsId;
+    const arsEntry={id:arsId,type:'Egreso',date,category:'Otro',
+      description:`Compra ${fmtU(usd)} @ ${fmtTC(ars/usd)}`,
+      amount:ars,myAmount:ars,shared:false,sharedPercent:100,
+      accountId:arsAccountId||null,   // pesos leave this wallet
+      createdAt:expenses.find(e=>e.id===arsId)?.createdAt||Date.now(),
+      updatedAt:Date.now(),autoGenerated:true};
+    const ei=expenses.findIndex(e=>e.id===arsId);if(ei>-1)expenses[ei]=arsEntry;else expenses.push(arsEntry);
+    skipNextArs=fbOnline;await persistArs(arsEntry,null);
+
+  } else if(type==='ingreso'&&tx.linkedArsId){
+    // Removed auto ARS — clean up linked entry
+    expenses=expenses.filter(e=>e.id!==tx.linkedArsId);
+    const lid=tx.linkedArsId;tx.linkedArsId=null;
     skipNextArs=fbOnline;await persistArs(null,lid);
   }
+
   if(id&&type==='ingreso'){const prev=usdTx.find(t=>t.id===id);if(prev?.linkedArsId){expenses=expenses.filter(e=>e.id!==prev.linkedArsId);skipNextArs=fbOnline;await persistArs(null,prev.linkedArsId);tx.linkedArsId=null;}}
   if(id){const i=usdTx.findIndex(t=>t.id===id);if(i>-1)usdTx[i]=tx;else usdTx.push(tx);}else usdTx.push(tx);
   haptic();closeUsdModal();renderAll();
-  toast(type==='venta'?`✅ Venta · TC ${fmtTC(ars/usd)}/U$S`:'✅ Ingreso USD guardado');
+  const tcStr=ars&&usd?` · TC ${fmtTC(ars/usd)}/U$S`:'';
+  toast(type==='compra'?`✅ Compra ${fmtU(usd)}${tcStr}`:type==='venta'?`✅ Venta ${fmtU(usd)}${tcStr}`:'✅ Ingreso USD guardado');
   skipNextUsd=fbOnline;await persistUsd(tx,null);
 }
 
