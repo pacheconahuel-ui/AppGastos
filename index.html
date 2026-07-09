@@ -690,6 +690,14 @@
         </div>
         <select class="f-ctrl" id="fil-cat" onchange="renderListSec()" style="flex:1"></select>
       </div>
+      <div class="list-filters-row2" style="margin-top:6px">
+        <select class="f-ctrl" id="fil-type" onchange="renderListSec()" style="flex:1">
+          <option value="">Ingreso + Egreso</option>
+          <option value="Ingreso">Solo ingresos</option>
+          <option value="Egreso">Solo egresos</option>
+        </select>
+        <select class="f-ctrl" id="fil-account" onchange="renderListSec()" style="flex:1"></select>
+      </div>
     </div>
     <div id="full-list"></div>
   </div>
@@ -2226,12 +2234,11 @@ function renderListSec(){
   el.innerHTML=months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('');
   el.value=months.includes(prev)?prev:nowKey();
   const mk=el.value;
-  // Cat filter — build from all categories actually used in expenses that month
-  // (not filtered by cats array, to include ingreso categories too)
+
+  // Cat filter
   const catSel=document.getElementById('fil-cat'),curCat=catSel.value;
   catSel.innerHTML='<option value="">Todas las categorías</option>';
   const used=new Set(expenses.filter(e=>monthKey(e.date)===mk).map(e=>e.category));
-  // Sort: first match order in cats array, then alphabetical for unknown ones
   const usedSorted=[...used].sort((a,b)=>{
     const ia=cats.indexOf(a), ib=cats.indexOf(b);
     if(ia>=0&&ib>=0)return ia-ib;
@@ -2240,20 +2247,39 @@ function renderListSec(){
   });
   usedSorted.forEach(c=>{
     const o=document.createElement('option');
-    o.value=c;
-    o.textContent=`${catIcon(c)} ${displayName(c)}`;
+    o.value=c;o.textContent=`${catIcon(c)} ${displayName(c)}`;
     catSel.appendChild(o);
   });
   if(curCat)catSel.value=curCat;
+
+  // Account filter — populate from accounts used in this month
+  const accSel=document.getElementById('fil-account'),curAcc=accSel?.value||'';
+  if(accSel){
+    const usedAccIds=new Set(expenses.filter(e=>monthKey(e.date)===mk&&e.accountId).map(e=>e.accountId));
+    accSel.innerHTML='<option value="">Todas las billeteras</option>'+
+      accounts.filter(a=>usedAccIds.has(a.id)).map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
+    if(curAcc)accSel.value=curAcc;
+  }
+
+  // Apply all filters
   const search=(document.getElementById('fil-search')?.value||'').toLowerCase().trim();
   const catFil=catSel.value;
+  const typeFil=document.getElementById('fil-type')?.value||'';
+  const accFil=accSel?.value||'';
+
   let rows=expenses.filter(e=>monthKey(e.date)===mk);
-  if(search)rows=rows.filter(e=>(e.description||'').toLowerCase().includes(search)||(e.category||'').toLowerCase().includes(search));
-  if(catFil)rows=rows.filter(e=>e.category===catFil);
+  if(search) rows=rows.filter(e=>(e.description||'').toLowerCase().includes(search)||(e.category||'').toLowerCase().includes(search));
+  if(catFil) rows=rows.filter(e=>e.category===catFil);
+  if(typeFil) rows=rows.filter(e=>e.type===typeFil);
+  if(accFil)  rows=rows.filter(e=>e.accountId===accFil);
   rows.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);
-  const hasFilter=search||catFil;
-  document.getElementById('list-count').textContent=rows.length?`${rows.length} resultado${rows.length>1?'s':''}${hasFilter?' (filtrado)':''}` :'';
-  document.getElementById('full-list').innerHTML=rows.length?rows.map(e=>expHTML(e,true)).join(''):`<div class="empty"><div class="empty-ico">${hasFilter?'🔍':'📭'}</div><p>${hasFilter?'Sin resultados':'Sin movimientos este mes'}</p></div>`;
+
+  const hasFilter=search||catFil||typeFil||accFil;
+  document.getElementById('list-count').textContent=rows.length
+    ?`${rows.length} resultado${rows.length>1?'s':''}${hasFilter?' (filtrado)':''}`:'';
+  document.getElementById('full-list').innerHTML=rows.length
+    ?rows.map(e=>expHTML(e,true)).join('')
+    :`<div class="empty"><div class="empty-ico">${hasFilter?'🔍':'📭'}</div><p>${hasFilter?'Sin resultados':'Sin movimientos este mes'}</p></div>`;
 }
 
 function renderUsdTab(){
