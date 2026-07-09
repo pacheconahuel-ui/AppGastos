@@ -2403,12 +2403,29 @@ function renderSaldosTab(){
 
   document.getElementById('saldos-list').innerHTML=html;
 
-  // Old debt alerts
+  // Old debt alerts — grouped by person
   const old=oldDebtAlerts();
   if(old.length){
+    // Group by person
+    const byPerson={};
+    old.forEach(d=>{
+      if(!byPerson[d.personId])byPerson[d.personId]={name:d.personName,debts:[]};
+      byPerson[d.personId].debts.push(d);
+    });
     const alertHtml=`<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:13px 15px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px">⏰ Deudas sin saldar hace más de 30 días</div>
-      ${old.map(d=>`<div style="font-size:12px;color:var(--txt2);margin-bottom:3px">${d.amount>0?'↙':'↗'} <b>${esc(d.personName)}</b> · ${esc(d.description)} · ${fmt(Math.abs(d.amount))}</div>`).join('')}
+      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px">⏰ Deudas sin saldar hace más de 30 días</div>
+      ${Object.entries(byPerson).map(([pid,{name,debts}])=>{
+        const total=debts.reduce((s,d)=>s+d.amount,0);
+        return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:6px 8px;background:rgba(0,0,0,.1);border-radius:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--txt)">${esc(name)}</div>
+            <div style="font-size:11px;color:var(--txt3)">${debts.length} deuda${debts.length!==1?'s':''} · ${total>0?'te deben':'le debés'} ${fmt(Math.abs(total))}</div>
+          </div>
+          <button onclick="openSettleModal('${pid}')" style="padding:6px 12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:8px;color:var(--yellow);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
+            ${total>0?'💸 Cobrar':'✅ Pagar'}
+          </button>
+        </div>`;
+      }).join('')}
     </div>`;
     document.getElementById('saldos-list').insertAdjacentHTML('afterbegin',alertHtml);
   }
@@ -3851,6 +3868,15 @@ function renderCuentasTab(){
     (wallets.length?`<div class="div-lbl">Billeteras</div>${walletHtml}`:'') +
     (cards.length?`<div class="div-lbl" style="margin-top:12px">Tarjetas de crédito</div>${ccHtml}`:'') +
     (!wallets.length&&!cards.length?'<div class="empty"><div class="empty-ico">💼</div><p>Sin cuentas. Tocá ＋ para agregar.</p></div>':'');
+
+  // Add adjust button below wallet list
+  if(wallets.length){
+    document.getElementById('cuentas-list').insertAdjacentHTML('beforeend',
+      `<button onclick="openAdjustModal(null,null)" style="width:100%;padding:11px;margin-top:8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+        ⚖️ Ajustar saldo de una billetera
+      </button>`
+    );
+  }
 
   document.getElementById('cuentas-total-ars').textContent=fmt(arsTotal);
   const mTf=transfers.filter(t=>monthKey(t.date)===mk);
