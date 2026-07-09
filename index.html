@@ -950,9 +950,16 @@
       <label class="f-lbl">Descripción</label>
       <input type="text" class="f-ctrl gold-focus" id="uf-desc" placeholder="ej: Sueldo Wise, Venta P2P Binance…">
     </div>
-    <!-- Ingreso USD: destination wallet -->
+    <!-- USD wallet destination/origin -->
+    <div class="f-grp" id="uf-usd-acc-wrap">
+      <label class="f-lbl" id="uf-usd-acc-lbl">💵 USD van a</label>
+      <select class="f-ctrl gold-focus" id="uf-usd-acc">
+        <option value="">— Sin asignar —</option>
+      </select>
+    </div>
+    <!-- Ingreso USD: ARS wallet destination (optional) -->
     <div class="f-grp" id="uf-acc-ingreso-wrap">
-      <label class="f-lbl">💼 Acreditar USD en</label>
+      <label class="f-lbl">💼 ARS acreditar en (opcional)</label>
       <select class="f-ctrl gold-focus" id="uf-acc-ingreso">
         <option value="">— Sin asignar —</option>
       </select>
@@ -1159,13 +1166,22 @@
       </div>
       <input type="hidden" id="acc-type" value="wallet">
     </div>
+    <!-- Currency — only for wallets -->
+    <div class="f-grp" id="acc-currency-wrap">
+      <label class="f-lbl">Moneda</label>
+      <div class="type-tog">
+        <button class="type-btn ai" id="acc-btn-ars" onclick="setAccCurrency('ARS')">🇦🇷 Pesos ARS</button>
+        <button class="type-btn"    id="acc-btn-usd" onclick="setAccCurrency('USD')">💵 Dólares USD</button>
+      </div>
+      <input type="hidden" id="acc-currency" value="ARS">
+    </div>
     <div class="f-grp">
       <label class="f-lbl">Nombre</label>
-      <input type="text" class="f-ctrl" id="acc-name" placeholder="ej: Santander, Visa Galicia…">
+      <input type="text" class="f-ctrl" id="acc-name" placeholder="ej: Santander, Efectivo USD…">
     </div>
     <!-- Wallet-only: initial balance -->
     <div class="f-grp" id="acc-initial-wrap">
-      <label class="f-lbl">Saldo inicial ($)</label>
+      <label class="f-lbl" id="acc-initial-lbl">Saldo inicial</label>
       <input type="number" class="f-ctrl" id="acc-initial" placeholder="0" inputmode="decimal" step="any">
     </div>
     <!-- Credit card extras -->
@@ -3091,23 +3107,25 @@ function openUsdModal(data){
   document.getElementById('uf-ars').value=data?.arsAmount||'';
   document.getElementById('uf-desc').value=data?.description||'';
   document.getElementById('uf-autoars').checked=true;
-  // Populate account selectors — wallets only
-  const wallets=walletAccounts();
-  const accOpts='<option value="">— Sin asignar —</option>'+
-    wallets.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
-  document.getElementById('uf-acc-ingreso').innerHTML=accOpts;
-  document.getElementById('uf-acc-compra').innerHTML=accOpts;
-  document.getElementById('uf-acc-venta').innerHTML=accOpts;
+
+  // ARS wallets
+  const arsWalletOpts='<option value="">— Sin asignar —</option>'+
+    arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
+  // USD wallets
+  const usdWalletOpts='<option value="">— Sin asignar —</option>'+
+    usdWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
+
+  document.getElementById('uf-usd-acc').innerHTML=usdWalletOpts;
+  document.getElementById('uf-acc-ingreso').innerHTML=arsWalletOpts;
+  document.getElementById('uf-acc-compra').innerHTML=arsWalletOpts;
+  document.getElementById('uf-acc-venta').innerHTML=arsWalletOpts;
+
+  // Restore saved values
+  document.getElementById('uf-usd-acc').value=data?.usdAccountId||'';
   document.getElementById('uf-acc-ingreso').value=data?.accountId||'';
   document.getElementById('uf-acc-compra').value=data?.arsAccountId||'';
   document.getElementById('uf-acc-venta').value=data?.arsAccountId||'';
-  // Default wallet from last used
-  const lastAcc=localStorage.getItem(lsKey('gp_last_acc'))||'';
-  if(lastAcc&&!data){
-    document.getElementById('uf-acc-ingreso').value=lastAcc;
-    document.getElementById('uf-acc-compra').value=lastAcc;
-    document.getElementById('uf-acc-venta').value=lastAcc;
-  }
+
   setUsdType(data?.type||'ingreso');calcTC();
   document.getElementById('usd-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('uf-usd').focus(),200);
@@ -3119,17 +3137,21 @@ function setUsdType(t){
   document.getElementById('ubtn-in').className='type-btn'+(t==='ingreso'?' au':'');
   document.getElementById('ubtn-buy').className='type-btn'+(t==='compra'?' au':'');
   document.getElementById('ubtn-sell').className='type-btn'+(t==='venta'?' av':'');
-  // ARS field: show for compra and venta
   document.getElementById('uf-ars-wrap').style.display=(t==='venta'||t==='compra')?'block':'none';
-  // Label changes based on type
   if(t==='compra'){
     document.getElementById('uf-ars-lbl').textContent='ARS pagados';
     document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Egreso automático';
-  } else {
+    document.getElementById('uf-usd-acc-lbl').textContent='💵 USD van a (billetera USD)';
+  } else if(t==='venta'){
     document.getElementById('uf-ars-lbl').textContent='ARS recibidos';
     document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Ingreso automático';
+    document.getElementById('uf-usd-acc-lbl').textContent='💵 USD salen de (billetera USD)';
+  } else {
+    document.getElementById('uf-usd-acc-lbl').textContent='💵 USD van a (billetera USD)';
   }
-  // Account selectors
+  // USD wallet: always show
+  document.getElementById('uf-usd-acc-wrap').style.display='block';
+  // ARS wallet selectors
   document.getElementById('uf-acc-ingreso-wrap').style.display=t==='ingreso'?'block':'none';
   document.getElementById('uf-acc-compra-wrap').style.display=t==='compra'?'block':'none';
   document.getElementById('uf-acc-venta-wrap').style.display=t==='venta'?'block':'none';
@@ -3150,6 +3172,7 @@ async function saveUsdTx(){
   const ars=parseFloat(document.getElementById('uf-ars').value);
   const desc=document.getElementById('uf-desc').value.trim();
   const autoArs=document.getElementById('uf-autoars').checked;
+  const usdAccountId=document.getElementById('uf-usd-acc')?.value||null;
   const arsAccountId=type==='venta'
     ? (document.getElementById('uf-acc-venta')?.value||null)
     : type==='compra'
@@ -3169,7 +3192,10 @@ async function saveUsdTx(){
     arsAmount:(type==='venta'||type==='compra')?ars:null,
     exchangeRate:(type==='venta'||type==='compra')?Math.round(ars/usd):null,
     description:desc||(type==='ingreso'?'Ingreso USD':type==='compra'?'Compra USD':'Venta USD P2P'),
-    linkedArsId:null,accountId:accountId||null,arsAccountId:arsAccountId||null,
+    linkedArsId:null,
+    accountId:accountId||null,
+    arsAccountId:arsAccountId||null,
+    usdAccountId:usdAccountId||null,
     createdAt:id?(usdTx.find(t=>t.id===id)?.createdAt||Date.now()):Date.now(),
     updatedAt:Date.now()
   };
@@ -3852,15 +3878,42 @@ function loadAccounts(){
 function saveAccounts(){
   try{localStorage.setItem(lsKey(ACC_SK),JSON.stringify(accounts));localStorage.setItem(lsKey(TRF_SK),JSON.stringify(transfers));}catch(e){}
 }
-function walletAccounts(){return accounts.filter(a=>a.type==='wallet');}
+function walletAccounts(currency=null){
+  const wallets=accounts.filter(a=>a.type==='wallet');
+  if(!currency)return wallets;
+  return wallets.filter(a=>(a.currency||'ARS')===currency);
+}
 function ccAccounts(){return accounts.filter(a=>a.type==='credit');}
+function arsWallets(){return walletAccounts('ARS');}
+function usdWallets(){return walletAccounts('USD');}
 
 function accountBalance(accId){
   const acc=accounts.find(a=>a.id===accId);
-  if(acc?.type==='credit')return null; // CC has no "balance" — has estimated due
-  let bal=acc?.initialBalance||0;
-  expenses.forEach(e=>{if(e.accountId!==accId)return;if(e.type==='Ingreso')bal+=e.amount;else bal-=effAmt(e);});
-  transfers.forEach(t=>{if(t.fromId===accId)bal-=t.amount;if(t.toId===accId)bal+=t.amount;});
+  if(!acc||acc.type==='credit')return null;
+  const isUSD=(acc.currency||'ARS')==='USD';
+  let bal=acc.initialBalance||0;
+  if(isUSD){
+    // USD wallet: balance from usdTx linkedArsId... no, from usdAccountId field
+    // Ingreso USD → goes to usdAccountId
+    // Compra USD → goes to usdAccountId  
+    // Venta USD → leaves from usdAccountId
+    usdTx.forEach(t=>{
+      if(t.usdAccountId!==accId)return;
+      if(t.type==='ingreso'||t.type==='compra') bal+=t.usdAmount;
+      else if(t.type==='venta') bal-=t.usdAmount;
+    });
+  } else {
+    // ARS wallet: balance from expenses
+    expenses.forEach(e=>{
+      if(e.accountId!==accId)return;
+      if(e.type==='Ingreso')bal+=e.amount;
+      else bal-=effAmt(e);
+    });
+    transfers.forEach(t=>{
+      if(t.fromId===accId)bal-=t.amount;
+      if(t.toId===accId)bal+=t.amount;
+    });
+  }
   return bal;
 }
 
@@ -3885,32 +3938,37 @@ function ccEstimated(accId){
 
 function renderCuentasTab(){
   const mk=nowKey();
-  const allAccounts=accounts;
-  const wallets=walletAccounts();
+  const arsAccs=arsWallets();
+  const usdAccs=usdWallets();
   const cards=ccAccounts();
 
-  // Wallets section
-  let walletHtml='';
-  let arsTotal=0;
-  wallets.forEach(a=>{
-    const bal=accountBalance(a.id);
-    if(bal===null)return; // CC cards return null — skip
-    arsTotal+=bal;const bc=bal>=0?'g':'r';
-    const negAlert=bal<0?'<span style="font-size:10px;color:var(--red);font-weight:700">⚠️ Negativa</span>':'';
-    walletHtml+=`<div class="account-card" onclick="openAccountModal('${a.id}')">
-      <div class="account-ava" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.2)">${a.emoji}</div>
-      <div class="account-info"><div class="account-name">${esc(a.name)}</div>
-        <div class="account-type">${expenses.filter(e=>e.accountId===a.id&&monthKey(e.date)===mk).length} mov. este mes ${negAlert}</div>
+  const makeWalletCard=(a,isUsd)=>{
+    const bal=accountBalance(a.id)||0;
+    const bc=bal>=0?'g':'r';
+    const balStr=isUsd
+      ?`<div class="account-bal-val card-val" style="color:var(--gold)">${fmtU(bal)}</div>`
+      :`<div class="account-bal-val card-val ${bc}">${bal<0?'-':''}${fmt(bal)}</div>`;
+    const negAlert=!isUsd&&bal<0?'<span style="font-size:10px;color:var(--red);font-weight:700">⚠️ Negativa</span>':'';
+    const movCount=isUsd
+      ?usdTx.filter(t=>t.usdAccountId===a.id&&monthKey(t.date)===mk).length
+      :expenses.filter(e=>e.accountId===a.id&&monthKey(e.date)===mk).length;
+    return`<div class="account-card" onclick="openAccountModal('${a.id}')">
+      <div class="account-ava" style="background:${isUsd?'rgba(245,158,11,.1)':'rgba(96,165,250,.1)'};border-color:${isUsd?'rgba(245,158,11,.2)':'rgba(96,165,250,.2)'}">${a.emoji}</div>
+      <div class="account-info">
+        <div class="account-name">${esc(a.name)}${isUsd?' <span style="font-size:10px;color:var(--gold);font-weight:700">USD</span>':''}</div>
+        <div class="account-type">${movCount} mov. este mes ${negAlert}</div>
       </div>
       <div class="account-bal">
-        <div class="account-bal-val card-val ${bc}">${bal<0?'-':''}${fmt(bal)}</div>
+        ${balStr}
         <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin-top:6px;width:26px;height:26px;font-size:11px">🗑️</button>
       </div>
     </div>`;
-  });
-  if(!wallets.length)walletHtml='<div class="empty" style="padding:20px 0"><div class="empty-ico" style="font-size:32px">💰</div><p>Sin billeteras</p></div>';
+  };
 
-  // Credit cards section
+  const arsWalletHtml=arsAccs.map(a=>makeWalletCard(a,false)).join('')
+    ||'<div class="empty" style="padding:16px 0"><div class="empty-ico" style="font-size:28px">💰</div><p>Sin billeteras ARS</p></div>';
+  const usdWalletHtml=usdAccs.map(a=>makeWalletCard(a,true)).join('');
+
   let ccHtml='';
   cards.forEach(a=>{
     const{lines,totalARS,totalUSD}=ccEstimated(a.id);
@@ -3935,13 +3993,11 @@ function renderCuentasTab(){
     const usdLine=totalUSD>0?`<div style="font-size:11px;color:var(--gold);margin-top:4px">+ U$S ${totalUSD} en dólares</div>`:'';
     ccHtml+=`<div class="cc-summary-box">
       <div class="cc-summary-header">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:22px">${a.emoji}</span>
-            <div>
-              <div class="cc-summary-name">${esc(a.name)}</div>
-              <div class="cc-summary-dates">${closingDate} · ${lines.length} consumo${lines.length!==1?'s':''}</div>
-            </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">${a.emoji}</span>
+          <div>
+            <div class="cc-summary-name">${esc(a.name)}</div>
+            <div class="cc-summary-dates">${closingDate} · ${lines.length} consumo${lines.length!==1?'s':''}</div>
           </div>
         </div>
         <div class="cc-estimated">
@@ -3960,21 +4016,23 @@ function renderCuentasTab(){
     </div>`;
   });
 
-  document.getElementById('cuentas-list').innerHTML=
-    (wallets.length?`<div class="div-lbl">Billeteras</div>${walletHtml}`:'') +
-    (cards.length?`<div class="div-lbl" style="margin-top:12px">Tarjetas de crédito</div>${ccHtml}`:'') +
-    (!wallets.length&&!cards.length?'<div class="empty"><div class="empty-ico">💼</div><p>Sin cuentas. Tocá ＋ para agregar.</p></div>':'');
+  const totalARS=arsAccs.reduce((s,a)=>{const b=accountBalance(a.id);return s+(b||0);},0);
+  const totalUSD=usdAccs.reduce((s,a)=>{const b=accountBalance(a.id);return s+(b||0);},0);
 
-  // Add adjust button below wallet list
-  if(wallets.length){
+  document.getElementById('cuentas-list').innerHTML=
+    `<div class="div-lbl">Billeteras ARS</div>${arsWalletHtml}`+
+    (usdAccs.length?`<div class="div-lbl" style="margin-top:12px;color:var(--gold)">Billeteras USD</div>${usdWalletHtml}`:'') +
+    (cards.length?`<div class="div-lbl" style="margin-top:12px">Tarjetas de crédito</div>${ccHtml}`:'') +
+    (!arsAccs.length&&!usdAccs.length&&!cards.length?'<div class="empty"><div class="empty-ico">💼</div><p>Sin cuentas. Tocá ＋ para agregar.</p></div>':'');
+
+  if(arsAccs.length||usdAccs.length){
     document.getElementById('cuentas-list').insertAdjacentHTML('beforeend',
-      `<button onclick="openAdjustModal(null,null)" style="width:100%;padding:11px;margin-top:8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
-        ⚖️ Ajustar saldo de una billetera
-      </button>`
+      `<button onclick="openAdjustModal(null,null)" style="width:100%;padding:11px;margin-top:8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">⚖️ Ajustar saldo de una billetera</button>`
     );
   }
 
-  document.getElementById('cuentas-total-ars').textContent=fmt(arsTotal);
+  document.getElementById('cuentas-total-ars').textContent=
+    fmt(totalARS)+(totalUSD>0?` + ${fmtU(totalUSD)}`:'');
   const mTf=transfers.filter(t=>monthKey(t.date)===mk);
   document.getElementById('cuentas-transfers-count').textContent=`${mTf.length} transferencia${mTf.length!==1?'s':''}`;
   const tHtml=transfers.length?[...transfers].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(t=>{
@@ -3994,6 +4052,7 @@ function setAccType(t){
   document.getElementById('acc-btn-cc').className='type-btn'+(t==='credit'?' au':'');
   document.getElementById('acc-initial-wrap').style.display=t==='wallet'?'block':'none';
   document.getElementById('acc-cc-extras').style.display=t==='credit'?'block':'none';
+  document.getElementById('acc-currency-wrap').style.display=t==='wallet'?'block':'none';
   document.getElementById('acc-emoji-preview').textContent=t==='credit'?'💳':'🏦';
 }
 
@@ -4008,17 +4067,25 @@ function openAccountModal(id=null,ev=null){
   document.getElementById('acc-initial').value=a?.initialBalance||0;
   document.getElementById('acc-closing-day').value=a?.closingDay||'';
   document.getElementById('acc-due-offset').value=a?.dueOffset||10;
-  // Populate pay-wallet selector
   const pw=document.getElementById('acc-pay-wallet');
   pw.innerHTML='<option value="">— Sin asignar —</option>'+
     walletAccounts().filter(w=>w.id!==id).map(w=>`<option value="${w.id}">${w.emoji} ${esc(w.name)}</option>`).join('');
   pw.value=a?.payWalletId||'';
   setAccType(a?.type||'wallet');
+  setAccCurrency(a?.currency||'ARS');
   document.getElementById('account-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('acc-name').focus(),200);
 }
 function closeAccountModal(){document.getElementById('account-overlay').classList.remove('on');}
 function accountOverlayClick(ev){if(ev.target===document.getElementById('account-overlay'))closeAccountModal();}
+
+function setAccCurrency(c){
+  document.getElementById('acc-currency').value=c;
+  document.getElementById('acc-btn-ars').className='type-btn'+(c==='ARS'?' ai':'');
+  document.getElementById('acc-btn-usd').className='type-btn'+(c==='USD'?' au':'');
+  const lbl=document.getElementById('acc-initial-lbl');
+  if(lbl)lbl.textContent=c==='USD'?'Saldo inicial (U$S)':'Saldo inicial ($)';
+}
 function pickAccountEmoji(){
   const ex=document.getElementById('acc-emoji-picker');if(ex){ex.remove();return;}
   const g=ACC_EMOJIS.map(e=>`<span onclick="document.getElementById('acc-emoji-preview').textContent='${e}';document.getElementById('acc-emoji-picker').remove()" style="font-size:28px;cursor:pointer;padding:6px;border-radius:8px;display:inline-block">${e}</span>`).join('');
@@ -4031,13 +4098,14 @@ function saveAccount(){
   const name=document.getElementById('acc-name').value.trim();
   const emoji=document.getElementById('acc-emoji-preview').textContent;
   const type=document.getElementById('acc-type').value;
+  const currency=type==='wallet'?(document.getElementById('acc-currency').value||'ARS'):'ARS';
   const initial=parseFloat(document.getElementById('acc-initial').value)||0;
   const closingDay=parseInt(document.getElementById('acc-closing-day').value)||0;
   const dueOffset=parseInt(document.getElementById('acc-due-offset').value)||10;
   const payWalletId=document.getElementById('acc-pay-wallet').value||null;
   if(!name){toast('⚠️ Escribí un nombre');return;}
   const acc={
-    id:id||'acc_'+newId(),name,emoji,type,
+    id:id||'acc_'+newId(),name,emoji,type,currency,
     initialBalance:type==='wallet'?initial:0,
     closingDay:type==='credit'?closingDay:0,
     dueOffset:type==='credit'?dueOffset:10,
@@ -4363,57 +4431,50 @@ async function saveQuickAdd(){
 let patrimonioExpanded = false;
 
 function renderPatrimonioCard(){
-  const el = document.getElementById('patrimonio-card');
-  if(!el) return;
-  const wallets = walletAccounts();
-  if(!wallets.length){
-    el.innerHTML = `<div class="pat-card" onclick="switchTab('cuentas')">
+  const el=document.getElementById('patrimonio-card');
+  if(!el)return;
+  const arsAccs=arsWallets();
+  const usdAccs=usdWallets();
+  if(!arsAccs.length&&!usdAccs.length){
+    el.innerHTML=`<div class="pat-card" onclick="switchTab('cuentas')">
       <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span></div>
-      <div class="pat-setup">No tenés billeteras creadas aún.<br><b style="color:var(--p1)">Tocá para agregar tus cuentas →</b></div>
+      <div class="pat-setup">No tenés billeteras creadas.<br><b style="color:var(--p1)">Tocá para agregar tus cuentas →</b></div>
     </div>`;
     return;
   }
-  let total = 0;
-  const rows = wallets.map(a => {
-    const bal = accountBalance(a.id);
-    total += bal;
-    const cls = bal > 0 ? 'pos' : bal < 0 ? 'neg' : 'zero';
-    return `<div class="pat-row">
-      <div class="pat-acc-left">
-        <span class="pat-acc-ico">${a.emoji}</span>
-        <span class="pat-acc-name">${esc(a.name)}</span>
-      </div>
+  let totalARS=0,totalUSD=0;
+  const makeRow=(a,isUsd)=>{
+    const bal=accountBalance(a.id)||0;
+    if(isUsd)totalUSD+=bal; else totalARS+=bal;
+    const cls=bal>0?'pos':bal<0?'neg':'zero';
+    const balStr=isUsd?`<span style="color:var(--gold)">${fmtU(bal)}</span>`:`<span class="pat-acc-bal ${cls}">${bal<0?'-':''}${fmt(bal)}</span>`;
+    return`<div class="pat-row">
+      <div class="pat-acc-left"><span class="pat-acc-ico">${a.emoji}</span><span class="pat-acc-name">${esc(a.name)}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="pat-acc-bal ${cls}">${bal < 0 ? '-' : ''}${fmt(bal)}</span>
-        <button onclick="openAdjustModal('${a.id}',event)" title="Ajustar saldo" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">⚙</button>
+        ${balStr}
+        <button onclick="openAdjustModal('${a.id}',event)" title="Ajustar" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">⚙</button>
       </div>
     </div>`;
-  }).join('');
-
-  // Count unassigned movements
-  const unassigned = expenses.filter(e => !e.accountId && e.type === 'Egreso').length
-    + expenses.filter(e => !e.accountId && e.type === 'Ingreso').length;
-  const unassignedWarning = unassigned > 0
-    ? `<div style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">
-        ⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera asignada — no afectan este saldo
-       </div>`
-    : '';
-
-  const totalCls = total > 0 ? 'pos' : total < 0 ? 'neg' : '';
-  el.innerHTML = `<div class="pat-card" onclick="togglePatrimonio()">
-    <div class="pat-header">
-      <span class="pat-label">💰 Disponible ahora</span>
-      <span class="pat-chevron ${patrimonioExpanded ? 'open' : ''}" id="pat-chev">▾</span>
+  };
+  const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
+  const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');
+  const unassigned=expenses.filter(e=>!e.accountId&&e.type==='Egreso').length+expenses.filter(e=>!e.accountId&&e.type==='Ingreso').length;
+  const warn=unassigned>0?`<div style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera</div>`:'';
+  el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
+    <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">▾</span></div>
+    <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px">
+      <div class="pat-total">${fmt(totalARS)}</div>
+      ${totalUSD>0?`<div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--gold)">${fmtU(totalUSD)}</div>`:''}
     </div>
-    <div class="pat-total">${total < 0 ? '-' : ''}${fmt(total)}</div>
-    <div class="pat-hint">${wallets.length} billetera${wallets.length !== 1 ? 's' : ''} · tocá para ver detalle</div>
-    ${unassignedWarning}
-    <div class="pat-detail ${patrimonioExpanded ? 'open' : ''}" id="pat-detail">
+    <div class="pat-hint">${arsAccs.length+usdAccs.length} billetera${arsAccs.length+usdAccs.length!==1?'s':''} · tocá para ver detalle</div>
+    ${warn}
+    <div class="pat-detail ${patrimonioExpanded?'open':''}" id="pat-detail">
       <div class="pat-divider"></div>
-      ${rows}
+      ${arsRows?`<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Pesos ARS</div>${arsRows}`:''}
+      ${usdRows?`<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px">Dolares USD</div>${usdRows}`:''}
       <div class="pat-actions">
-        <button class="pat-btn primary" onclick="switchTab('cuentas');event.stopPropagation()">💼 Gestionar cuentas</button>
-        <button class="pat-btn secondary" onclick="openAdjustModal(null,event)">⚖️ Registrar ajuste</button>
+        <button class="pat-btn primary" onclick="switchTab('cuentas');event.stopPropagation()">💼 Gestionar</button>
+        <button class="pat-btn secondary" onclick="openAdjustModal(null,event)">⚖️ Ajustar saldo</button>
       </div>
     </div>
   </div>`;
