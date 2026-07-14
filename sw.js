@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v2.7';
+const CACHE = 'gastos-v2.8';
 const ASSETS = [
   '/AppGastos/',
   '/AppGastos/index.html',
