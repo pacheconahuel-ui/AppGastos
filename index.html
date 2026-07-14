@@ -2055,6 +2055,7 @@ async function runDiagnostics(){
     const fbU=snapU.val()?Object.keys(snapU.val()).length:0;
     const fbD=snapD.val()?Object.keys(snapD.val()).length:0;
     const colorD=fbD>0?'var(--green)':'var(--txt3)';
+    const colorG=fbG>0?'var(--green)':'var(--red)';
     const fbS=await db.ref(settingsPath()).once('value');
     const rawS=fbS.val();
     const fbAccounts=rawS?.accounts?.length||0;
