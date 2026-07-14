@@ -1578,12 +1578,7 @@ async function persistUsd(tx,removeId){
   if(ok){usdPendQ=usdPendQ.filter(p=>p.path!==usdPath(removeId||tx?.id));saveLocal();setStatus('online','● Sincronizado');}
   else{if(removeId)enqueue('usd','remove',usdPath(removeId),null);else if(tx)enqueue('usd','set',usdPath(tx.id),tx);setStatus('offline','⚠ Offline');}
 }
-// Debounced pushSettings — coalesces rapid calls into one
-let _pushSettingsTimer=null;
-function pushSettings(){
-  if(_pushSettingsTimer)clearTimeout(_pushSettingsTimer);
-  _pushSettingsTimer=setTimeout(()=>{_pushSettingsTimer=null;pushSettings();},600);
-}
+// pushSettingsDebounced was removed — all calls use pushSettings() directly
 async function pushSettings(){
   if(!db||!currentUID)return;
   const ts=Date.now();
