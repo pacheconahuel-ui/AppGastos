@@ -2070,6 +2070,7 @@ async function runDiagnostics(){
       <div>☁️ Gastos Firebase: <b style="color:${colorG}">${fbG}</b> · pantalla: <b>${expenses.length}</b></div>
       <div>🤝 Deudas Firebase: <b style="color:${colorD}">${fbD}</b> · pantalla: <b>${debts.length}</b></div>
       <div>💼 Cuentas Firebase: <b style="color:${fbAccounts>0?'var(--green)':'var(--red)'}">${fbAccounts}</b> · pantalla: <b>${accounts.length}</b></div>
+      <div>🔄 Transferencias Firebase: <b style="color:var(--txt3)">${rawS?.transfers?.length||0}</b> · pantalla: <b>${transfers.length}</b></div>
       <div>💵 USD Firebase: <b>${fbU}</b></div>
       <div>🌐 Online: <b style="color:${fbOnline?'var(--green)':'var(--red)'}">${fbOnline?'Sí':'No'}</b></div>
       </div>
@@ -4128,7 +4129,7 @@ function saveAccount(){
   else accounts.push(acc);
   // Block listener BEFORE async push so it can't overwrite what we just saved
   skipNextSettings=true;
-  saveAccounts();pushSettings();closeAccountModal();renderCuentasTab();haptic();
+  saveAccounts();skipNextSettings=true;pushSettings();closeAccountModal();renderCuentasTab();haptic();
   toast(`✅ ${type==='credit'?'Tarjeta':'Billetera'} "${name}" ${id?'actualizada':'creada'}`);
   }catch(err){
     console.error('[saveAccount]',err);
