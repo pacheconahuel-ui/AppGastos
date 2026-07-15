@@ -4334,21 +4334,11 @@ function saveTransfer(){
   if(!date){toast('⚠️ Completá la fecha');return;}
   const fromAcc=accounts.find(a=>a.id===fromId);
   const toAcc=accounts.find(a=>a.id===toId);
-  // Confirm before saving
-  showConf(
-    '⇄',
-    'Confirmar transferencia',
-    `${fromAcc?.emoji} ${fromAcc?.name} → ${toAcc?.emoji} ${toAcc?.name}\nMonto: ${fmt(amt)}`,
-    ()=>{
-      transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
-        description:desc||'Transferencia',createdAt:Date.now()});
-      saveAccounts();skipNextSettings=true;pushSettings();
-      closeTransferModal();renderCuentasTab();haptic();
-      toast(`✅ Transferencia de ${fmt(amt)} registrada`);
-    },
-    'Confirmar',
-    'Cancelar'
-  );
+  transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
+    description:desc||'Transferencia',createdAt:Date.now()});
+  saveAccounts();skipNextSettings=true;pushSettings();
+  closeTransferModal();renderCuentasTab();haptic();
+  toast(`✅ ${fromAcc?.name} → ${toAcc?.name} · ${fmt(amt)}`);
 }
 function deleteTransfer(id,ev){
   ev?.stopPropagation?.();const t=transfers.find(x=>x.id===id);
