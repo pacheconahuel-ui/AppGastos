@@ -1533,7 +1533,20 @@ function setStatus(state,label){
 }
 
 // --- FIREBASE OPS ---
-async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data);return true;}catch(e){console.warn('fbSet',path,e);return false;}}
+async function fbSet(path,data){
+  if(!db)return false;
+  try{
+    await db.ref(path).set(data);
+    return true;
+  }catch(e){
+    console.error('[fbSet] FAILED path:',path,'error:',e.code,e.message);
+    // Show the actual Firebase error in a toast for debugging
+    if(e.code==='PERMISSION_DENIED'||e.message?.includes('permission')){
+      toast('🔒 Firebase: '+( e.code||e.message)+' — UID: '+(currentUID||'null').substring(0,8));
+    }
+    return false;
+  }
+}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
 // --- QUEUE HELPERS ---
