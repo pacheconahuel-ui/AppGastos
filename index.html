@@ -1604,14 +1604,15 @@ async function pushSettings(){
     goals,
     updatedAt:ts
   };
-  await fbSet(settingsPath(),payload).then(()=>{
+  const ok=await fbSet(settingsPath(),payload);
+  if(ok){
     localStorage.removeItem('gp_settings_pending');
     setStatus('online','● Sincronizado');
-  }).catch(e=>{
-    console.warn('[FB] pushSettings failed, queuing:',e);
+  } else {
+    console.warn('[FB] pushSettings failed');
     localStorage.setItem('gp_settings_pending','1');
     setStatus('offline','⚙ Config pendiente');
-  });
+  }
 }
 
 async function persistDebt(debt,removeId){  saveLocal();
@@ -1934,15 +1935,29 @@ async function forcePushSettings(btn){
   if(statusEl)statusEl.textContent='⏳';
   if(btn)btn.style.opacity='.6';
   try{
-    await pushSettings();
+    if(!db||!currentUID)throw new Error('Sin conexión a Firebase — ¿estás logueado?');
+    if(!fbOnline)throw new Error('Sin conexión a internet');
+    skipNextSettings=true;
+    const catIcons=loadIconOverrides();
+    const payload={
+      customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
+      hiddenCats:[...hiddenCats],renamedCats,catTypes,catIcons,
+      persons,accounts,transfers,budgets,goals,
+      updatedAt:Date.now()
+    };
+    const ok=await fbSet(settingsPath(),payload);
+    if(!ok)throw new Error('Firebase rechazó la escritura — revisá las Rules o la conexión');
+    localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.textContent='✅';
     if(btn)btn.style.opacity='1';
-    toast('✅ Tu configuración fue subida al servidor');
+    toast(`✅ Config subida — ${transfers.length} transferencia${transfers.length!==1?'s':''}${accounts.length?' · '+accounts.length+' cuentas':''}`);
     setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
   }catch(e){
+    skipNextSettings=false;
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ Error: '+(e.message||e));
+    toast('❌ Error al subir: '+(e.message||e));
+    console.error('[forcePush]',e);
   }
 }
 
