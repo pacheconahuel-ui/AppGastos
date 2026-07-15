@@ -1626,14 +1626,16 @@ async function persistDebt(debt,removeId){  saveLocal();
 function loginGoogle(){
   if(!auth){toast('⚠️ Firebase no inicializado, recargá la página');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
-  // Use redirect on mobile/PWA (popup gets blocked), popup on desktop
-  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isPWA=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
-  if(isMobile||isPWA){
-    auth.signInWithRedirect(provider).catch(e=>document.getElementById('login-err').textContent=e.message);
-  } else {
-    auth.signInWithPopup(provider).catch(e=>document.getElementById('login-err').textContent=e.message);
-  }
+  auth.signInWithPopup(provider).catch(e=>{
+    // If popup blocked, fall back to redirect
+    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'){
+      auth.signInWithRedirect(provider).catch(e2=>
+        document.getElementById('login-err').textContent=e2.message
+      );
+    } else {
+      document.getElementById('login-err').textContent=e.message;
+    }
+  });
 }
 function loginEmail(){
   if(!auth){toast('⚠️ Firebase no inicializado, recargá la página');return;}
