@@ -1935,8 +1935,18 @@ async function forcePushSettings(btn){
   if(statusEl)statusEl.textContent='⏳';
   if(btn)btn.style.opacity='.6';
   try{
-    if(!db||!currentUID)throw new Error('Sin conexión a Firebase — ¿estás logueado?');
-    if(!fbOnline)throw new Error('Sin conexión a internet');
+    // Re-check auth state in case session was restored after page load
+    const currentUser=firebase.auth().currentUser;
+    if(!currentUser){
+      throw new Error('No hay sesión activa — cerrá sesión y volvé a entrar con Google');
+    }
+    if(!currentUID) currentUID=currentUser.uid;
+    if(!db) throw new Error('Firebase no inicializado');
+    if(!fbOnline) throw new Error('Sin conexión a internet');
+
+    // Force token refresh before writing
+    await currentUser.getIdToken(true);
+
     skipNextSettings=true;
     const catIcons=loadIconOverrides();
     const payload={
@@ -1946,7 +1956,7 @@ async function forcePushSettings(btn){
       updatedAt:Date.now()
     };
     const ok=await fbSet(settingsPath(),payload);
-    if(!ok)throw new Error('Firebase rechazó la escritura — revisá las Rules o la conexión');
+    if(!ok)throw new Error('Firebase rechazó la escritura — intentá cerrar sesión y volver a entrar');
     localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.textContent='✅';
     if(btn)btn.style.opacity='1';
@@ -1956,7 +1966,7 @@ async function forcePushSettings(btn){
     skipNextSettings=false;
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ Error al subir: '+(e.message||e));
+    toast('❌ '+( e.message||String(e)));
     console.error('[forcePush]',e);
   }
 }
