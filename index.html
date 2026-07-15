@@ -1533,18 +1533,7 @@ function setStatus(state,label){
 }
 
 // --- FIREBASE OPS ---
-async function fbSet(path,data){
-  if(!db){toast('⚠️ db es null');return false;}
-  try{
-    await db.ref(path).set(data);
-    return true;
-  }catch(e){
-    const msg=`[fbSet] code:${e.code} msg:${e.message} path:${path.substring(0,30)}`;
-    console.error(msg);
-    toast('🔴 '+msg.substring(0,120));
-    return false;
-  }
-}
+async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data);return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
 // --- QUEUE HELPERS ---
@@ -1602,17 +1591,21 @@ async function pushSettings(){
   }
   skipNextSettings=true;
   const catIcons=loadIconOverrides();
+  // Firebase doesn't allow . # $ / [ ] in keys — sanitize catTypes and catIcons
+  const sanitizeKeys=obj=>{
+    const safe={};
+    Object.entries(obj||{}).forEach(([k,v])=>{
+      safe[k.replace(/[.#$/\[\]]/g,'_')]=v;
+    });
+    return safe;
+  };
   const payload={
     customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
     hiddenCats:[...hiddenCats],
-    renamedCats,
-    catTypes,
-    catIcons,
-    persons,
-    accounts,
-    transfers,
-    budgets,
-    goals,
+    renamedCats:sanitizeKeys(renamedCats),
+    catTypes:sanitizeKeys(catTypes),
+    catIcons:sanitizeKeys(catIcons),
+    persons,accounts,transfers,budgets,goals,
     updatedAt:ts
   };
   const ok=await fbSet(settingsPath(),payload);
@@ -1960,9 +1953,11 @@ async function forcePushSettings(btn){
 
     skipNextSettings=true;
     const catIcons=loadIconOverrides();
+    const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
     const payload={
       customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
-      hiddenCats:[...hiddenCats],renamedCats,catTypes,catIcons,
+      hiddenCats:[...hiddenCats],renamedCats:sanitizeKeys(renamedCats),
+      catTypes:sanitizeKeys(catTypes),catIcons:sanitizeKeys(catIcons),
       persons,accounts,transfers,budgets,goals,
       updatedAt:Date.now()
     };
