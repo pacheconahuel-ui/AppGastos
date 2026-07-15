@@ -1534,16 +1534,14 @@ function setStatus(state,label){
 
 // --- FIREBASE OPS ---
 async function fbSet(path,data){
-  if(!db)return false;
+  if(!db){toast('⚠️ db es null');return false;}
   try{
     await db.ref(path).set(data);
     return true;
   }catch(e){
-    console.error('[fbSet] FAILED path:',path,'error:',e.code,e.message);
-    // Show the actual Firebase error in a toast for debugging
-    if(e.code==='PERMISSION_DENIED'||e.message?.includes('permission')){
-      toast('🔒 Firebase: '+( e.code||e.message)+' — UID: '+(currentUID||'null').substring(0,8));
-    }
+    const msg=`[fbSet] code:${e.code} msg:${e.message} path:${path.substring(0,30)}`;
+    console.error(msg);
+    toast('🔴 '+msg.substring(0,120));
     return false;
   }
 }
