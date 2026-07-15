@@ -4311,9 +4311,12 @@ function openTransferModal(){
   const wallets=walletAccounts();
   if(wallets.length<2){toast('⚠️ Necesitás al menos 2 billeteras para transferir');return;}
   const opts=wallets.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
-  document.getElementById('tf-from').innerHTML=opts;document.getElementById('tf-to').innerHTML=opts;
-  if(accounts.length>1)document.getElementById('tf-to').selectedIndex=1;
-  document.getElementById('tf-amt').value='';document.getElementById('tf-desc').value='';
+  document.getElementById('tf-from').innerHTML=opts;
+  document.getElementById('tf-to').innerHTML=opts;
+  // Fix: use wallets.length not accounts.length
+  if(wallets.length>1)document.getElementById('tf-to').selectedIndex=1;
+  document.getElementById('tf-amt').value='';
+  document.getElementById('tf-desc').value='';
   document.getElementById('tf-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('transfer-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('tf-amt').focus(),200);
@@ -4321,13 +4324,31 @@ function openTransferModal(){
 function closeTransferModal(){document.getElementById('transfer-overlay').classList.remove('on');}
 function transferOverlayClick(ev){if(ev.target===document.getElementById('transfer-overlay'))closeTransferModal();}
 function saveTransfer(){
-  const fromId=document.getElementById('tf-from').value,toId=document.getElementById('tf-to').value;
-  const amt=parseFloat(document.getElementById('tf-amt').value),date=document.getElementById('tf-date').value;
+  const fromId=document.getElementById('tf-from').value;
+  const toId=document.getElementById('tf-to').value;
+  const amt=parseFloat(document.getElementById('tf-amt').value);
+  const date=document.getElementById('tf-date').value;
   const desc=document.getElementById('tf-desc').value.trim();
   if(fromId===toId){toast('⚠️ Elegí billeteras distintas');return;}
   if(!amt||amt<=0){toast('⚠️ Ingresá el monto');return;}
-  transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,description:desc||'Transferencia',createdAt:Date.now()});
-  saveAccounts();skipNextSettings=true;pushSettings();closeTransferModal();renderCuentasTab();haptic();toast(`✅ Transferencia de ${fmt(amt)} registrada`);
+  if(!date){toast('⚠️ Completá la fecha');return;}
+  const fromAcc=accounts.find(a=>a.id===fromId);
+  const toAcc=accounts.find(a=>a.id===toId);
+  // Confirm before saving
+  showConf(
+    '⇄',
+    'Confirmar transferencia',
+    `${fromAcc?.emoji} ${fromAcc?.name} → ${toAcc?.emoji} ${toAcc?.name}\nMonto: ${fmt(amt)}`,
+    ()=>{
+      transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
+        description:desc||'Transferencia',createdAt:Date.now()});
+      saveAccounts();skipNextSettings=true;pushSettings();
+      closeTransferModal();renderCuentasTab();haptic();
+      toast(`✅ Transferencia de ${fmt(amt)} registrada`);
+    },
+    'Confirmar',
+    'Cancelar'
+  );
 }
 function deleteTransfer(id,ev){
   ev?.stopPropagation?.();const t=transfers.find(x=>x.id===id);
