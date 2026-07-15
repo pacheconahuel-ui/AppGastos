@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mis Gastos · Pache</title>
+  <title>Mis Gastos</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#667eea" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
@@ -1458,7 +1458,15 @@ let chart=null,tcChart=null,monthlyChart=null;
 let pendingDel=null;
 let dashMk=null; // month shown on dashboard — null means auto (most recent with data or current)
 let fbOnline=false,fbReady=false,db=null,auth=null,currentUID=null;
-let skipNextArs=false,skipNextUsd=false,skipNextDebt=false,skipNextSettings=false;
+// Device ID — unique per browser/device, persists in localStorage
+// Used to identify our own pushSettings echo and ignore it
+const DEVICE_ID = (()=>{
+  let id = localStorage.getItem('gp_device_id');
+  if(!id){ id = 'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); localStorage.setItem('gp_device_id',id); }
+  return id;
+})();
+let skipNextArs=false,skipNextUsd=false,skipNextDebt=false;
+let _lastPushedSettingsId=null; // track which push the listener should ignore
 let activeTab='dashboard';
 let isRegisterMode=false;
 let arsListener=null,usdListener=null,debtListener=null;
@@ -1589,16 +1597,10 @@ async function pushSettings(){
     localStorage.setItem('gp_settings_pending','1');
     return;
   }
-  skipNextSettings=true;
+  const pushId=DEVICE_ID+'_'+ts;
+  _lastPushedSettingsId=pushId;
   const catIcons=loadIconOverrides();
-  // Firebase doesn't allow . # $ / [ ] in keys — sanitize catTypes and catIcons
-  const sanitizeKeys=obj=>{
-    const safe={};
-    Object.entries(obj||{}).forEach(([k,v])=>{
-      safe[k.replace(/[.#$/\[\]]/g,'_')]=v;
-    });
-    return safe;
-  };
+  const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
   const payload={
     customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
     hiddenCats:[...hiddenCats],
@@ -1606,7 +1608,8 @@ async function pushSettings(){
     catTypes:sanitizeKeys(catTypes),
     catIcons:sanitizeKeys(catIcons),
     persons,accounts,transfers,budgets,goals,
-    updatedAt:ts
+    updatedAt:ts,
+    _pushId:pushId  // echo detection
   };
   const ok=await fbSet(settingsPath(),payload);
   if(ok){
@@ -1712,12 +1715,17 @@ function attachListeners(){
   },err=>console.warn('[FB] debts:',err));
 
   // Settings listener — always applies Firebase data when it arrives
-  // Echo prevention: skipNextSettings=true before own pushSettings() calls
-  // Cross-device: Firebase is the source of truth — latest push always wins
+  // Echo prevention: ignore updates that WE just pushed (identified by _pushId)
+  // Cross-device: Firebase is source of truth — updates from other devices always apply
   db.ref(settingsPath()).on('value',snap=>{
-    if(skipNextSettings){skipNextSettings=false;return;}
     const raw=snap.val();
     if(!raw)return;
+
+    // Skip if this is the echo of our own push
+    if(raw._pushId && raw._pushId===_lastPushedSettingsId){
+      _lastPushedSettingsId=null; // consume the echo
+      return;
+    }
 
     // Apply all settings from Firebase
     if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
@@ -1731,9 +1739,7 @@ function attachListeners(){
     if(raw.budgets)      budgets=raw.budgets||{};
     if(raw.goals)        goals=raw.goals||[];
 
-    // Update local timestamp to match Firebase (prevents pending push from re-uploading old data)
     if(raw.updatedAt) localStorage.setItem(lsKey('gp_settings_ts'), String(raw.updatedAt));
-    // Clear pending flag — Firebase has the latest
     localStorage.removeItem('gp_settings_pending');
     saveLocal();saveAccounts();saveBudgets();saveGoals();
     renderAll();
@@ -1951,7 +1957,7 @@ async function forcePushSettings(btn){
     // Force token refresh before writing
     await currentUser.getIdToken(true);
 
-    skipNextSettings=true;
+    
     const catIcons=loadIconOverrides();
     const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
     const payload={
@@ -1969,7 +1975,7 @@ async function forcePushSettings(btn){
     toast(`✅ Config subida — ${transfers.length} transferencia${transfers.length!==1?'s':''}${accounts.length?' · '+accounts.length+' cuentas':''}`);
     setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
   }catch(e){
-    skipNextSettings=false;
+    
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
     toast('❌ '+( e.message||String(e)));
@@ -2163,7 +2169,7 @@ function editCatIcon(catName){
   const t=newIco.trim();
   const ov=loadIconOverrides();
   ov[catName]=t;
-  saveIconOverrides(ov);skipNextSettings=true;pushSettings();
+  saveIconOverrides(ov);pushSettings();
   renderCatManager();
   renderAll();
   toast(`✅ Ícono de "${catName}" cambiado a ${t}`);
@@ -2776,7 +2782,7 @@ function saveContact(){
 
   if(id){const i=persons.findIndex(x=>x.id===id);if(i>-1)persons[i]=p;else persons.push(p);}
   else persons.push(p);
-  saveLocal();skipNextSettings=true;pushSettings();
+  saveLocal();pushSettings();
 
   closeAddContactModal();
   // If opened from split panel, add to split
@@ -2977,7 +2983,7 @@ function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
   const type=(document.getElementById('f-type')?.value||'Egreso')==='Ingreso'?'ingreso':'egreso';
-  cats.push(t);setCatType(t,type);saveLocal();skipNextSettings=true;pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
+  cats.push(t);setCatType(t,type);saveLocal();pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
 }
 function openCatManager(){renderCatManager();document.getElementById('cat-overlay').classList.add('on');history.pushState({modal:true},'');}
 function closeCatManager(){document.getElementById('cat-overlay').classList.remove('on');}
@@ -3019,11 +3025,11 @@ function addCatTyped(type='egreso'){
   const name=prompt(`Nueva categoría de ${type==='ingreso'?'ingreso':'egreso'}:`);
   if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
-  cats.push(t);setCatType(t,type);saveLocal();skipNextSettings=true;pushSettings();renderCatManager();buildCatSelect(t);toast(`✅ Categoría "${t}" creada`);
+  cats.push(t);setCatType(t,type);saveLocal();pushSettings();renderCatManager();buildCatSelect(t);toast(`✅ Categoría "${t}" creada`);
 }
 function toggleCatType(cat){
   const next=catTypeFor(cat)==='ingreso'?'egreso':'ingreso';
-  setCatType(cat,next);saveLocal();skipNextSettings=true;pushSettings();renderCatManager();buildCatSelect(null);
+  setCatType(cat,next);saveLocal();pushSettings();renderCatManager();buildCatSelect(null);
   toast(`✅ "${displayName(cat)}" ahora es ${next==='ingreso'?'Ingreso':'Egreso'}`);
 }
 function renameCat(oldName){
@@ -3032,7 +3038,7 @@ function renameCat(oldName){
   const idx=cats.indexOf(oldName);if(idx>-1)cats[idx]=t;
   catTypes[t]=catTypeFor(oldName);delete catTypes[oldName];
   expenses=expenses.map(e=>e.category===oldName?{...e,category:t}:e);
-  saveLocal();skipNextSettings=true;pushSettings();expenses.filter(e=>e.category===t).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
+  saveLocal();pushSettings();expenses.filter(e=>e.category===t).forEach(e=>{skipNextArs=fbOnline;persistArs(e,null);});
   buildCatSelect(t);renderCatManager();renderAll();toast(`✅ "${oldName}" → "${t}"`);
 }
 
@@ -3041,7 +3047,7 @@ function renameDefCat(originalName){
   const newLabel=prompt(`Renombrar "${current}" a:`,current);
   if(!newLabel?.trim()||newLabel.trim()===current)return;
   renamedCats[originalName]=newLabel.trim();
-  saveLocal();skipNextSettings=true;pushSettings();buildCatSelect(null);renderCatManager();
+  saveLocal();pushSettings();buildCatSelect(null);renderCatManager();
   renderAll(); // update existing expenses, charts, filters
   toast(`✅ Listo — ahora se llama "${newLabel.trim()}" en todos lados`);
 }
@@ -3054,7 +3060,7 @@ function toggleHideCat(cat){
     hiddenCats.add(cat);
     toast(`🙈 "${displayName(cat)}" oculta`);
   }
-  saveLocal();skipNextSettings=true;pushSettings();buildCatSelect(null);renderCatManager();
+  saveLocal();pushSettings();buildCatSelect(null);renderCatManager();
 }
 
 // --- SAVE EXPENSE  (with split logic) ---
@@ -3449,26 +3455,26 @@ async function doDelete(){
   const{type,id,name}=pendingDel;closeConf();
   if(type==='cat'){
     haptic([30,30,60]);
-    cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();skipNextSettings=true;pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
+    cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
     return;
   }
   if(type==='contact'){
     haptic([30,30,60]);
-    persons=persons.filter(p=>p.id!==id);saveLocal();skipNextSettings=true;pushSettings();
+    persons=persons.filter(p=>p.id!==id);saveLocal();pushSettings();
     renderContactsList();renderSaldosTab();buildDebtPersonSelect();
     toast('🗑️ Contacto eliminado');return;
   }
   if(type==='account'){
     haptic([30,30,60]);
-    accounts=accounts.filter(a=>a.id!==id);saveAccounts();skipNextSettings=true;pushSettings();renderCuentasTab();toast('🗑️ Billetera eliminada');return;
+    accounts=accounts.filter(a=>a.id!==id);saveAccounts();pushSettings();renderCuentasTab();toast('🗑️ Billetera eliminada');return;
   }
   if(type==='transfer'){
     haptic([30,30,60]);
-    transfers=transfers.filter(x=>x.id!==id);saveAccounts();skipNextSettings=true;pushSettings();renderCuentasTab();toast('🗑️ Transferencia eliminada');return;
+    transfers=transfers.filter(x=>x.id!==id);saveAccounts();pushSettings();renderCuentasTab();toast('🗑️ Transferencia eliminada');return;
   }
   if(type==='goal'){
     haptic([30,30,60]);
-    goals=goals.filter(x=>x.id!==id);saveGoals();skipNextSettings=true;pushSettings();renderGoalsSection();toast('🗑️ Meta eliminada');return;
+    goals=goals.filter(x=>x.id!==id);saveGoals();pushSettings();renderGoalsSection();toast('🗑️ Meta eliminada');return;
   }
   haptic([30,30,60]);
   if(type==='debt'){
@@ -4183,8 +4189,8 @@ function saveAccount(){
   if(id){const i=accounts.findIndex(a=>a.id===id);if(i>-1)accounts[i]=acc;else accounts.push(acc);}
   else accounts.push(acc);
   // Block listener BEFORE async push so it can't overwrite what we just saved
-  skipNextSettings=true;
-  saveAccounts();skipNextSettings=true;pushSettings();closeAccountModal();renderCuentasTab();haptic();
+  
+  saveAccounts();pushSettings();closeAccountModal();renderCuentasTab();haptic();
   toast(`✅ ${type==='credit'?'Tarjeta':'Billetera'} "${name}" ${id?'actualizada':'creada'}`);
   }catch(err){
     console.error('[saveAccount]',err);
@@ -4369,7 +4375,7 @@ function saveTransfer(){
   const toAcc=accounts.find(a=>a.id===toId);
   transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
     description:desc||'Transferencia',createdAt:Date.now()});
-  saveAccounts();skipNextSettings=true;pushSettings();
+  saveAccounts();pushSettings();
   closeTransferModal();renderCuentasTab();haptic();
   toast(`✅ ${fromAcc?.name} → ${toAcc?.name} · ${fmt(amt)}`);
 }
@@ -4397,7 +4403,7 @@ function renderBudgetsSection(){
   });
   el.innerHTML=html;
 }
-function deleteBudget(cat){delete budgets[cat];saveBudgets();skipNextSettings=true;pushSettings();renderBudgetsSection();}
+function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();renderBudgetsSection();}
 function openBudgetModal(){
   document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
   document.getElementById('bdg-amt').value='';
@@ -4409,7 +4415,7 @@ function budgetOverlayClick(ev){if(ev.target===document.getElementById('budget-o
 function saveBudget(){
   const cat=document.getElementById('bdg-cat').value,amt=parseFloat(document.getElementById('bdg-amt').value);
   if(!cat){toast('⚠️ Elegí una categoría');return;}if(!amt||amt<=0){toast('⚠️ Ingresá un monto');return;}
-  budgets[cat]=amt;saveBudgets();skipNextSettings=true;pushSettings();closeBudgetModal();renderBudgetsSection();haptic();toast(`✅ Presupuesto de ${fmt(amt)}/mes para ${cat}`);
+  budgets[cat]=amt;saveBudgets();pushSettings();closeBudgetModal();renderBudgetsSection();haptic();toast(`✅ Presupuesto de ${fmt(amt)}/mes para ${cat}`);
 }
 
 // --- GOALS (METAS) ---
@@ -4452,13 +4458,13 @@ function saveGoal(){
   if(!name){toast('⚠️ Escribí un nombre');return;}if(!target||target<=0){toast('⚠️ Ingresá la meta');return;}
   const g={id:id||'goal_'+newId(),name,emoji,target,current,createdAt:id?goals.find(x=>x.id===id)?.createdAt||Date.now():Date.now()};
   if(id){const i=goals.findIndex(x=>x.id===id);if(i>-1)goals[i]=g;else goals.push(g);}else goals.push(g);
-  saveGoals();skipNextSettings=true;pushSettings();closeGoalModal();renderGoalsSection();haptic();toast(`✅ Meta "${name}" ${id?'actualizada':'creada'}`);
+  saveGoals();pushSettings();closeGoalModal();renderGoalsSection();haptic();toast(`✅ Meta "${name}" ${id?'actualizada':'creada'}`);
 }
 function addToGoal(id){
   const g=goals.find(x=>x.id===id);if(!g)return;
   const amt=parseFloat(prompt(`¿Cuánto agregás a "${g.name}"?\nActual: ${fmt(g.current)} / ${fmt(g.target)}`));
   if(!amt||amt<=0||isNaN(amt))return;
-  g.current=Math.min(g.target,g.current+amt);saveGoals();skipNextSettings=true;pushSettings();renderGoalsSection();haptic();toast(`✅ +${fmt(amt)} a "${g.name}"`);
+  g.current=Math.min(g.target,g.current+amt);saveGoals();pushSettings();renderGoalsSection();haptic();toast(`✅ +${fmt(amt)} a "${g.name}"`);
 }
 function deleteGoal(id){
   const g=goals.find(x=>x.id===id);pendingDel={type:'goal',id};
