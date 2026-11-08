@@ -2073,15 +2073,25 @@ async function resetAllData(){
   }
 }
 
+// Diálogo de confirmación único. La función se guarda (no se pasa como texto),
+// así puede usar las variables del lugar que la llama.
+let _confCb=null;
 function showConf(ico,title,msg,onConfirm,confirmLabel='Confirmar',cancelLabel='Cancelar'){
   document.getElementById('conf-ico').textContent=ico;
   document.getElementById('conf-ttl').textContent=title;
-  document.getElementById('conf-txt').textContent=msg;
+  if(msg!=null)document.getElementById('conf-txt').textContent=msg;
   document.getElementById('conf-btns').innerHTML=`
     <button class="btn-no" onclick="closeConf()">${esc(cancelLabel)}</button>
-    <button class="btn-yes" onclick="closeConf();(${onConfirm.toString()})()">${esc(confirmLabel)}</button>`;
+    <button class="btn-yes" onclick="confYes()">${esc(confirmLabel)}</button>`;
+  _confCb=onConfirm;
   document.getElementById('conf-overlay').classList.add('on');
   history.pushState({modal:true},'');
+}
+function confYes(){const cb=_confCb;closeConf();if(cb)cb();}
+// Para borrar: el texto ya lo puso quien llama (conf-txt) junto con pendingDel
+function openDeleteConf(){
+  const pd=pendingDel;
+  showConf('🗑️','¿Eliminar?',null,()=>{pendingDel=pd;doDelete();},'Eliminar');
 }
 
 async function runDiagnostics(){
@@ -2194,7 +2204,7 @@ function confirmDeleteCat(name){
   document.getElementById('conf-txt').textContent=inUse
     ?`"${name}" se usa en gastos existentes.\nSe eliminará solo la categoría, los gastos quedan intactos.\n¿Eliminar igual?`
     :`¿Eliminar la categoría "${name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 function personById(id){return persons.find(p=>p.id===id);}
 
@@ -2732,7 +2742,7 @@ function confirmDeleteContact(personId){
   document.getElementById('conf-txt').textContent=
     (hasDebts?`"${p.name}" tiene saldos pendientes.\n`:``) +
     `¿Eliminar el contacto "${p.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // Add contact type to doDelete — handled below in doDelete
@@ -3357,7 +3367,7 @@ function deleteDebt(id,ev){
   document.getElementById('conf-txt').textContent=d
     ?`"${d.description}" · ${fmt(Math.abs(d.amount))}\nEsta acción no se puede deshacer.`
     :'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- SETTLE MODAL ---
@@ -3459,17 +3469,17 @@ function delExp(id,ev){
   ev?.stopPropagation();pendingDel={type:'ars',id};
   const e=expenses.find(x=>x.id===id);
   document.getElementById('conf-txt').textContent=e?`"${e.description}" · ${fmt(e.amount)}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 function editUsdTx(id,ev){ev?.stopPropagation();const t=usdTx.find(x=>x.id===id);if(t)openUsdModal(t);}
 function delUsdTx(id,ev){
   ev?.stopPropagation();pendingDel={type:'usd',id};
   const t=usdTx.find(x=>x.id===id);
   document.getElementById('conf-txt').textContent=t?`"${t.description}" · ${fmtU(t.usdAmount)}${t.linkedArsId?'\n(también se eliminará el ingreso ARS asociado)':''}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 function closeConf(){
-  pendingDel=null;
+  pendingDel=null;_confCb=null;
   document.getElementById('conf-overlay').classList.remove('on');
 }
 
@@ -4222,7 +4232,7 @@ function confirmDeleteAccount(id,ev){
   ev?.stopPropagation?.();const a=accounts.find(x=>x.id===id);
   pendingDel={type:'account',id};
   document.getElementById('conf-txt').textContent=`¿Eliminar "${a?.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- CC PAYMENT MODAL ---
@@ -4394,17 +4404,21 @@ function saveTransfer(){
   if(!date){toast('⚠️ Completá la fecha');return;}
   const fromAcc=accounts.find(a=>a.id===fromId);
   const toAcc=accounts.find(a=>a.id===toId);
-  transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
-    description:desc||'Transferencia',createdAt:Date.now()});
-  saveAccounts();pushSettings();
-  closeTransferModal();renderCuentasTab();haptic();
-  toast(`✅ ${fromAcc?.name} → ${toAcc?.name} · ${fmt(amt)}`);
+  showConf('⇄','Confirmar transferencia',
+    `${fromAcc?.emoji||''} ${fromAcc?.name||''} → ${toAcc?.emoji||''} ${toAcc?.name||''}\nMonto: ${fmt(amt)}`,
+    ()=>{
+      transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
+        description:desc||'Transferencia',createdAt:Date.now()});
+      saveAccounts();pushSettings();
+      closeTransferModal();renderCuentasTab();haptic();
+      toast(`✅ ${fromAcc?.name} → ${toAcc?.name} · ${fmt(amt)}`);
+    },'Confirmar');
 }
 function deleteTransfer(id,ev){
   ev?.stopPropagation?.();const t=transfers.find(x=>x.id===id);
   pendingDel={type:'transfer',id};
   document.getElementById('conf-txt').textContent=t?`¿Eliminar transferencia "${t.description}"?\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- BUDGETS (PRESUPUESTOS) ---
@@ -4490,7 +4504,7 @@ function addToGoal(id){
 function deleteGoal(id){
   const g=goals.find(x=>x.id===id);pendingDel={type:'goal',id};
   document.getElementById('conf-txt').textContent=`¿Eliminar la meta "${g?.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- STATS ---

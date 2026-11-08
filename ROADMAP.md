@@ -10,10 +10,10 @@ Estado a **noviembre 2026**: versión **2.9**, en uso. Toda la app está en `ind
 - [x] Errores en castellano en lugar del mensaje técnico.
 - [x] Aviso al guardar sin billetera.
 - [x] Fecha del día en hora local (antes, después de las 21 h quedaba la de mañana).
+- [x] Diálogo de confirmación (`showConf`) arreglado y confirmación de transferencias.
 
 ## Fase 2 — Robustez
 
-- [ ] **Diálogo de confirmación (`showConf`).** Pasa la función como texto (`onConfirm.toString()`), así que las confirmaciones que usan variables locales fallan. Arreglarlo y devolverle la confirmación a las transferencias.
 - [ ] **Respaldo completo:** exportar e importar todos los datos en JSON (hoy solo hay CSV del mes).
 - [ ] **Sincronización entre dispositivos:** revisar el sistema de deviceId + pushId (2.8) y cerrarlo con pruebas.
 - [ ] **Reglas de Firebase con validación** de tipos y forma, no solo del dueño.
