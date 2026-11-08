@@ -586,7 +586,7 @@
   <div class="hdr">
     <div>
       <div class="hdr-title"><span style="-webkit-text-fill-color:initial;background:none">💸</span> Mis Gastos</div>
-      <div class="hdr-sub" id="hdr-month">— <span style="opacity:.5">v2.8</span></div>
+      <div class="hdr-sub" id="hdr-month">—</div>
     </div>
     <div class="hdr-right">
       <div class="hdr-user">
@@ -1426,6 +1426,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// --- VERSION (única fuente: la usan el encabezado y el service worker) ---
+const APP_VERSION='2.9';
+
 // --- FIREBASE CONFIG ---
 const FB_CONFIG={apiKey:"AIzaSyAMUb7e_ngGiTc9lRTazNf290bKKRGvZN0",authDomain:"gastos-pache.firebaseapp.com",databaseURL:"https://gastos-pache-default-rtdb.firebaseio.com",projectId:"gastos-pache",storageBucket:"gastos-pache.firebasestorage.app",messagingSenderId:"151998147367",appId:"1:151998147367:web:6918969bcadef03048d702"};
 
@@ -1541,6 +1544,15 @@ function setStatus(state,label){
 }
 
 // --- FIREBASE OPS ---
+// Mensaje para el usuario a partir de un error técnico (el detalle va a la consola)
+function errMsg(e,fallback='No se pudo guardar. Probá de nuevo en un rato.'){
+  console.error(e);
+  if(e&&e.userMsg)return e.userMsg;
+  const code=String((e&&(e.code||e.message))||'').toLowerCase();
+  if(!navigator.onLine||code.includes('network'))return'Sin conexión. Probá de nuevo cuando vuelva internet.';
+  if(code.includes('permission'))return'No tenés permiso para guardar. Cerrá sesión y volvé a entrar.';
+  return fallback;
+}
 async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data);return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
@@ -1968,7 +1980,7 @@ async function forcePushSettings(btn){
       updatedAt:Date.now()
     };
     const ok=await fbSet(settingsPath(),payload);
-    if(!ok)throw new Error('Firebase rechazó la escritura — intentá cerrar sesión y volver a entrar');
+    if(!ok)throw Object.assign(new Error('fbSet failed'),{userMsg:'No se pudo subir la configuración. Cerrá sesión y volvé a entrar.'});
     localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.textContent='✅';
     if(btn)btn.style.opacity='1';
@@ -1978,8 +1990,7 @@ async function forcePushSettings(btn){
     
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ '+( e.message||String(e)));
-    console.error('[forcePush]',e);
+    toast('❌ '+errMsg(e));
   }
 }
 
@@ -2018,7 +2029,7 @@ async function forceSyncSettings(btn){
   }catch(e){
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ Error: '+(e.message||e));
+    toast('❌ '+errMsg(e,'No se pudo traer la configuración. Probá de nuevo en un rato.'));
   }
 }
 
@@ -2057,7 +2068,7 @@ async function resetAllData(){
     // Logout so they start fresh
     setTimeout(()=>doLogout(),1000);
   }catch(e){
-    toast('❌ Error al borrar: '+e.message);
+    toast('❌ '+errMsg(e,'No se pudieron borrar los datos. Probá de nuevo en un rato.'));
     setStatus('online','● Sincronizado');
   }
 }
@@ -2243,7 +2254,7 @@ function renderDashboard(){
 
   // Header subtitle
   const hdrSub=document.getElementById('hdr-month');
-  if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v2.8</span>`;
+  if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v${APP_VERSION}</span>`;
 
   const{ing,pag,real,bal}=calcSummary(mk);
   const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
@@ -2538,7 +2549,8 @@ function expHTML(e,actions){
   const usdBadge=e.currency==='USD'?`<span class="badge" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.25)">U$S ${e.amount}</span>`:'';
   const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border-color:rgba(251,191,36,.25)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
   const acc=e.accountId?accounts?.find(a=>a.id===e.accountId):null;
-  const accBadge=acc?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`:'';
+  const accBadge=acc?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`
+    :(accounts?.length?'<span class="badge" style="background:rgba(251,191,36,.08);color:var(--yellow);border-color:rgba(251,191,36,.25)">Sin billetera</span>':'');
   const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">⏳</span>':'';
   const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${esc(e.notes)}</div>`:'';
   const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">✏️</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">🗑️</button></div>`:'';
@@ -2836,7 +2848,10 @@ function setCardExpType(t){
   // Auto-check recurring if fijo
   if(t==='recurring')document.getElementById('f-recur').checked=true;
 }
+// Guardar sin billetera pide un segundo toque: ese movimiento no suma ni resta en ningún saldo
+let _noAccConfirmed=false;
 function onAccountSelected(){
+  _noAccConfirmed=false;
   const accId=document.getElementById('f-account').value;
   const acc=accId?accounts.find(a=>a.id===accId):null;
   const cardWrap=document.getElementById('f-card-type-wrap');
@@ -3084,6 +3099,12 @@ async function saveExpense(){
   const acc=accountId?accounts.find(a=>a.id===accountId):null;
   if(!date){toast('⚠️ Completá la fecha');return;}
   if(!amt||amt<=0||isNaN(amt)){toast('⚠️ Ingresá un monto válido');return;}
+  if(!accountId&&walletAccounts().length&&!_noAccConfirmed){
+    _noAccConfirmed=true;
+    document.getElementById('f-account').focus();
+    toast('⚠️ Sin billetera, no cuenta en ningún saldo. Elegí una o tocá Guardar de nuevo.',5000);
+    return;
+  }
 
   // Calculate my amount from split
   const splits=splitPanelOpen&&splitRows.length>0?splitRows.map(r=>({personId:r.personId,personName:r.personName,emoji:r.emoji,amount:parseFloat(r.amount)||0})):[];
@@ -3899,11 +3920,10 @@ document.addEventListener('touchend',()=>{
 });
 
 // --- SERVICE WORKER (PWA) ---
-const APP_VERSION='2.8';
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').then(reg=>{
+    navigator.serviceWorker.register('./sw.js?v='+APP_VERSION).then(reg=>{
       // Check for updates every time the page loads
       reg.update();
       // When a new SW is found, prompt user to refresh
@@ -4193,8 +4213,7 @@ function saveAccount(){
   saveAccounts();pushSettings();closeAccountModal();renderCuentasTab();haptic();
   toast(`✅ ${type==='credit'?'Tarjeta':'Billetera'} "${name}" ${id?'actualizada':'creada'}`);
   }catch(err){
-    console.error('[saveAccount]',err);
-    toast('❌ Error al guardar: '+err.message);
+    toast('❌ '+errMsg(err));
   }
 }
 function confirmDeleteAccount(id,ev){

@@ -1,4 +1,6 @@
-const CACHE = 'gastos-v2.9';
+// La versión llega en la URL del registro (sw.js?v=X.Y, desde APP_VERSION en index.html)
+const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
+const CACHE = 'gastos-v' + VERSION;
 
 // Only cache external CDN assets — NEVER cache index.html
 // This way every deploy is picked up immediately without cache clearing
