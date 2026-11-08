@@ -2,8 +2,7 @@
 const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
 const CACHE = 'gastos-v' + VERSION;
 
-// Only cache external CDN assets — NEVER cache index.html
-// This way every deploy is picked up immediately without cache clearing
+// CDN: caché primero. index.html: red primero, caché solo sin conexión
 const CDN_ASSETS = [
   'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
@@ -32,8 +31,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = e.request.url;
 
-  // Never intercept Firebase or Google auth
-  if (url.includes('firebase') ||
+  // Never intercept Firebase or Google auth (las librerías /firebasejs/ sí se guardan)
+  if ((url.includes('firebase') && !url.includes('/firebasejs/')) ||
       url.includes('googleapis.com') ||
       url.includes('accounts.google.com') ||
       url.includes('__/auth/') ||
@@ -42,13 +41,19 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // index.html — ALWAYS fetch fresh from network, fallback to cache only if offline
+  // index.html — siempre se pide a la red (cada versión se ve al toque). La última
+  // que llegó bien se guarda solo para poder abrir la app sin conexión.
   if (e.request.mode === 'navigate' ||
       url.endsWith('/AppGastos/') ||
       url.endsWith('/AppGastos/index.html')) {
+    const INDEX = new URL('index.html', self.registration.scope).href;
     e.respondWith(
       fetch(e.request, { cache: 'no-store' })
-        .catch(() => caches.match('/AppGastos/index.html'))
+        .then(res => {
+          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(INDEX, copy)); }
+          return res;
+        })
+        .catch(() => caches.match(INDEX))
     );
     return;
   }
