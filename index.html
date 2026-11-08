@@ -1469,7 +1469,6 @@ const DEVICE_ID = (()=>{
   return id;
 })();
 let skipNextArs=false,skipNextUsd=false,skipNextDebt=false;
-let _lastPushedSettingsId=null; // track which push the listener should ignore
 let activeTab='dashboard';
 let isRegisterMode=false;
 let arsListener=null,usdListener=null,debtListener=null;
@@ -1553,7 +1552,7 @@ function errMsg(e,fallback='No se pudo guardar. Probá de nuevo en un rato.'){
   if(code.includes('permission'))return'No tenés permiso para guardar. Cerrá sesión y volvé a entrar.';
   return fallback;
 }
-async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data);return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
+async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data==null?data:JSON.parse(JSON.stringify(data)));return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
 // --- QUEUE HELPERS ---
@@ -1598,7 +1597,50 @@ async function persistUsd(tx,removeId){
   if(ok){usdPendQ=usdPendQ.filter(p=>p.path!==usdPath(removeId||tx?.id));saveLocal();setStatus('online','● Sincronizado');}
   else{if(removeId)enqueue('usd','remove',usdPath(removeId),null);else if(tx)enqueue('usd','set',usdPath(tx.id),tx);setStatus('offline','⚠ Offline');}
 }
-// pushSettingsDebounced was removed — all calls use pushSettings() directly
+// --- SETTINGS: armar y aplicar en un solo lugar ---
+// Firebase no acepta . # $ / [ ] en las claves. Se codifican de forma reversible
+// (antes se cambiaban por "_" y se perdía el nombre real, ej. "Freelance / Honorarios").
+function encKey(k){return String(k).replace(/[%.#$/\[\]]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0'));}
+function decKey(k){try{return decodeURIComponent(k);}catch{return k;}}
+function encKeys(obj){const o={};Object.entries(obj||{}).forEach(([k,v])=>{o[encKey(k)]=v;});return o;}
+function decKeys(obj){const o={};Object.entries(obj||{}).forEach(([k,v])=>{o[decKey(k)]=v;});return o;}
+// v2: el payload siempre trae todas las listas, así que una que falta significa vacía
+// (Firebase no guarda listas vacías). Sin v (versiones viejas) no se pisa lo local.
+const SETTINGS_V=2;
+function buildSettingsPayload(ts){
+  return{
+    v:SETTINGS_V,
+    customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
+    hiddenCats:[...hiddenCats],
+    renamedCats:encKeys(renamedCats),
+    catTypes:encKeys(catTypes),
+    catIcons:encKeys(loadIconOverrides()),
+    budgets:encKeys(budgets),
+    persons,accounts,transfers,goals,
+    updatedAt:ts
+  };
+}
+function applySettings(raw){
+  const full=(raw.v||0)>=2;
+  const has=k=>full||raw[k]!=null;
+  if(has('customCats'))  cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
+  if(has('hiddenCats'))  hiddenCats=new Set(raw.hiddenCats||[]);
+  if(has('renamedCats')) renamedCats=decKeys(raw.renamedCats);
+  if(has('catTypes'))    catTypes=normalizeCatTypes(decKeys(raw.catTypes));
+  if(has('catIcons'))    saveIconOverrides(decKeys(raw.catIcons));
+  if(has('persons'))     persons=raw.persons||[];
+  if(raw.accounts!=null) accounts=raw.accounts;else if(full)accounts=[];
+  if(has('transfers'))   transfers=raw.transfers||[];
+  if(has('budgets'))     budgets=decKeys(raw.budgets);
+  if(has('goals'))       goals=raw.goals||[];
+  if(raw.updatedAt) localStorage.setItem(lsKey('gp_settings_ts'),String(raw.updatedAt));
+  localStorage.removeItem('gp_settings_pending');
+  saveLocal();saveAccounts();saveBudgets();saveGoals();
+  renderAll();
+  if(activeTab==='cuentas')renderCuentasTab();
+}
+// Todos los envíos de esta pestaña: su eco se ignora aunque lleguen varios seguidos
+const _myPushIds=new Set();
 async function pushSettings(){
   if(!db||!currentUID)return;
   const ts=Date.now();
@@ -1609,20 +1651,9 @@ async function pushSettings(){
     localStorage.setItem('gp_settings_pending','1');
     return;
   }
-  const pushId=DEVICE_ID+'_'+ts;
-  _lastPushedSettingsId=pushId;
-  const catIcons=loadIconOverrides();
-  const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
-  const payload={
-    customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
-    hiddenCats:[...hiddenCats],
-    renamedCats:sanitizeKeys(renamedCats),
-    catTypes:sanitizeKeys(catTypes),
-    catIcons:sanitizeKeys(catIcons),
-    persons,accounts,transfers,budgets,goals,
-    updatedAt:ts,
-    _pushId:pushId  // echo detection
-  };
+  const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
+  _myPushIds.add(pushId);
+  const payload={...buildSettingsPayload(ts),_pushId:pushId};
   const ok=await fbSet(settingsPath(),payload);
   if(ok){
     localStorage.removeItem('gp_settings_pending');
@@ -1679,6 +1710,15 @@ function doLogout(){
 }
 
 // --- FIREBASE INIT + LISTENERS ---
+// Firebase vacío: si este dispositivo ya había recibido datos, se borraron en otro
+// (borrar el último gasto, "Borrar todos mis datos") y se respeta. Solo si nunca
+// recibió nada se suben los datos locales (los de antes de tener sincronización).
+function syncedKey(kind){return lsKey('gp_synced_'+kind);}
+function onEmptyRemote(kind,list,queue,pathFn){
+  if(localStorage.getItem(syncedKey(kind)))return queue.filter(p=>p.op==='set').map(p=>p.data);
+  if(fbOnline)list.forEach(x=>fbSet(pathFn(x.id),x));
+  return list;
+}
 function attachListeners(){
   if(!db||!currentUID)return;
   if(arsListener)db.ref(arsBase()).off('value',arsListener);
@@ -1694,12 +1734,11 @@ function attachListeners(){
       rows=rows.filter(e=>!pRem.has(e.id));
       for(const p of pendingQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(e=>e.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
       expenses=rows;
+      localStorage.setItem(syncedKey('ars'),'1');
       saveLocal();renderAll();
-    }else if(fbOnline&&expenses.length>0){
-      // Firebase returned null but we have local data — push it up
-      expenses.forEach(e=>fbSet(arsPath(e.id),e));
+    }else if(expenses.length>0){
+      expenses=onEmptyRemote('ars',expenses,pendingQ,arsPath);saveLocal();renderAll();
     }
-    // If Firebase returns null and we have no local data, don't wipe — just wait
   },err=>{console.warn('[FB] gastos:',err);fbReady=true;});
 
   usdListener=db.ref(usdBase()).on('value',snap=>{
@@ -1710,8 +1749,8 @@ function attachListeners(){
       const pRem=new Set(usdPendQ.filter(p=>p.op==='remove').map(p=>p.path.split('/').pop()));
       rows=rows.filter(t=>!pRem.has(t.id));
       for(const p of usdPendQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(t=>t.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
-      usdTx=rows;saveLocal();renderAll();
-    }else if(fbOnline&&usdTx.length>0){usdTx.forEach(t=>fbSet(usdPath(t.id),t));}
+      usdTx=rows;localStorage.setItem(syncedKey('usd'),'1');saveLocal();renderAll();
+    }else if(usdTx.length>0){usdTx=onEmptyRemote('usd',usdTx,usdPendQ,usdPath);saveLocal();renderAll();}
   },err=>console.warn('[FB] usd:',err));
 
   debtListener=db.ref(debtBase()).on('value',snap=>{
@@ -1722,8 +1761,8 @@ function attachListeners(){
       const pRem=new Set(debtPendQ.filter(p=>p.op==='remove').map(p=>p.path.split('/').pop()));
       rows=rows.filter(d=>!pRem.has(d.id));
       for(const p of debtPendQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(d=>d.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
-      debts=rows;saveLocal();renderAll();
-    }else if(fbOnline&&debts.length>0){debts.forEach(d=>fbSet(debtPath(d.id),d));}
+      debts=rows;localStorage.setItem(syncedKey('debt'),'1');saveLocal();renderAll();
+    }else if(debts.length>0){debts=onEmptyRemote('debt',debts,debtPendQ,debtPath);saveLocal();renderAll();}
   },err=>console.warn('[FB] debts:',err));
 
   // Settings listener — always applies Firebase data when it arrives
@@ -1733,29 +1772,11 @@ function attachListeners(){
     const raw=snap.val();
     if(!raw)return;
 
-    // Skip if this is the echo of our own push
-    if(raw._pushId && raw._pushId===_lastPushedSettingsId){
-      _lastPushedSettingsId=null; // consume the echo
-      return;
-    }
-
-    // Apply all settings from Firebase
-    if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
-    if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
-    if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
-    if(raw.catTypes)     catTypes=normalizeCatTypes(raw.catTypes||{});
-    if(raw.catIcons)     localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(raw.catIcons));
-    if(raw.persons)      persons=raw.persons||[];
-    if(raw.accounts)     accounts=raw.accounts||[...DEF_ACCOUNTS];
-    if(raw.transfers)    transfers=raw.transfers||[];
-    if(raw.budgets)      budgets=raw.budgets||{};
-    if(raw.goals)        goals=raw.goals||[];
-
-    if(raw.updatedAt) localStorage.setItem(lsKey('gp_settings_ts'), String(raw.updatedAt));
-    localStorage.removeItem('gp_settings_pending');
-    saveLocal();saveAccounts();saveBudgets();saveGoals();
-    renderAll();
-    if(activeTab==='cuentas')renderCuentasTab();
+    // Eco de un envío propio: lo local ya está igual o más nuevo
+    if(raw._pushId && _myPushIds.has(raw._pushId))return;
+    // Hay cambios locales sin subir: no pisarlos; se suben al reconectar
+    if(localStorage.getItem('gp_settings_pending'))return;
+    applySettings(raw);
   },err=>console.warn('[FB] settings:',err));
 }
 
@@ -1796,7 +1817,10 @@ function initFirebase(){
         // Only push settings on login if there are LOCAL changes pending upload
         // (don't push on every login — it would overwrite Firebase with stale local data
         //  before the settings listener has a chance to pull the latest from server)
-        setTimeout(()=>{
+        setTimeout(async()=>{
+          // Lo cargado sin conexión en la sesión anterior: .info/connected suele llegar
+          // antes que los datos (fbReady), así que esa subida no se hacía al entrar
+          if(fbOnline&&currentUID){await flushQueueFor('ars');await flushQueueFor('usd');await flushQueueFor('debt');}
           if(localStorage.getItem('gp_settings_pending')){
             console.log('[Settings] Pending changes found — pushing to Firebase');
             pushSettings();
@@ -1970,16 +1994,11 @@ async function forcePushSettings(btn){
     await currentUser.getIdToken(true);
 
     
-    const catIcons=loadIconOverrides();
-    const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
-    const payload={
-      customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
-      hiddenCats:[...hiddenCats],renamedCats:sanitizeKeys(renamedCats),
-      catTypes:sanitizeKeys(catTypes),catIcons:sanitizeKeys(catIcons),
-      persons,accounts,transfers,budgets,goals,
-      updatedAt:Date.now()
-    };
-    const ok=await fbSet(settingsPath(),payload);
+    const ts=Date.now();
+    const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
+    _myPushIds.add(pushId);
+    localStorage.setItem(lsKey('gp_settings_ts'),String(ts));
+    const ok=await fbSet(settingsPath(),{...buildSettingsPayload(ts),_pushId:pushId});
     if(!ok)throw Object.assign(new Error('fbSet failed'),{userMsg:'No se pudo subir la configuración. Cerrá sesión y volvé a entrar.'});
     localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.textContent='✅';
@@ -2004,21 +2023,7 @@ async function forceSyncSettings(btn){
     const snap=await db.ref(settingsPath()).once('value');
     const raw=snap.val();
     if(raw){
-      if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
-      if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
-      if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
-      if(raw.catTypes)     catTypes=normalizeCatTypes(raw.catTypes||{});
-      if(raw.catIcons)     localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(raw.catIcons));
-      if(raw.persons)      persons=raw.persons||[];
-      if(raw.accounts)     accounts=raw.accounts||[...DEF_ACCOUNTS];
-      if(raw.transfers)    transfers=raw.transfers||[];
-      if(raw.budgets)      budgets=raw.budgets||{};
-      if(raw.goals)        goals=raw.goals||[];
-      if(raw.updatedAt)    localStorage.setItem(lsKey('gp_settings_ts'),String(raw.updatedAt));
-      localStorage.removeItem('gp_settings_pending');
-      saveLocal();saveAccounts();saveBudgets();saveGoals();
-      renderAll();
-      if(activeTab==='cuentas')renderCuentasTab();
+      applySettings(raw);
       toast('✅ Datos actualizados desde el servidor');
     } else {
       toast('ℹ Sin configuración en el servidor aún');
