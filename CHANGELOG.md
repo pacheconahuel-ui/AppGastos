@@ -2,6 +2,21 @@
 
 ## 2.9 — noviembre 2026
 
+### Nuevo
+- **Respaldo completo** (Perfil → Respaldo): descargar todos los datos en un archivo JSON y restaurarlos. Antes de restaurar se descarga solo un respaldo de lo que había.
+- **Asignar billetera:** el aviso "N movimientos sin billetera" ahora se toca y lista esos movimientos (de todos los meses) para elegirles la billetera.
+- **Funciona sin conexión:** la app abre aunque no haya internet (se guarda la última versión y las librerías).
+- **Reglas de Firebase con validación** de la forma de los datos (`database.rules.json`; se publican a mano, ver README).
+
+### Arreglos de datos y sincronización
+- **Gastos compartidos:** editar un gasto con split volvía a crear las deudas (la persona quedaba debiendo el doble o más). Ahora se actualizan, y borrar el gasto borra sus deudas sin saldar.
+- **Saldar deudas:** un pago parcial no descontaba nada; ahora queda como "Pago parcial". Cuando el que paga sos vos, sale de la billetera elegida.
+- **Tarjeta:** editar un gasto ya pagado lo volvía a poner en el próximo resumen.
+- **Cuotas y fijos del 29 al 31** salteaban un mes (31/01 → 31/03).
+- **Gastos en dólares** se sumaban como pesos (U$S 10 = $10). Ahora se pasan a pesos con su cotización; los que no tienen cotización se muestran aparte.
+- **Sincronización:** borrar lo último de una lista (transferencias, billeteras, contactos, metas, presupuestos) no llegaba a los otros dispositivos; borrar el único gasto hacía que el otro dispositivo lo volviera a subir; un presupuesto en una categoría con "/" impedía subir toda la configuración.
+- Categorías con apóstrofo ("Mc Donald's") no se podían elegir.
+
 - **Aviso al guardar un movimiento sin billetera.** Si tenés billeteras y dejás "Sin asignar", la app avisa que ese movimiento no va a contar en ningún saldo; con un segundo toque en Guardar se guarda igual. En la lista, esos movimientos llevan la etiqueta *Sin billetera*. (Caso real: un sueldo guardado sin billetera y un gasto en Mercado Pago dejaban la billetera en negativo.)
 - **La fecha del día ya no salta a mañana de noche.** Se tomaba en hora UTC, así que después de las 21 h un gasto nuevo (y transferencias, deudas, pagos de tarjeta, recurrentes y carga rápida) quedaba con la fecha del día siguiente. Ahora se usa la hora del celular.
 - **Diálogo de confirmación arreglado.** Después de abrir (y cancelar) "Borrar todos mis datos", el siguiente borrado de un gasto, deuda, billetera, transferencia, categoría, contacto o meta mostraba ese mismo diálogo ("Sí, borrar todo") y no borraba nada hasta recargar la app. Ahora cada diálogo arma su título y sus botones, y la acción confirmada puede usar los datos del formulario.

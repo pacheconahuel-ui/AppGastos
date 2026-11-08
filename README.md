@@ -33,6 +33,14 @@ Solo cuentan los movimientos **que tienen esa billetera elegida**. Un movimiento
 - **Firebase y Chart.js** se cargan desde CDN (`<script>` al principio de `index.html`).
 - **Publicación:** GitHub Pages sirve la rama `main` tal cual. Cada push a `main` se publica solo, en uno o dos minutos.
 
+## Reglas de Firebase
+
+`database.rules.json` no se publica solo. Para aplicarlo: consola de Firebase → Realtime Database → Reglas → pegar el contenido → Publicar. Cada usuario solo lee y escribe `usuarios/{su uid}`, y se valida la forma de gastos, USD, deudas y configuración.
+
+## Respaldo
+
+Perfil → Respaldo → **Descargar respaldo completo** baja un JSON con todo. **Restaurar un respaldo** reemplaza todos los datos por los del archivo (antes descarga uno de lo actual).
+
 ## Versión
 
 La versión está en **una sola constante**: `APP_VERSION` al principio del `<script>` de `index.html`. Se muestra en el encabezado y le da nombre a la caché del service worker (`sw.js?v=...`), así que **subirla hace que los celulares vean "Nueva versión disponible"**.
