@@ -9,10 +9,10 @@ Estado a **noviembre 2026**: versión **2.9**, en uso. Toda la app está en `ind
 - [x] README y ROADMAP.
 - [x] Errores en castellano en lugar del mensaje técnico.
 - [x] Aviso al guardar sin billetera.
+- [x] Fecha del día en hora local (antes, después de las 21 h quedaba la de mañana).
 
 ## Fase 2 — Robustez
 
-- [ ] **Fecha del día en hora argentina.** Hoy se usa `toISOString()` (hora UTC) en 11 lugares: después de las 21 h, un gasto nuevo queda con la fecha de mañana.
 - [ ] **Diálogo de confirmación (`showConf`).** Pasa la función como texto (`onConfirm.toString()`), así que las confirmaciones que usan variables locales fallan. Arreglarlo y devolverle la confirmación a las transferencias.
 - [ ] **Respaldo completo:** exportar e importar todos los datos en JSON (hoy solo hay CSV del mes).
 - [ ] **Sincronización entre dispositivos:** revisar el sistema de deviceId + pushId (2.8) y cerrarlo con pruebas.

@@ -2138,6 +2138,8 @@ function fmtU(n){return'U$S '+(Math.round(n*100)/100).toLocaleString('es-AR');}
 function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
 function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}`;}
 function monthKey(d){return d?d.slice(0,7):'';}
+// Fecha de hoy (YYYY-MM-DD) en la hora del celular; toISOString() da la de UTC y después de las 21 h en Argentina ya es mañana
+function todayStr(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
 function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}
 function icon(cat){return ICONS[cat]||'📌';}
@@ -2865,7 +2867,7 @@ function onAccountSelected(){
 function openModal(data=null){
   document.getElementById('m-title').textContent=data?'Editar Gasto':'Nuevo Gasto';
   document.getElementById('f-id').value=data?.id||'';
-  document.getElementById('f-date').value=data?.date||new Date().toISOString().split('T')[0];
+  document.getElementById('f-date').value=data?.date||todayStr();
   document.getElementById('f-desc').value=data?.description||'';
   document.getElementById('f-notes').value=data?.notes||'';
   document.getElementById('f-amt').value=data?.amount||'';
@@ -3159,7 +3161,7 @@ async function saveExpense(){
 function openUsdModal(data){
   document.getElementById('usd-m-title').textContent=data?'Editar movimiento USD':'Nuevo movimiento USD';
   document.getElementById('uf-id').value=data?.id||'';
-  document.getElementById('uf-date').value=data?.date||new Date().toISOString().split('T')[0];
+  document.getElementById('uf-date').value=data?.date||todayStr();
   document.getElementById('uf-usd').value=data?.usdAmount||'';
   document.getElementById('uf-ars').value=data?.arsAmount||'';
   document.getElementById('uf-desc').value=data?.description||'';
@@ -3300,7 +3302,7 @@ async function saveUsdTx(){
 // --- MODAL DEUDA MANUAL ---
 function openDebtModal(data){
   document.getElementById('df-id').value=data?.id||'';
-  document.getElementById('df-date').value=data?.date||new Date().toISOString().split('T')[0];
+  document.getElementById('df-date').value=data?.date||todayStr();
   document.getElementById('df-amt').value=data?Math.abs(data.amount):'';
   document.getElementById('df-desc').value=data?.description||'';
   buildDebtPersonSelect();
@@ -3382,7 +3384,7 @@ function openSettleModal(personId){
     bal<0?`Le debés ${fmt(Math.abs(bal))}`:
     `${activeDebts.length} deuda${activeDebts.length!==1?'s':''} activa${activeDebts.length!==1?'s':''} (saldo neto $0)`;
   document.getElementById('settle-amt').value=Math.abs(bal)||activeDebts.reduce((s,d)=>s+Math.abs(d.amount),0);
-  document.getElementById('settle-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('settle-date').value=todayStr();
   const accSel=document.getElementById('settle-acc');
   const accWrap=document.getElementById('settle-acc-wrap');
   if(bal>=0&&arsWallets().length>0){
@@ -3742,7 +3744,7 @@ async function confirmRecurring(templateId){
   }
 
   // Wallet recurring — crear copia para este mes
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayStr();
   const exp={
     ...tmpl,
     id:newId(),
@@ -3762,7 +3764,7 @@ async function confirmRecurring(templateId){
 function editRecurringAmt(templateId){
   const tmpl=expenses.find(e=>e.id===templateId);
   if(!tmpl)return;
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayStr();
   // Open pre-filled modal — user can change amount, then save
   openModal({...tmpl,id:null,date:today,ccPaid:false});
   // After save, the new expense is added and won't show in reminders
@@ -3777,7 +3779,7 @@ function getPrevMonth(mk){
 function preloadRecurring(templateId){
   const tmpl=expenses.find(e=>e.id===templateId);
   if(!tmpl)return;
-  openModal({...tmpl,id:null,date:new Date().toISOString().split('T')[0]});
+  openModal({...tmpl,id:null,date:todayStr()});
 }
 
 // --- MONTH COMPARISON CHART ---
@@ -4238,7 +4240,7 @@ function openCCPayModal(accId){
   document.getElementById('cc-pay-title').textContent=`💳 Pagar ${a.name}`;
   document.getElementById('ccp-real-ars').value='';
   document.getElementById('ccp-real-usd').value='';
-  document.getElementById('ccp-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ccp-date').value=todayStr();
   document.getElementById('ccp-subtotal-ars').textContent=fmt(totalARS);
   const usdRow=document.getElementById('ccp-usd-subtotal-row');
   usdRow.style.display=totalUSD>0?'flex':'none';
@@ -4375,7 +4377,7 @@ function openTransferModal(){
   if(wallets.length>1)document.getElementById('tf-to').selectedIndex=1;
   document.getElementById('tf-amt').value='';
   document.getElementById('tf-desc').value='';
-  document.getElementById('tf-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('tf-date').value=todayStr();
   document.getElementById('transfer-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('tf-amt').focus(),200);
 }
@@ -4526,7 +4528,7 @@ async function saveQuickAdd(){
   const amt=parseFloat(document.getElementById('qa-amt').value);
   if(!amt||amt<=0){toast('⚠️ Ingresá el monto');return;}
   if(!_qaCat){toast('⚠️ Elegí una categoría');return;}
-  const exp={id:newId(),type:'Egreso',date:new Date().toISOString().split('T')[0],category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
+  const exp={id:newId(),type:'Egreso',date:todayStr(),category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
   expenses.push(exp);haptic();closeQuickAdd();renderAll();toast(`✅ ${icon(_qaCat)} ${fmt(amt)} en ${_qaCat}`);
   skipNextArs=fbOnline;await persistArs(exp,null);
 }
@@ -4636,7 +4638,7 @@ async function saveAdjust(){
   const exp = {
     id: newId(),
     type: diff > 0 ? 'Ingreso' : 'Egreso',
-    date: new Date().toISOString().split('T')[0],
+    date: todayStr(),
     category: diff > 0 ? 'Sueldo' : 'Otro',
     description: `Ajuste de saldo — ${acc?.name}`,
     amount: Math.abs(diff), myAmount: Math.abs(diff),
