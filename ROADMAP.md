@@ -21,11 +21,11 @@ Estado a **noviembre 2026**: versión **2.9**, en uso. Toda la app está en `ind
 - [x] "Asignar billetera" desde el aviso.
 - [x] Auditoría: deudas duplicadas al editar, pagos parciales, tarjeta pagada, cuotas del 31, USD como pesos, apóstrofos.
 
-## Decisiones pendientes (hacen cambiar los números del resumen)
+## Decisiones de cómo se cuenta el mes ✅ (2.9)
 
-- [ ] **Tarjeta contada dos veces en el resumen del mes:** la compra con tarjeta es un gasto y el "Pago resumen" también (categoría Servicios). Propuesta: el pago del resumen descuenta de la billetera pero no cuenta como gasto del mes.
-- [ ] **Comprar dólares cuenta como gasto** (egreso "Otro" en pesos) y venderlos como ingreso. Propuesta: tratarlos como cambio de moneda, fuera del gasto e ingreso del mes.
-- [ ] **Deudas duplicadas que ya existen** por el bug de editar gastos compartidos: detectarlas (misma persona y mismo gasto) y ofrecer limpiarlas.
+- [x] El pago del resumen de la tarjeta no cuenta como gasto del mes (las compras ya cuentan); sigue restando de la billetera.
+- [x] Comprar o vender USD es un cambio de moneda, fuera del gasto e ingreso del mes.
+- [x] Aviso en Saldos para limpiar las deudas repetidas que ya existían.
 
 ## Fase 3 — Estructura
 

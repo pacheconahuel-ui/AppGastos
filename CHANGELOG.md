@@ -8,6 +8,12 @@
 - **Funciona sin conexión:** la app abre aunque no haya internet (se guarda la última versión y las librerías).
 - **Reglas de Firebase con validación** de la forma de los datos (`database.rules.json`; se publican a mano, ver README).
 
+### Cambia cómo se cuenta el mes
+- **El pago del resumen de la tarjeta ya no cuenta como gasto del mes:** las compras con tarjeta ya se contaban, así que se sumaba dos veces (y el pago inflaba "Servicios"). Sigue restando de la billetera con la que pagaste.
+- **Comprar o vender dólares no es gasto ni ingreso del mes:** es un cambio de moneda. Los pesos siguen saliendo o entrando de la billetera.
+- En la lista, esos movimientos llevan la etiqueta *Pago de tarjeta* o *Cambio de moneda · no suma al mes*. Se aplica también a los que ya estaban cargados.
+- **Limpiar deudas repetidas:** en Saldos aparece un aviso si hay deudas duplicadas por el error de editar gastos compartidos. Al tocarlo muestra cuánto sobra por persona y, al confirmar, deja solo la última versión de cada gasto.
+
 ### Arreglos de datos y sincronización
 - **Gastos compartidos:** editar un gasto con split volvía a crear las deudas (la persona quedaba debiendo el doble o más). Ahora se actualizan, y borrar el gasto borra sus deudas sin saldar.
 - **Saldar deudas:** un pago parcial no descontaba nada; ahora queda como "Pago parcial". Cuando el que paga sos vos, sale de la billetera elegida.

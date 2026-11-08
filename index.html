@@ -2239,6 +2239,12 @@ function effAmt(e){return e.myAmount!=null?e.myAmount:(e.shared?e.amount*(e.shar
 // Movimientos en USD: pesos según la cotización cargada (0 si no tiene). Antes se sumaban U$S como si fueran $.
 function usdRate(e){if(e.currency!=='USD')return 1;if(e.arsEquiv&&e.amount)return e.arsEquiv/e.amount;return e.exchangeRate||0;}
 function effArs(e){return effAmt(e)*usdRate(e);}
+// Movimientos que mueven plata entre cuentas pero no son gasto ni ingreso del mes:
+// el pago del resumen de la tarjeta (las compras ya se contaron) y la compra/venta de USD.
+// Siguen sumando y restando en el saldo de cada billetera.
+function isCCPayment(e){return !!e.ccPayment||(e.description||'').startsWith('Pago resumen ');}
+function isFxEntry(e){return !!e.fxOp||usdTx.some(t=>t.linkedArsId===e.id);}
+function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e);}
 function amtArs(e){return e.amount*usdRate(e);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
 // Texto como argumento de un onclick="...": comillas de JS + escape HTML (un ' en el nombre ya no rompe el botón)
@@ -2298,7 +2304,7 @@ function personById(id){return persons.find(p=>p.id===id);}
 
 // --- CALC ARS ---
 function calcSummary(mk){
-  const rows=expenses.filter(e=>monthKey(e.date)===mk);
+  const rows=expenses.filter(e=>monthKey(e.date)===mk&&countsInMonth(e));
   let ing=0,pag=0,real=0;
   let usdNoRate=0;
   rows.forEach(e=>{
@@ -2309,8 +2315,39 @@ function calcSummary(mk){
 }
 function calcByCat(mk){
   const map={};
-  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').forEach(e=>{map[e.category]=(map[e.category]||0)+effArs(e);});
+  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).forEach(e=>{map[e.category]=(map[e.category]||0)+effArs(e);});
   return map;
+}
+
+// --- DEUDAS REPETIDAS ---
+// Hasta la 2.8, editar un gasto compartido creaba otra deuda por persona cada vez.
+// Por cada gasto y persona queda la más nueva (la del último guardado); las demás
+// sin saldar son repetidas.
+function duplicateSplitDebts(){
+  const groups={};
+  debts.filter(d=>d.linkedExpenseId&&!d.settled).forEach(d=>{(groups[d.linkedExpenseId+'|'+d.personId]??=[]).push(d);});
+  const out=[];
+  Object.values(groups).forEach(g=>{
+    if(g.length<2)return;
+    g.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    out.push(...g.slice(1));
+  });
+  return out;
+}
+function confirmCleanDuplicates(){
+  const dups=duplicateSplitDebts();
+  if(!dups.length)return;
+  const byPerson={};dups.forEach(d=>{byPerson[d.personName||'?']=(byPerson[d.personName||'?']||0)+d.amount;});
+  const lines=Object.entries(byPerson).map(([n,a])=>`• ${n}: ${a>0?'te debe':'le debés'} ${fmt(Math.abs(a))} de más`).join('\n');
+  showConf('🧹','Limpiar deudas repetidas',
+    `Se borran ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''}. De cada gasto queda la última versión.\n\n${lines}`,
+    async()=>{
+      const ids=new Set(dups.map(d=>d.id));
+      debts=debts.filter(d=>!ids.has(d.id));
+      renderAll();
+      for(const id of ids){skipNextDebt=fbOnline;await persistDebt(null,id);}
+      toast(`🧹 ${ids.size} deuda${ids.size>1?'s':''} repetida${ids.size>1?'s':''} borrada${ids.size>1?'s':''}`);
+    },'Limpiar');
 }
 
 // --- CALC DEBTS ---
@@ -2511,8 +2548,13 @@ function renderSaldosTab(){
   });
 
   let html='';
+  const dups=duplicateSplitDebts();
+  if(dups.length){
+    const total=dups.reduce((s,d)=>s+d.amount,0);
+    html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:rgba(251,191,36,.08);border-radius:12px;border:1px solid rgba(251,191,36,.25)">⚠️ ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
+  }
   if(visiblePersons.length===0){
-    html='<div class="empty"><div class="empty-ico">🤝</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
+    html+='<div class="empty"><div class="empty-ico">🤝</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
   } else {
     visiblePersons.forEach(p=>{
       const bal=personBalance(p.id);
@@ -2650,6 +2692,7 @@ function expHTML(e,actions){
   const hasSplit=e.splits&&e.splits.length>0;
   const splitBadge=hasSplit?`<span class="badge sh">🤝 ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
+  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?'💳 Pago de tarjeta':'💱 Cambio de moneda'} · no suma al mes</span>`:'';
   const recurBadge=e.recurring?'<span class="badge" style="background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.25)">🔁</span>':'';
   const usdBadge=e.currency==='USD'?`<span class="badge" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.25)">U$S ${e.amount}</span>`:'';
   const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border-color:rgba(251,191,36,.25)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
@@ -2664,7 +2707,7 @@ function expHTML(e,actions){
     <div class="exp-info">
       <div class="exp-desc">${esc(displayName(e.description||e.category))} ${pending}</div>
       ${notesLine}
-      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}</div>
+      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>
     </div>
     <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${e.currency==='USD'&&!usdRate(e)?fmtU(effAmt(e)):fmt(effArs(e))}</div>${btns}</div>
   </div>`;
@@ -3383,7 +3426,7 @@ async function saveUsdTx(){
       amount:ars,myAmount:ars,shared:false,sharedPercent:100,
       accountId:arsAccountId||null,
       createdAt:expenses.find(e=>e.id===arsId)?.createdAt||Date.now(),
-      updatedAt:Date.now(),autoGenerated:true};
+      updatedAt:Date.now(),autoGenerated:true,fxOp:true};
     const ei=expenses.findIndex(e=>e.id===arsId);if(ei>-1)expenses[ei]=arsEntry;else expenses.push(arsEntry);
     skipNextArs=fbOnline;await persistArs(arsEntry,null);
 
@@ -3395,7 +3438,7 @@ async function saveUsdTx(){
       amount:ars,myAmount:ars,shared:false,sharedPercent:100,
       accountId:arsAccountId||null,   // pesos leave this wallet
       createdAt:expenses.find(e=>e.id===arsId)?.createdAt||Date.now(),
-      updatedAt:Date.now(),autoGenerated:true};
+      updatedAt:Date.now(),autoGenerated:true,fxOp:true};
     const ei=expenses.findIndex(e=>e.id===arsId);if(ei>-1)expenses[ei]=arsEntry;else expenses.push(arsEntry);
     skipNextArs=fbOnline;await persistArs(arsEntry,null);
 
@@ -3936,8 +3979,8 @@ function renderMonthlyChart(){
     months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   }
   const labels=months.map(mk=>{ const[,m]=mk.split('-'); return['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(m)-1]; });
-  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effArs(e),0));
-  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+amtArs(e),0));
+  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).reduce((s,e)=>s+effArs(e),0));
+  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0));
   const box=document.getElementById('monthly-chart-box');
   if(gastos.every(v=>v===0)&&ingresos.every(v=>v===0)){box.classList.add('hidden');return;}
   box.classList.remove('hidden');
@@ -3968,10 +4011,10 @@ function renderProjection(){
   const dayOfMonth=today.getDate();
   const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
   if(dayOfMonth<3){document.getElementById('proj-card').style.display='none';return;}
-  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effArs(e),0);
+  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).reduce((s,e)=>s+effArs(e),0);
   const dailyRate=spentSoFar/dayOfMonth;
   const projected=Math.round(dailyRate*daysInMonth);
-  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+amtArs(e),0);
+  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
   const projCard=document.getElementById('proj-card');
   const projVal=document.getElementById('c-proj');
   const projHint=document.getElementById('c-proj-hint');
@@ -4462,7 +4505,7 @@ async function saveCCPayment(){
     const exp={
       id:newId(),type:'Egreso',date,
       category:'Servicios',
-      description:`Pago resumen ${a.name}`,
+      description:`Pago resumen ${a.name}`,ccPayment:true,
       amount:payARS,myAmount:payARS,
       accountId:walletArsId||null,
       currency:'ARS',shared:false,sharedPercent:100,
@@ -4477,7 +4520,7 @@ async function saveCCPayment(){
     const usdEntry={
       id:newId(),type:'Egreso',date,
       category:'Servicios',
-      description:`Pago resumen ${a.name} (USD)`,
+      description:`Pago resumen ${a.name} (USD)`,ccPayment:true,
       amount:payUSD,myAmount:payUSD,
       accountId:walletUsdId||null,
       currency:'USD',shared:false,sharedPercent:100,
@@ -4665,7 +4708,7 @@ function deleteGoal(id){
 
 // --- STATS ---
 function renderStats(mk){
-  const rows=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso');
+  const rows=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e));
   if(!rows.length){document.getElementById('stats-grid').style.display='none';return;}
   const{ing,real}=calcSummary(mk);
   const rate=ing>0?Math.round((1-real/ing)*100):0;
