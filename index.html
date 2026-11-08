@@ -2236,6 +2236,10 @@ function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMon
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}
 function icon(cat){return ICONS[cat]||'📌';}
 function effAmt(e){return e.myAmount!=null?e.myAmount:(e.shared?e.amount*(e.sharedPercent/100):e.amount);}
+// Movimientos en USD: pesos según la cotización cargada (0 si no tiene). Antes se sumaban U$S como si fueran $.
+function usdRate(e){if(e.currency!=='USD')return 1;if(e.arsEquiv&&e.amount)return e.arsEquiv/e.amount;return e.exchangeRate||0;}
+function effArs(e){return effAmt(e)*usdRate(e);}
+function amtArs(e){return e.amount*usdRate(e);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function newId(){return String(Date.now())+Math.random().toString(36).slice(2,6);}
@@ -2294,12 +2298,16 @@ function personById(id){return persons.find(p=>p.id===id);}
 function calcSummary(mk){
   const rows=expenses.filter(e=>monthKey(e.date)===mk);
   let ing=0,pag=0,real=0;
-  rows.forEach(e=>{if(e.type==='Ingreso'){ing+=e.amount;}else{pag+=e.amount;real+=effAmt(e);}});
-  return{ing,pag,real,bal:ing-real};
+  let usdNoRate=0;
+  rows.forEach(e=>{
+    if(e.currency==='USD'&&!usdRate(e)&&e.type!=='Ingreso')usdNoRate+=effAmt(e);
+    if(e.type==='Ingreso'){ing+=amtArs(e);}else{pag+=amtArs(e);real+=effArs(e);}
+  });
+  return{ing,pag,real,bal:ing-real,usdNoRate};
 }
 function calcByCat(mk){
   const map={};
-  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').forEach(e=>{map[e.category]=(map[e.category]||0)+effAmt(e);});
+  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').forEach(e=>{map[e.category]=(map[e.category]||0)+effArs(e);});
   return map;
 }
 
@@ -2350,9 +2358,10 @@ function renderDashboard(){
   const hdrSub=document.getElementById('hdr-month');
   if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v${APP_VERSION}</span>`;
 
-  const{ing,pag,real,bal}=calcSummary(mk);
+  const{ing,pag,real,bal,usdNoRate}=calcSummary(mk);
   const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
-  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag);
+  // Los gastos en USD sin cotización no se pueden pasar a pesos: se muestran aparte
+  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag)+(usdNoRate?' + '+fmtU(usdNoRate):'');
   const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real);
   const balEl=document.getElementById('c-bal');
   if(balEl){balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');}
@@ -2655,7 +2664,7 @@ function expHTML(e,actions){
       ${notesLine}
       <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}</div>
     </div>
-    <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${fmt(effAmt(e))}</div>${btns}</div>
+    <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${e.currency==='USD'&&!usdRate(e)?fmtU(effAmt(e)):fmt(effArs(e))}</div>${btns}</div>
   </div>`;
 }
 
@@ -3901,8 +3910,8 @@ function renderMonthlyChart(){
     months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   }
   const labels=months.map(mk=>{ const[,m]=mk.split('-'); return['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(m)-1]; });
-  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effAmt(e),0));
-  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+e.amount,0));
+  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effArs(e),0));
+  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+amtArs(e),0));
   const box=document.getElementById('monthly-chart-box');
   if(gastos.every(v=>v===0)&&ingresos.every(v=>v===0)){box.classList.add('hidden');return;}
   box.classList.remove('hidden');
@@ -3933,10 +3942,10 @@ function renderProjection(){
   const dayOfMonth=today.getDate();
   const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
   if(dayOfMonth<3){document.getElementById('proj-card').style.display='none';return;}
-  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effAmt(e),0);
+  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effArs(e),0);
   const dailyRate=spentSoFar/dayOfMonth;
   const projected=Math.round(dailyRate*daysInMonth);
-  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+e.amount,0);
+  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+amtArs(e),0);
   const projCard=document.getElementById('proj-card');
   const projVal=document.getElementById('c-proj');
   const projHint=document.getElementById('c-proj-hint');
@@ -4121,12 +4130,17 @@ function accountBalance(accId){
       if(t.type==='ingreso'||t.type==='compra') bal+=t.usdAmount;
       else if(t.type==='venta') bal-=t.usdAmount;
     });
+    // Gastos e ingresos en USD con esta billetera (ej. pago del resumen en dólares)
+    expenses.forEach(e=>{
+      if(e.accountId!==accId||e.currency!=='USD')return;
+      if(e.type==='Ingreso')bal+=e.amount;else bal-=effAmt(e);
+    });
   } else {
     // ARS wallet: balance from expenses
     expenses.forEach(e=>{
       if(e.accountId!==accId)return;
-      if(e.type==='Ingreso')bal+=e.amount;
-      else bal-=effAmt(e);
+      if(e.type==='Ingreso')bal+=amtArs(e);
+      else bal-=effArs(e);
     });
     transfers.forEach(t=>{
       if(t.fromId===accId)bal-=t.amount;
@@ -4627,7 +4641,7 @@ function renderStats(mk){
   const{ing,real}=calcSummary(mk);
   const rate=ing>0?Math.round((1-real/ing)*100):0;
   const today=new Date().getDate(),dailyAvg=today>0?Math.round(real/today):0;
-  const catMap={};rows.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+effAmt(e);});
+  const catMap={};rows.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+effArs(e);});
   const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
   document.getElementById('stats-grid').style.display='grid';
   document.getElementById('st-rate').textContent=ing>0?rate+'%':'—';
