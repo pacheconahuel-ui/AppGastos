@@ -3128,6 +3128,9 @@ async function saveExpense(){
   const theirTotal=splits.reduce((s,r)=>s+r.amount,0);
   const myAmount=splitPanelOpen&&splits.length>0?Math.max(0,amt-theirTotal):amt;
 
+  const prev=id?expenses.find(e=>e.id===id):null;
+  // Editar un gasto de tarjeta ya pagado no lo vuelve a poner en el próximo resumen
+  const keepPaid=!!(prev&&prev.ccPaid===true&&prev.accountId===accountId);
   const exp={
     id:id||newId(),type,date,category:cat,
     description:desc||cat,notes:notes||null,amount:amt,myAmount,
@@ -3139,7 +3142,7 @@ async function saveExpense(){
     cardExpType:acc?.type==='credit'?cardExpType:'one',
     installmentCurrent:cardExpType==='installment'?installmentCurrent:null,
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
-    ccPaid:false,
+    ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
     updatedAt:Date.now()
@@ -3153,20 +3156,29 @@ async function saveExpense(){
   skipNextArs=fbOnline;
   await persistArs(exp,null);
 
-  // Create debt records for each split person
-  if(splits.length>0&&type==='Egreso'){
-    for(const s of splits){
-      if(s.amount<=0)continue;
+  // Deudas del split: al editar se actualizan las que ya existían (antes se creaban
+  // de nuevo y la persona quedaba debiendo el doble). Las ya saldadas no se tocan.
+  const linked=id?debts.filter(d=>d.linkedExpenseId===exp.id&&!d.settled):[];
+  const wanted=type==='Egreso'?splits.filter(s=>s.amount>0):[];
+  if(wanted.length||linked.length){
+    for(const s of wanted){
+      const old=linked.find(d=>d.personId===s.personId);
       const debt={
-        id:newId(),personId:s.personId,personName:s.personName,
+        id:old?.id||newId(),personId:s.personId,personName:s.personName,
         description:desc||cat,amount:s.amount, // positive = they owe me
         date,settled:false,settledDate:null,
         linkedExpenseId:exp.id,
-        createdAt:Date.now(),updatedAt:Date.now()
+        createdAt:old?.createdAt||Date.now(),updatedAt:Date.now()
       };
-      debts.push(debt);
+      const i=debts.findIndex(d=>d.id===debt.id);
+      if(i>-1)debts[i]=debt;else debts.push(debt);
       skipNextDebt=fbOnline;
       await persistDebt(debt,null);
+    }
+    for(const d of linked.filter(d=>!wanted.some(s=>s.personId===d.personId))){
+      debts=debts.filter(x=>x.id!==d.id);
+      skipNextDebt=fbOnline;
+      await persistDebt(null,d.id);
     }
     renderSaldosTab();
   }
@@ -3519,8 +3531,13 @@ async function doDelete(){
     debts=debts.filter(d=>d.id!==id);renderSaldosTab();toast('🗑️ Deuda eliminada');
     skipNextDebt=fbOnline;await persistDebt(null,id);
   }else if(type==='ars'){
-    expenses=expenses.filter(e=>e.id!==id);renderAll();toast('🗑️ Gasto eliminado');
+    // Las deudas del split que todavía no se saldaron se van con el gasto
+    const linked=debts.filter(d=>d.linkedExpenseId===id&&!d.settled);
+    expenses=expenses.filter(e=>e.id!==id);
+    debts=debts.filter(d=>!linked.includes(d));
+    renderAll();toast(linked.length?`🗑️ Gasto eliminado (y ${linked.length} deuda${linked.length>1?'s':''} del split)`:'🗑️ Gasto eliminado');
     skipNextArs=fbOnline;await persistArs(null,id);
+    for(const d of linked){skipNextDebt=fbOnline;await persistDebt(null,d.id);}
   }else{
     const t=usdTx.find(x=>x.id===id);
     if(t?.linkedArsId){expenses=expenses.filter(e=>e.id!==t.linkedArsId);skipNextArs=fbOnline;await persistArs(null,t.linkedArsId);}
