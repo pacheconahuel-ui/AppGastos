@@ -2241,6 +2241,8 @@ function usdRate(e){if(e.currency!=='USD')return 1;if(e.arsEquiv&&e.amount)retur
 function effArs(e){return effAmt(e)*usdRate(e);}
 function amtArs(e){return e.amount*usdRate(e);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
+// Texto como argumento de un onclick="...": comillas de JS + escape HTML (un ' en el nombre ya no rompe el botón)
+function jsArg(s){return esc(JSON.stringify(String(s)));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function newId(){return String(Date.now())+Math.random().toString(36).slice(2,6);}
 function customCats(){return cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));}
@@ -2646,7 +2648,7 @@ function toggleZeroPersons(){
 function expHTML(e,actions){
   const ing=e.type==='Ingreso';
   const hasSplit=e.splits&&e.splits.length>0;
-  const splitBadge=hasSplit?`<span class="badge sh">🤝 ${e.splits.map(s=>s.personName).join(', ')}</span>`:'';
+  const splitBadge=hasSplit?`<span class="badge sh">🤝 ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
   const recurBadge=e.recurring?'<span class="badge" style="background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.25)">🔁</span>':'';
   const usdBadge=e.currency==='USD'?`<span class="badge" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.25)">U$S ${e.amount}</span>`:'';
@@ -3070,7 +3072,7 @@ function renderCatDropdown(q){
     dd.innerHTML=`<div class="cat-drop-empty">Sin resultados — tocá ＋ para crear "${q}"</div>`;
   } else {
     dd.innerHTML=filtered.map(c=>`
-      <div class="cat-drop-item" onclick="selectCat('${esc(c)}')">
+      <div class="cat-drop-item" onclick="selectCat(${jsArg(c)})">
         <span class="cat-drop-ico">${catIcon(c)}</span>
         <span>${esc(displayName(c))}</span>
       </div>`).join('');
@@ -3121,11 +3123,11 @@ function renderCatManager(){
       </div>
       <span class="cat-manager-badge">${catTypeFor(c)==='ingreso'?'Ingreso':'Egreso'}</span>
       <div class="cat-manager-actions">
-        <button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button>
-        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat('${esc(c)}')`:`renameCat('${esc(c)}')`}" title="Renombrar">✏️</button>
-        <button class="cat-mgr-btn" onclick="toggleCatType('${esc(c)}')" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${moveTo==='ingreso'?'📥':'📤'}</button>
-        <button class="cat-mgr-btn" onclick="toggleHideCat('${esc(c)}')" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?'＋':'👁'}</button>
-        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat('${esc(c)}')" title="Eliminar">🗑️</button>`}
+        <button class="cat-mgr-btn ico" onclick="editCatIcon(${jsArg(c)})" title="Cambiar ícono">🎨</button>
+        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat(${jsArg(c)})`:`renameCat(${jsArg(c)})`}" title="Renombrar">✏️</button>
+        <button class="cat-mgr-btn" onclick="toggleCatType(${jsArg(c)})" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${moveTo==='ingreso'?'📥':'📤'}</button>
+        <button class="cat-mgr-btn" onclick="toggleHideCat(${jsArg(c)})" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?'＋':'👁'}</button>
+        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat(${jsArg(c)})" title="Eliminar">🗑️</button>`}
       </div>
     </div>`;
   };
@@ -4561,13 +4563,13 @@ function renderBudgetsSection(){
   budgetCats.forEach(cat=>{
     const limit=budgets[cat],spent=catData[cat]||0,pct=Math.min(100,Math.round((spent/limit)*100));
     const cls=pct>=100?'over':pct>=80?'warn':'ok';
-    html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget('${esc(cat)}')" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">✕</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' ⚠️ Excedido':pct>=80?' ⚡ Cerca del límite':''}</div></div>`;
+    html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget(${jsArg(cat)})" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">✕</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' ⚠️ Excedido':pct>=80?' ⚡ Cerca del límite':''}</div></div>`;
   });
   el.innerHTML=html;
 }
 function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();renderBudgetsSection();}
 function openBudgetModal(){
-  document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
+  document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${esc(c)}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
   document.getElementById('bdg-amt').value='';
   document.getElementById('budget-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('bdg-amt').focus(),200);
@@ -4654,7 +4656,7 @@ function renderStats(mk){
 let _qaCat='';
 function openQuickAdd(){
   document.getElementById('qa-amt').value='';_qaCat='';
-  document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)&&catTypeFor(c)!=='ingreso').map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
+  document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)&&catTypeFor(c)!=='ingreso').map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat(${jsArg(c)})" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
   document.getElementById('qa-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('qa-amt').focus(),200);
 }
