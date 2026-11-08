@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **2.9**, en uso. Toda la app está en `index.html` (~4650 líneas).
+Estado a **noviembre 2026**: versión **3.0**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -27,12 +27,12 @@ Estado a **noviembre 2026**: versión **2.9**, en uso. Toda la app está en `ind
 - [x] Comprar o vender USD es un cambio de moneda, fuera del gasto e ingreso del mes.
 - [x] Aviso en Saldos para limpiar las deudas repetidas que ya existían.
 
-## Fase 3 — Estructura
+## Fase 3 — Estructura ✅ (3.0)
 
-- [ ] Partir `index.html` en módulos (`src/`) de a una sección, con Vite. La carpeta `src/` actual es una copia de junio que quedó desactualizada: se rehace a partir del código de hoy.
-- [ ] Firebase moderno (SDK modular, v12) en lugar del modo compat 10.7 por CDN.
-- [ ] Pruebas de los cálculos (saldos, deudas, USD, tarjetas).
-- [ ] Sacar los estilos en línea a clases.
+- [x] `index.html` partido en `css/app.css` y 15 archivos en `js/` (scripts clásicos, sin compilación).
+- [x] Firebase 12 en modo compat. El SDK modular pediría pasar a módulos ES y cambiar las ~60 llamadas a `db`/`auth`; hoy no trae una mejora visible.
+- [x] Pruebas: lógica (vitest), navegador (Playwright) y emuladores de Firebase, con CI.
+- [ ] Sacar los estilos en línea a clases: quedan muchos `style="..."` en `index.html` y en los templates de `js/`. Conviene hacerlo de a una pantalla, comparando capturas antes y después.
 
 ## Fase 4 — Funciones nuevas (a elegir)
 
