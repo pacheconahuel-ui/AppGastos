@@ -586,7 +586,7 @@
   <div class="hdr">
     <div>
       <div class="hdr-title"><span style="-webkit-text-fill-color:initial;background:none">💸</span> Mis Gastos</div>
-      <div class="hdr-sub" id="hdr-month">— <span style="opacity:.5">v2.8</span></div>
+      <div class="hdr-sub" id="hdr-month">—</div>
     </div>
     <div class="hdr-right">
       <div class="hdr-user">
@@ -1053,7 +1053,7 @@
       <input type="date" class="f-ctrl teal-focus" id="settle-date">
     </div>
     <div class="f-grp" id="settle-acc-wrap">
-      <label class="f-lbl">💼 Acreditar en</label>
+      <label class="f-lbl" id="settle-acc-lbl">💼 Acreditar en</label>
       <select class="f-ctrl teal-focus" id="settle-acc">
         <option value="">— Sin asignar —</option>
       </select>
@@ -1424,8 +1424,12 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="onBackupFile(this)">
 
 <script>
+// --- VERSION (única fuente: la usan el encabezado y el service worker) ---
+const APP_VERSION='2.9';
+
 // --- FIREBASE CONFIG ---
 const FB_CONFIG={apiKey:"AIzaSyAMUb7e_ngGiTc9lRTazNf290bKKRGvZN0",authDomain:"gastos-pache.firebaseapp.com",databaseURL:"https://gastos-pache-default-rtdb.firebaseio.com",projectId:"gastos-pache",storageBucket:"gastos-pache.firebasestorage.app",messagingSenderId:"151998147367",appId:"1:151998147367:web:6918969bcadef03048d702"};
 
@@ -1466,7 +1470,6 @@ const DEVICE_ID = (()=>{
   return id;
 })();
 let skipNextArs=false,skipNextUsd=false,skipNextDebt=false;
-let _lastPushedSettingsId=null; // track which push the listener should ignore
 let activeTab='dashboard';
 let isRegisterMode=false;
 let arsListener=null,usdListener=null,debtListener=null;
@@ -1541,7 +1544,16 @@ function setStatus(state,label){
 }
 
 // --- FIREBASE OPS ---
-async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data);return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
+// Mensaje para el usuario a partir de un error técnico (el detalle va a la consola)
+function errMsg(e,fallback='No se pudo guardar. Probá de nuevo en un rato.'){
+  console.error(e);
+  if(e&&e.userMsg)return e.userMsg;
+  const code=String((e&&(e.code||e.message))||'').toLowerCase();
+  if(!navigator.onLine||code.includes('network'))return'Sin conexión. Probá de nuevo cuando vuelva internet.';
+  if(code.includes('permission'))return'No tenés permiso para guardar. Cerrá sesión y volvé a entrar.';
+  return fallback;
+}
+async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data==null?data:JSON.parse(JSON.stringify(data)));return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
 // --- QUEUE HELPERS ---
@@ -1586,7 +1598,50 @@ async function persistUsd(tx,removeId){
   if(ok){usdPendQ=usdPendQ.filter(p=>p.path!==usdPath(removeId||tx?.id));saveLocal();setStatus('online','● Sincronizado');}
   else{if(removeId)enqueue('usd','remove',usdPath(removeId),null);else if(tx)enqueue('usd','set',usdPath(tx.id),tx);setStatus('offline','⚠ Offline');}
 }
-// pushSettingsDebounced was removed — all calls use pushSettings() directly
+// --- SETTINGS: armar y aplicar en un solo lugar ---
+// Firebase no acepta . # $ / [ ] en las claves. Se codifican de forma reversible
+// (antes se cambiaban por "_" y se perdía el nombre real, ej. "Freelance / Honorarios").
+function encKey(k){return String(k).replace(/[%.#$/\[\]]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0'));}
+function decKey(k){try{return decodeURIComponent(k);}catch{return k;}}
+function encKeys(obj){const o={};Object.entries(obj||{}).forEach(([k,v])=>{o[encKey(k)]=v;});return o;}
+function decKeys(obj){const o={};Object.entries(obj||{}).forEach(([k,v])=>{o[decKey(k)]=v;});return o;}
+// v2: el payload siempre trae todas las listas, así que una que falta significa vacía
+// (Firebase no guarda listas vacías). Sin v (versiones viejas) no se pisa lo local.
+const SETTINGS_V=2;
+function buildSettingsPayload(ts){
+  return{
+    v:SETTINGS_V,
+    customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
+    hiddenCats:[...hiddenCats],
+    renamedCats:encKeys(renamedCats),
+    catTypes:encKeys(catTypes),
+    catIcons:encKeys(loadIconOverrides()),
+    budgets:encKeys(budgets),
+    persons,accounts,transfers,goals,
+    updatedAt:ts
+  };
+}
+function applySettings(raw){
+  const full=(raw.v||0)>=2;
+  const has=k=>full||raw[k]!=null;
+  if(has('customCats'))  cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
+  if(has('hiddenCats'))  hiddenCats=new Set(raw.hiddenCats||[]);
+  if(has('renamedCats')) renamedCats=decKeys(raw.renamedCats);
+  if(has('catTypes'))    catTypes=normalizeCatTypes(decKeys(raw.catTypes));
+  if(has('catIcons'))    saveIconOverrides(decKeys(raw.catIcons));
+  if(has('persons'))     persons=raw.persons||[];
+  if(raw.accounts!=null) accounts=raw.accounts;else if(full)accounts=[];
+  if(has('transfers'))   transfers=raw.transfers||[];
+  if(has('budgets'))     budgets=decKeys(raw.budgets);
+  if(has('goals'))       goals=raw.goals||[];
+  if(raw.updatedAt) localStorage.setItem(lsKey('gp_settings_ts'),String(raw.updatedAt));
+  localStorage.removeItem('gp_settings_pending');
+  saveLocal();saveAccounts();saveBudgets();saveGoals();
+  renderAll();
+  if(activeTab==='cuentas')renderCuentasTab();
+}
+// Todos los envíos de esta pestaña: su eco se ignora aunque lleguen varios seguidos
+const _myPushIds=new Set();
 async function pushSettings(){
   if(!db||!currentUID)return;
   const ts=Date.now();
@@ -1597,20 +1652,9 @@ async function pushSettings(){
     localStorage.setItem('gp_settings_pending','1');
     return;
   }
-  const pushId=DEVICE_ID+'_'+ts;
-  _lastPushedSettingsId=pushId;
-  const catIcons=loadIconOverrides();
-  const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
-  const payload={
-    customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
-    hiddenCats:[...hiddenCats],
-    renamedCats:sanitizeKeys(renamedCats),
-    catTypes:sanitizeKeys(catTypes),
-    catIcons:sanitizeKeys(catIcons),
-    persons,accounts,transfers,budgets,goals,
-    updatedAt:ts,
-    _pushId:pushId  // echo detection
-  };
+  const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
+  _myPushIds.add(pushId);
+  const payload={...buildSettingsPayload(ts),_pushId:pushId};
   const ok=await fbSet(settingsPath(),payload);
   if(ok){
     localStorage.removeItem('gp_settings_pending');
@@ -1667,6 +1711,15 @@ function doLogout(){
 }
 
 // --- FIREBASE INIT + LISTENERS ---
+// Firebase vacío: si este dispositivo ya había recibido datos, se borraron en otro
+// (borrar el último gasto, "Borrar todos mis datos") y se respeta. Solo si nunca
+// recibió nada se suben los datos locales (los de antes de tener sincronización).
+function syncedKey(kind){return lsKey('gp_synced_'+kind);}
+function onEmptyRemote(kind,list,queue,pathFn){
+  if(localStorage.getItem(syncedKey(kind)))return queue.filter(p=>p.op==='set').map(p=>p.data);
+  if(fbOnline)list.forEach(x=>fbSet(pathFn(x.id),x));
+  return list;
+}
 function attachListeners(){
   if(!db||!currentUID)return;
   if(arsListener)db.ref(arsBase()).off('value',arsListener);
@@ -1682,12 +1735,11 @@ function attachListeners(){
       rows=rows.filter(e=>!pRem.has(e.id));
       for(const p of pendingQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(e=>e.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
       expenses=rows;
+      localStorage.setItem(syncedKey('ars'),'1');
       saveLocal();renderAll();
-    }else if(fbOnline&&expenses.length>0){
-      // Firebase returned null but we have local data — push it up
-      expenses.forEach(e=>fbSet(arsPath(e.id),e));
+    }else if(expenses.length>0){
+      expenses=onEmptyRemote('ars',expenses,pendingQ,arsPath);saveLocal();renderAll();
     }
-    // If Firebase returns null and we have no local data, don't wipe — just wait
   },err=>{console.warn('[FB] gastos:',err);fbReady=true;});
 
   usdListener=db.ref(usdBase()).on('value',snap=>{
@@ -1698,8 +1750,8 @@ function attachListeners(){
       const pRem=new Set(usdPendQ.filter(p=>p.op==='remove').map(p=>p.path.split('/').pop()));
       rows=rows.filter(t=>!pRem.has(t.id));
       for(const p of usdPendQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(t=>t.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
-      usdTx=rows;saveLocal();renderAll();
-    }else if(fbOnline&&usdTx.length>0){usdTx.forEach(t=>fbSet(usdPath(t.id),t));}
+      usdTx=rows;localStorage.setItem(syncedKey('usd'),'1');saveLocal();renderAll();
+    }else if(usdTx.length>0){usdTx=onEmptyRemote('usd',usdTx,usdPendQ,usdPath);saveLocal();renderAll();}
   },err=>console.warn('[FB] usd:',err));
 
   debtListener=db.ref(debtBase()).on('value',snap=>{
@@ -1710,8 +1762,8 @@ function attachListeners(){
       const pRem=new Set(debtPendQ.filter(p=>p.op==='remove').map(p=>p.path.split('/').pop()));
       rows=rows.filter(d=>!pRem.has(d.id));
       for(const p of debtPendQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(d=>d.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
-      debts=rows;saveLocal();renderAll();
-    }else if(fbOnline&&debts.length>0){debts.forEach(d=>fbSet(debtPath(d.id),d));}
+      debts=rows;localStorage.setItem(syncedKey('debt'),'1');saveLocal();renderAll();
+    }else if(debts.length>0){debts=onEmptyRemote('debt',debts,debtPendQ,debtPath);saveLocal();renderAll();}
   },err=>console.warn('[FB] debts:',err));
 
   // Settings listener — always applies Firebase data when it arrives
@@ -1721,29 +1773,11 @@ function attachListeners(){
     const raw=snap.val();
     if(!raw)return;
 
-    // Skip if this is the echo of our own push
-    if(raw._pushId && raw._pushId===_lastPushedSettingsId){
-      _lastPushedSettingsId=null; // consume the echo
-      return;
-    }
-
-    // Apply all settings from Firebase
-    if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
-    if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
-    if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
-    if(raw.catTypes)     catTypes=normalizeCatTypes(raw.catTypes||{});
-    if(raw.catIcons)     localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(raw.catIcons));
-    if(raw.persons)      persons=raw.persons||[];
-    if(raw.accounts)     accounts=raw.accounts||[...DEF_ACCOUNTS];
-    if(raw.transfers)    transfers=raw.transfers||[];
-    if(raw.budgets)      budgets=raw.budgets||{};
-    if(raw.goals)        goals=raw.goals||[];
-
-    if(raw.updatedAt) localStorage.setItem(lsKey('gp_settings_ts'), String(raw.updatedAt));
-    localStorage.removeItem('gp_settings_pending');
-    saveLocal();saveAccounts();saveBudgets();saveGoals();
-    renderAll();
-    if(activeTab==='cuentas')renderCuentasTab();
+    // Eco de un envío propio: lo local ya está igual o más nuevo
+    if(raw._pushId && _myPushIds.has(raw._pushId))return;
+    // Hay cambios locales sin subir: no pisarlos; se suben al reconectar
+    if(localStorage.getItem('gp_settings_pending'))return;
+    applySettings(raw);
   },err=>console.warn('[FB] settings:',err));
 }
 
@@ -1784,7 +1818,10 @@ function initFirebase(){
         // Only push settings on login if there are LOCAL changes pending upload
         // (don't push on every login — it would overwrite Firebase with stale local data
         //  before the settings listener has a chance to pull the latest from server)
-        setTimeout(()=>{
+        setTimeout(async()=>{
+          // Lo cargado sin conexión en la sesión anterior: .info/connected suele llegar
+          // antes que los datos (fbReady), así que esa subida no se hacía al entrar
+          if(fbOnline&&currentUID){await flushQueueFor('ars');await flushQueueFor('usd');await flushQueueFor('debt');}
           if(localStorage.getItem('gp_settings_pending')){
             console.log('[Settings] Pending changes found — pushing to Firebase');
             pushSettings();
@@ -1920,6 +1957,13 @@ function openProfilePanel(){
       <span class="par-ico">⬆️</span>Subir mi config al servidor<span class="par-chevron" id="force-push-status">›</span>
     </button>
     <div id="diag-result"></div>
+    <div class="profile-sec-lbl">Respaldo</div>
+    <button class="profile-action-row" onclick="exportBackup()">
+      <span class="par-ico">💾</span>Descargar respaldo completo<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="document.getElementById('backup-file').click()">
+      <span class="par-ico">♻️</span>Restaurar un respaldo<span class="par-chevron">›</span>
+    </button>
     <div class="profile-sec-lbl">Cuenta</div>
     <button class="profile-action-row" onclick="confirmResetAll()" style="color:var(--red)">
       <span class="par-ico">🗑️</span>Borrar todos mis datos<span class="par-chevron">›</span>
@@ -1958,17 +2002,12 @@ async function forcePushSettings(btn){
     await currentUser.getIdToken(true);
 
     
-    const catIcons=loadIconOverrides();
-    const sanitizeKeys=obj=>{const safe={};Object.entries(obj||{}).forEach(([k,v])=>{safe[k.replace(/[.#$/\[\]]/g,'_')]=v;});return safe;};
-    const payload={
-      customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
-      hiddenCats:[...hiddenCats],renamedCats:sanitizeKeys(renamedCats),
-      catTypes:sanitizeKeys(catTypes),catIcons:sanitizeKeys(catIcons),
-      persons,accounts,transfers,budgets,goals,
-      updatedAt:Date.now()
-    };
-    const ok=await fbSet(settingsPath(),payload);
-    if(!ok)throw new Error('Firebase rechazó la escritura — intentá cerrar sesión y volver a entrar');
+    const ts=Date.now();
+    const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
+    _myPushIds.add(pushId);
+    localStorage.setItem(lsKey('gp_settings_ts'),String(ts));
+    const ok=await fbSet(settingsPath(),{...buildSettingsPayload(ts),_pushId:pushId});
+    if(!ok)throw Object.assign(new Error('fbSet failed'),{userMsg:'No se pudo subir la configuración. Cerrá sesión y volvé a entrar.'});
     localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.textContent='✅';
     if(btn)btn.style.opacity='1';
@@ -1978,8 +2017,7 @@ async function forcePushSettings(btn){
     
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ '+( e.message||String(e)));
-    console.error('[forcePush]',e);
+    toast('❌ '+errMsg(e));
   }
 }
 
@@ -1993,21 +2031,7 @@ async function forceSyncSettings(btn){
     const snap=await db.ref(settingsPath()).once('value');
     const raw=snap.val();
     if(raw){
-      if(raw.customCats)   cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
-      if(raw.hiddenCats)   hiddenCats=new Set(raw.hiddenCats||[]);
-      if(raw.renamedCats)  renamedCats=raw.renamedCats||{};
-      if(raw.catTypes)     catTypes=normalizeCatTypes(raw.catTypes||{});
-      if(raw.catIcons)     localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(raw.catIcons));
-      if(raw.persons)      persons=raw.persons||[];
-      if(raw.accounts)     accounts=raw.accounts||[...DEF_ACCOUNTS];
-      if(raw.transfers)    transfers=raw.transfers||[];
-      if(raw.budgets)      budgets=raw.budgets||{};
-      if(raw.goals)        goals=raw.goals||[];
-      if(raw.updatedAt)    localStorage.setItem(lsKey('gp_settings_ts'),String(raw.updatedAt));
-      localStorage.removeItem('gp_settings_pending');
-      saveLocal();saveAccounts();saveBudgets();saveGoals();
-      renderAll();
-      if(activeTab==='cuentas')renderCuentasTab();
+      applySettings(raw);
       toast('✅ Datos actualizados desde el servidor');
     } else {
       toast('ℹ Sin configuración en el servidor aún');
@@ -2018,7 +2042,76 @@ async function forceSyncSettings(btn){
   }catch(e){
     if(statusEl)statusEl.textContent='❌';
     if(btn)btn.style.opacity='1';
-    toast('❌ Error: '+(e.message||e));
+    toast('❌ '+errMsg(e,'No se pudo traer la configuración. Probá de nuevo en un rato.'));
+  }
+}
+
+// --- RESPALDO COMPLETO (JSON) ---
+function backupData(){
+  return{
+    app:'AppGastos',backupVersion:1,appVersion:APP_VERSION,exportedAt:new Date().toISOString(),
+    expenses,usdTx,debts,
+    settings:{customCats:cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c)),
+      hiddenCats:[...hiddenCats],renamedCats,catTypes,catIcons:loadIconOverrides(),
+      budgets,persons,accounts,transfers,goals}
+  };
+}
+function downloadJSON(obj,name){
+  const blob=new Blob([JSON.stringify(obj,null,1)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportBackup(){
+  downloadJSON(backupData(),`mis-gastos-respaldo-${todayStr()}.json`);
+  toast(`💾 Respaldo descargado · ${expenses.length} movimientos`);
+}
+function onBackupFile(input){
+  const file=input.files&&input.files[0];input.value='';
+  if(!file)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let b;
+    try{b=JSON.parse(rd.result);}catch{toast('⚠️ El archivo no es un respaldo válido');return;}
+    if(!b||b.app!=='AppGastos'||!Array.isArray(b.expenses)||!Array.isArray(b.usdTx)||!Array.isArray(b.debts)||!b.settings){
+      toast('⚠️ El archivo no es un respaldo de Mis Gastos');return;
+    }
+    if(!fbOnline||!db||!currentUID){toast('⚠️ Necesitás conexión para restaurar');return;}
+    const when=b.exportedAt?new Date(b.exportedAt).toLocaleDateString('es-AR'):'?';
+    closeProfilePanel();
+    showConf('♻️','Restaurar respaldo',
+      `Respaldo del ${when}: ${b.expenses.length} movimientos, ${b.usdTx.length} en USD, ${b.debts.length} deudas, ${(b.settings.accounts||[]).length} billeteras.\n\nReemplaza TODOS tus datos actuales. Antes se descarga un respaldo de lo que tenés hoy.`,
+      ()=>restoreBackup(b),'Restaurar');
+  };
+  rd.readAsText(file);
+}
+async function restoreBackup(b){
+  downloadJSON(backupData(),`mis-gastos-antes-de-restaurar-${todayStr()}.json`);
+  setStatus('syncing','↑ Restaurando…');
+  const byId=arr=>{const o={};arr.filter(x=>x&&x.id).forEach(x=>{o[x.id]=x;});return o;};
+  try{
+    const st=b.settings;
+    expenses=b.expenses.filter(x=>x&&x.id);usdTx=b.usdTx.filter(x=>x&&x.id);debts=b.debts.filter(x=>x&&x.id);
+    pendingQ=[];usdPendQ=[];debtPendQ=[];
+    cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(st.customCats||[])])];
+    hiddenCats=new Set(st.hiddenCats||[]);renamedCats=st.renamedCats||{};
+    catTypes=normalizeCatTypes(st.catTypes||{});saveIconOverrides(st.catIcons||{});
+    budgets=st.budgets||{};persons=st.persons||[];accounts=st.accounts||[];
+    transfers=st.transfers||[];goals=st.goals||[];
+    saveLocal();saveAccounts();saveBudgets();saveGoals();
+    const sets=[[arsBase(),byId(expenses)],[usdBase(),byId(usdTx)],[debtBase(),byId(debts)]];
+    let failed=0;
+    for(const[path,data]of sets){
+      if(await fbSet(path,Object.keys(data).length?data:null))continue;
+      // Si algún registro viejo no pasa las reglas, se sube de a uno y se cuentan los que no
+      if(!await fbSet(path,null))throw new Error('restore '+path);
+      for(const[id,x]of Object.entries(data)){if(!await fbSet(path+'/'+id,x))failed++;}
+    }
+    await pushSettings();
+    renderAll();if(activeTab==='cuentas')renderCuentasTab();
+    toast(failed?`⚠️ Respaldo restaurado, pero ${failed} registro${failed>1?'s':''} no se pudo subir (queda solo en este dispositivo)`:`✅ Respaldo restaurado · ${expenses.length} movimientos`,5000);
+  }catch(e){
+    toast('❌ '+errMsg(e,'No se pudo terminar de restaurar. Probá de nuevo: el respaldo de antes quedó descargado.'),5000);
   }
 }
 
@@ -2057,20 +2150,30 @@ async function resetAllData(){
     // Logout so they start fresh
     setTimeout(()=>doLogout(),1000);
   }catch(e){
-    toast('❌ Error al borrar: '+e.message);
+    toast('❌ '+errMsg(e,'No se pudieron borrar los datos. Probá de nuevo en un rato.'));
     setStatus('online','● Sincronizado');
   }
 }
 
+// Diálogo de confirmación único. La función se guarda (no se pasa como texto),
+// así puede usar las variables del lugar que la llama.
+let _confCb=null;
 function showConf(ico,title,msg,onConfirm,confirmLabel='Confirmar',cancelLabel='Cancelar'){
   document.getElementById('conf-ico').textContent=ico;
   document.getElementById('conf-ttl').textContent=title;
-  document.getElementById('conf-txt').textContent=msg;
+  if(msg!=null)document.getElementById('conf-txt').textContent=msg;
   document.getElementById('conf-btns').innerHTML=`
     <button class="btn-no" onclick="closeConf()">${esc(cancelLabel)}</button>
-    <button class="btn-yes" onclick="closeConf();(${onConfirm.toString()})()">${esc(confirmLabel)}</button>`;
+    <button class="btn-yes" onclick="confYes()">${esc(confirmLabel)}</button>`;
+  _confCb=onConfirm;
   document.getElementById('conf-overlay').classList.add('on');
   history.pushState({modal:true},'');
+}
+function confYes(){const cb=_confCb;closeConf();if(cb)cb();}
+// Para borrar: el texto ya lo puso quien llama (conf-txt) junto con pendingDel
+function openDeleteConf(){
+  const pd=pendingDel;
+  showConf('🗑️','¿Eliminar?',null,()=>{pendingDel=pd;doDelete();},'Eliminar');
 }
 
 async function runDiagnostics(){
@@ -2127,11 +2230,25 @@ function fmtU(n){return'U$S '+(Math.round(n*100)/100).toLocaleString('es-AR');}
 function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
 function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}`;}
 function monthKey(d){return d?d.slice(0,7):'';}
+// Fecha de hoy (YYYY-MM-DD) en la hora del celular; toISOString() da la de UTC y después de las 21 h en Argentina ya es mañana
+function todayStr(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
 function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}
 function icon(cat){return ICONS[cat]||'📌';}
 function effAmt(e){return e.myAmount!=null?e.myAmount:(e.shared?e.amount*(e.sharedPercent/100):e.amount);}
+// Movimientos en USD: pesos según la cotización cargada (0 si no tiene). Antes se sumaban U$S como si fueran $.
+function usdRate(e){if(e.currency!=='USD')return 1;if(e.arsEquiv&&e.amount)return e.arsEquiv/e.amount;return e.exchangeRate||0;}
+function effArs(e){return effAmt(e)*usdRate(e);}
+// Movimientos que mueven plata entre cuentas pero no son gasto ni ingreso del mes:
+// el pago del resumen de la tarjeta (las compras ya se contaron) y la compra/venta de USD.
+// Siguen sumando y restando en el saldo de cada billetera.
+function isCCPayment(e){return !!e.ccPayment||(e.description||'').startsWith('Pago resumen ');}
+function isFxEntry(e){return !!e.fxOp||usdTx.some(t=>t.linkedArsId===e.id);}
+function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e);}
+function amtArs(e){return e.amount*usdRate(e);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
+// Texto como argumento de un onclick="...": comillas de JS + escape HTML (un ' en el nombre ya no rompe el botón)
+function jsArg(s){return esc(JSON.stringify(String(s)));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function newId(){return String(Date.now())+Math.random().toString(36).slice(2,6);}
 function customCats(){return cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));}
@@ -2181,21 +2298,56 @@ function confirmDeleteCat(name){
   document.getElementById('conf-txt').textContent=inUse
     ?`"${name}" se usa en gastos existentes.\nSe eliminará solo la categoría, los gastos quedan intactos.\n¿Eliminar igual?`
     :`¿Eliminar la categoría "${name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 function personById(id){return persons.find(p=>p.id===id);}
 
 // --- CALC ARS ---
 function calcSummary(mk){
-  const rows=expenses.filter(e=>monthKey(e.date)===mk);
+  const rows=expenses.filter(e=>monthKey(e.date)===mk&&countsInMonth(e));
   let ing=0,pag=0,real=0;
-  rows.forEach(e=>{if(e.type==='Ingreso'){ing+=e.amount;}else{pag+=e.amount;real+=effAmt(e);}});
-  return{ing,pag,real,bal:ing-real};
+  let usdNoRate=0;
+  rows.forEach(e=>{
+    if(e.currency==='USD'&&!usdRate(e)&&e.type!=='Ingreso')usdNoRate+=effAmt(e);
+    if(e.type==='Ingreso'){ing+=amtArs(e);}else{pag+=amtArs(e);real+=effArs(e);}
+  });
+  return{ing,pag,real,bal:ing-real,usdNoRate};
 }
 function calcByCat(mk){
   const map={};
-  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').forEach(e=>{map[e.category]=(map[e.category]||0)+effAmt(e);});
+  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).forEach(e=>{map[e.category]=(map[e.category]||0)+effArs(e);});
   return map;
+}
+
+// --- DEUDAS REPETIDAS ---
+// Hasta la 2.8, editar un gasto compartido creaba otra deuda por persona cada vez.
+// Por cada gasto y persona queda la más nueva (la del último guardado); las demás
+// sin saldar son repetidas.
+function duplicateSplitDebts(){
+  const groups={};
+  debts.filter(d=>d.linkedExpenseId&&!d.settled).forEach(d=>{(groups[d.linkedExpenseId+'|'+d.personId]??=[]).push(d);});
+  const out=[];
+  Object.values(groups).forEach(g=>{
+    if(g.length<2)return;
+    g.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    out.push(...g.slice(1));
+  });
+  return out;
+}
+function confirmCleanDuplicates(){
+  const dups=duplicateSplitDebts();
+  if(!dups.length)return;
+  const byPerson={};dups.forEach(d=>{byPerson[d.personName||'?']=(byPerson[d.personName||'?']||0)+d.amount;});
+  const lines=Object.entries(byPerson).map(([n,a])=>`• ${n}: ${a>0?'te debe':'le debés'} ${fmt(Math.abs(a))} de más`).join('\n');
+  showConf('🧹','Limpiar deudas repetidas',
+    `Se borran ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''}. De cada gasto queda la última versión.\n\n${lines}`,
+    async()=>{
+      const ids=new Set(dups.map(d=>d.id));
+      debts=debts.filter(d=>!ids.has(d.id));
+      renderAll();
+      for(const id of ids){skipNextDebt=fbOnline;await persistDebt(null,id);}
+      toast(`🧹 ${ids.size} deuda${ids.size>1?'s':''} repetida${ids.size>1?'s':''} borrada${ids.size>1?'s':''}`);
+    },'Limpiar');
 }
 
 // --- CALC DEBTS ---
@@ -2243,11 +2395,12 @@ function renderDashboard(){
 
   // Header subtitle
   const hdrSub=document.getElementById('hdr-month');
-  if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v2.8</span>`;
+  if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v${APP_VERSION}</span>`;
 
-  const{ing,pag,real,bal}=calcSummary(mk);
+  const{ing,pag,real,bal,usdNoRate}=calcSummary(mk);
   const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
-  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag);
+  // Los gastos en USD sin cotización no se pueden pasar a pesos: se muestran aparte
+  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag)+(usdNoRate?' + '+fmtU(usdNoRate):'');
   const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real);
   const balEl=document.getElementById('c-bal');
   if(balEl){balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');}
@@ -2395,8 +2548,13 @@ function renderSaldosTab(){
   });
 
   let html='';
+  const dups=duplicateSplitDebts();
+  if(dups.length){
+    const total=dups.reduce((s,d)=>s+d.amount,0);
+    html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:rgba(251,191,36,.08);border-radius:12px;border:1px solid rgba(251,191,36,.25)">⚠️ ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
+  }
   if(visiblePersons.length===0){
-    html='<div class="empty"><div class="empty-ico">🤝</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
+    html+='<div class="empty"><div class="empty-ico">🤝</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
   } else {
     visiblePersons.forEach(p=>{
       const bal=personBalance(p.id);
@@ -2532,13 +2690,15 @@ function toggleZeroPersons(){
 function expHTML(e,actions){
   const ing=e.type==='Ingreso';
   const hasSplit=e.splits&&e.splits.length>0;
-  const splitBadge=hasSplit?`<span class="badge sh">🤝 ${e.splits.map(s=>s.personName).join(', ')}</span>`:'';
+  const splitBadge=hasSplit?`<span class="badge sh">🤝 ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
+  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?'💳 Pago de tarjeta':'💱 Cambio de moneda'} · no suma al mes</span>`:'';
   const recurBadge=e.recurring?'<span class="badge" style="background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.25)">🔁</span>':'';
   const usdBadge=e.currency==='USD'?`<span class="badge" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.25)">U$S ${e.amount}</span>`:'';
   const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border-color:rgba(251,191,36,.25)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
   const acc=e.accountId?accounts?.find(a=>a.id===e.accountId):null;
-  const accBadge=acc?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`:'';
+  const accBadge=acc?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`
+    :(accounts?.length?'<span class="badge" style="background:rgba(251,191,36,.08);color:var(--yellow);border-color:rgba(251,191,36,.25)">Sin billetera</span>':'');
   const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">⏳</span>':'';
   const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${esc(e.notes)}</div>`:'';
   const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">✏️</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">🗑️</button></div>`:'';
@@ -2547,9 +2707,9 @@ function expHTML(e,actions){
     <div class="exp-info">
       <div class="exp-desc">${esc(displayName(e.description||e.category))} ${pending}</div>
       ${notesLine}
-      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}</div>
+      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>
     </div>
-    <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${fmt(effAmt(e))}</div>${btns}</div>
+    <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${e.currency==='USD'&&!usdRate(e)?fmtU(effAmt(e)):fmt(effArs(e))}</div>${btns}</div>
   </div>`;
 }
 
@@ -2718,7 +2878,7 @@ function confirmDeleteContact(personId){
   document.getElementById('conf-txt').textContent=
     (hasDebts?`"${p.name}" tiene saldos pendientes.\n`:``) +
     `¿Eliminar el contacto "${p.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // Add contact type to doDelete — handled below in doDelete
@@ -2836,7 +2996,10 @@ function setCardExpType(t){
   // Auto-check recurring if fijo
   if(t==='recurring')document.getElementById('f-recur').checked=true;
 }
+// Guardar sin billetera pide un segundo toque: ese movimiento no suma ni resta en ningún saldo
+let _noAccConfirmed=false;
 function onAccountSelected(){
+  _noAccConfirmed=false;
   const accId=document.getElementById('f-account').value;
   const acc=accId?accounts.find(a=>a.id===accId):null;
   const cardWrap=document.getElementById('f-card-type-wrap');
@@ -2850,7 +3013,7 @@ function onAccountSelected(){
 function openModal(data=null){
   document.getElementById('m-title').textContent=data?'Editar Gasto':'Nuevo Gasto';
   document.getElementById('f-id').value=data?.id||'';
-  document.getElementById('f-date').value=data?.date||new Date().toISOString().split('T')[0];
+  document.getElementById('f-date').value=data?.date||todayStr();
   document.getElementById('f-desc').value=data?.description||'';
   document.getElementById('f-notes').value=data?.notes||'';
   document.getElementById('f-amt').value=data?.amount||'';
@@ -2952,7 +3115,7 @@ function renderCatDropdown(q){
     dd.innerHTML=`<div class="cat-drop-empty">Sin resultados — tocá ＋ para crear "${q}"</div>`;
   } else {
     dd.innerHTML=filtered.map(c=>`
-      <div class="cat-drop-item" onclick="selectCat('${esc(c)}')">
+      <div class="cat-drop-item" onclick="selectCat(${jsArg(c)})">
         <span class="cat-drop-ico">${catIcon(c)}</span>
         <span>${esc(displayName(c))}</span>
       </div>`).join('');
@@ -3003,11 +3166,11 @@ function renderCatManager(){
       </div>
       <span class="cat-manager-badge">${catTypeFor(c)==='ingreso'?'Ingreso':'Egreso'}</span>
       <div class="cat-manager-actions">
-        <button class="cat-mgr-btn ico" onclick="editCatIcon('${esc(c)}')" title="Cambiar ícono">🎨</button>
-        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat('${esc(c)}')`:`renameCat('${esc(c)}')`}" title="Renombrar">✏️</button>
-        <button class="cat-mgr-btn" onclick="toggleCatType('${esc(c)}')" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${moveTo==='ingreso'?'📥':'📤'}</button>
-        <button class="cat-mgr-btn" onclick="toggleHideCat('${esc(c)}')" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?'＋':'👁'}</button>
-        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat('${esc(c)}')" title="Eliminar">🗑️</button>`}
+        <button class="cat-mgr-btn ico" onclick="editCatIcon(${jsArg(c)})" title="Cambiar ícono">🎨</button>
+        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat(${jsArg(c)})`:`renameCat(${jsArg(c)})`}" title="Renombrar">✏️</button>
+        <button class="cat-mgr-btn" onclick="toggleCatType(${jsArg(c)})" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${moveTo==='ingreso'?'📥':'📤'}</button>
+        <button class="cat-mgr-btn" onclick="toggleHideCat(${jsArg(c)})" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?'＋':'👁'}</button>
+        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat(${jsArg(c)})" title="Eliminar">🗑️</button>`}
       </div>
     </div>`;
   };
@@ -3084,12 +3247,21 @@ async function saveExpense(){
   const acc=accountId?accounts.find(a=>a.id===accountId):null;
   if(!date){toast('⚠️ Completá la fecha');return;}
   if(!amt||amt<=0||isNaN(amt)){toast('⚠️ Ingresá un monto válido');return;}
+  if(!accountId&&walletAccounts().length&&!_noAccConfirmed){
+    _noAccConfirmed=true;
+    document.getElementById('f-account').focus();
+    toast('⚠️ Sin billetera, no cuenta en ningún saldo. Elegí una o tocá Guardar de nuevo.',5000);
+    return;
+  }
 
   // Calculate my amount from split
   const splits=splitPanelOpen&&splitRows.length>0?splitRows.map(r=>({personId:r.personId,personName:r.personName,emoji:r.emoji,amount:parseFloat(r.amount)||0})):[];
   const theirTotal=splits.reduce((s,r)=>s+r.amount,0);
   const myAmount=splitPanelOpen&&splits.length>0?Math.max(0,amt-theirTotal):amt;
 
+  const prev=id?expenses.find(e=>e.id===id):null;
+  // Editar un gasto de tarjeta ya pagado no lo vuelve a poner en el próximo resumen
+  const keepPaid=!!(prev&&prev.ccPaid===true&&prev.accountId===accountId);
   const exp={
     id:id||newId(),type,date,category:cat,
     description:desc||cat,notes:notes||null,amount:amt,myAmount,
@@ -3101,7 +3273,7 @@ async function saveExpense(){
     cardExpType:acc?.type==='credit'?cardExpType:'one',
     installmentCurrent:cardExpType==='installment'?installmentCurrent:null,
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
-    ccPaid:false,
+    ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
     updatedAt:Date.now()
@@ -3115,20 +3287,29 @@ async function saveExpense(){
   skipNextArs=fbOnline;
   await persistArs(exp,null);
 
-  // Create debt records for each split person
-  if(splits.length>0&&type==='Egreso'){
-    for(const s of splits){
-      if(s.amount<=0)continue;
+  // Deudas del split: al editar se actualizan las que ya existían (antes se creaban
+  // de nuevo y la persona quedaba debiendo el doble). Las ya saldadas no se tocan.
+  const linked=id?debts.filter(d=>d.linkedExpenseId===exp.id&&!d.settled):[];
+  const wanted=type==='Egreso'?splits.filter(s=>s.amount>0):[];
+  if(wanted.length||linked.length){
+    for(const s of wanted){
+      const old=linked.find(d=>d.personId===s.personId);
       const debt={
-        id:newId(),personId:s.personId,personName:s.personName,
+        id:old?.id||newId(),personId:s.personId,personName:s.personName,
         description:desc||cat,amount:s.amount, // positive = they owe me
         date,settled:false,settledDate:null,
         linkedExpenseId:exp.id,
-        createdAt:Date.now(),updatedAt:Date.now()
+        createdAt:old?.createdAt||Date.now(),updatedAt:Date.now()
       };
-      debts.push(debt);
+      const i=debts.findIndex(d=>d.id===debt.id);
+      if(i>-1)debts[i]=debt;else debts.push(debt);
       skipNextDebt=fbOnline;
       await persistDebt(debt,null);
+    }
+    for(const d of linked.filter(d=>!wanted.some(s=>s.personId===d.personId))){
+      debts=debts.filter(x=>x.id!==d.id);
+      skipNextDebt=fbOnline;
+      await persistDebt(null,d.id);
     }
     renderSaldosTab();
   }
@@ -3138,7 +3319,7 @@ async function saveExpense(){
 function openUsdModal(data){
   document.getElementById('usd-m-title').textContent=data?'Editar movimiento USD':'Nuevo movimiento USD';
   document.getElementById('uf-id').value=data?.id||'';
-  document.getElementById('uf-date').value=data?.date||new Date().toISOString().split('T')[0];
+  document.getElementById('uf-date').value=data?.date||todayStr();
   document.getElementById('uf-usd').value=data?.usdAmount||'';
   document.getElementById('uf-ars').value=data?.arsAmount||'';
   document.getElementById('uf-desc').value=data?.description||'';
@@ -3245,7 +3426,7 @@ async function saveUsdTx(){
       amount:ars,myAmount:ars,shared:false,sharedPercent:100,
       accountId:arsAccountId||null,
       createdAt:expenses.find(e=>e.id===arsId)?.createdAt||Date.now(),
-      updatedAt:Date.now(),autoGenerated:true};
+      updatedAt:Date.now(),autoGenerated:true,fxOp:true};
     const ei=expenses.findIndex(e=>e.id===arsId);if(ei>-1)expenses[ei]=arsEntry;else expenses.push(arsEntry);
     skipNextArs=fbOnline;await persistArs(arsEntry,null);
 
@@ -3257,7 +3438,7 @@ async function saveUsdTx(){
       amount:ars,myAmount:ars,shared:false,sharedPercent:100,
       accountId:arsAccountId||null,   // pesos leave this wallet
       createdAt:expenses.find(e=>e.id===arsId)?.createdAt||Date.now(),
-      updatedAt:Date.now(),autoGenerated:true};
+      updatedAt:Date.now(),autoGenerated:true,fxOp:true};
     const ei=expenses.findIndex(e=>e.id===arsId);if(ei>-1)expenses[ei]=arsEntry;else expenses.push(arsEntry);
     skipNextArs=fbOnline;await persistArs(arsEntry,null);
 
@@ -3279,7 +3460,7 @@ async function saveUsdTx(){
 // --- MODAL DEUDA MANUAL ---
 function openDebtModal(data){
   document.getElementById('df-id').value=data?.id||'';
-  document.getElementById('df-date').value=data?.date||new Date().toISOString().split('T')[0];
+  document.getElementById('df-date').value=data?.date||todayStr();
   document.getElementById('df-amt').value=data?Math.abs(data.amount):'';
   document.getElementById('df-desc').value=data?.description||'';
   buildDebtPersonSelect();
@@ -3334,7 +3515,7 @@ function deleteDebt(id,ev){
   document.getElementById('conf-txt').textContent=d
     ?`"${d.description}" · ${fmt(Math.abs(d.amount))}\nEsta acción no se puede deshacer.`
     :'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- SETTLE MODAL ---
@@ -3361,10 +3542,11 @@ function openSettleModal(personId){
     bal<0?`Le debés ${fmt(Math.abs(bal))}`:
     `${activeDebts.length} deuda${activeDebts.length!==1?'s':''} activa${activeDebts.length!==1?'s':''} (saldo neto $0)`;
   document.getElementById('settle-amt').value=Math.abs(bal)||activeDebts.reduce((s,d)=>s+Math.abs(d.amount),0);
-  document.getElementById('settle-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('settle-date').value=todayStr();
   const accSel=document.getElementById('settle-acc');
   const accWrap=document.getElementById('settle-acc-wrap');
-  if(bal>=0&&arsWallets().length>0){
+  document.getElementById('settle-acc-lbl').textContent=bal<0?'💼 Pagar desde':'💼 Acreditar en';
+  if(arsWallets().length>0){
     accSel.innerHTML='<option value="">— Sin asignar —</option>'+
       arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
     accWrap.style.display='block';
@@ -3392,17 +3574,25 @@ async function doSettle(){
   const p=personById(personId);
   const bal=personBalance(personId);
 
-  // Mark active debts as settled up to amt
-  let remaining=amt;
+  // Se salda contra el saldo neto: si el pago lo cubre (o el neto es 0) se cierran
+  // todas las deudas activas; si no, queda un "Pago parcial" que lo descuenta.
+  // Antes se cerraban deudas de a una y lo que no alcanzaba se perdía.
   const activeDebts=personDebtsActive(personId);
   const settledIds=[];
-  for(const d of activeDebts){
-    if(remaining<=0)break;
-    const absAmt=Math.abs(d.amount);
-    if(absAmt<=remaining){
+  let partial=null;
+  if(bal===0||amt>=Math.abs(bal)-0.005){
+    for(const d of activeDebts){
       debts=debts.map(x=>x.id===d.id?{...x,settled:true,settledDate:date,updatedAt:Date.now()}:x);
-      remaining-=absAmt;settledIds.push(d.id);
+      settledIds.push(d.id);
     }
+  }else{
+    partial={
+      id:newId(),personId,personName:p?.name||'',
+      description:'Pago parcial',amount:bal>0?-amt:amt,
+      date,settled:false,settledDate:null,linkedExpenseId:null,
+      createdAt:Date.now(),updatedAt:Date.now()
+    };
+    debts.push(partial);
   }
 
   // Create ARS ingreso if they were paying me and it's a transfer
@@ -3418,16 +3608,31 @@ async function doSettle(){
     expenses.push(arsEntry);
     skipNextArs=fbOnline;await persistArs(arsEntry,null);
   }
+  // Si el que paga soy yo, la plata sale de la billetera elegida
+  if(bal<0&&type==='transfer'){
+    const accName=accountId?(' desde '+(accounts.find(a=>a.id===accountId)?.name||'')):'';
+    const arsEntry={
+      id:newId(),type:'Egreso',date,category:'Otro',
+      description:`Liquidación ${p.name}${accName}`,
+      amount:amt,myAmount:amt,shared:false,sharedPercent:100,
+      accountId:accountId||null,
+      createdAt:Date.now(),updatedAt:Date.now(),autoGenerated:true
+    };
+    expenses.push(arsEntry);
+    skipNextArs=fbOnline;await persistArs(arsEntry,null);
+  }
 
   // Persist settled debts
   for(const id of settledIds){
     const d=debts.find(x=>x.id===id);
     skipNextDebt=fbOnline;await persistDebt(d,null);
   }
+  if(partial){skipNextDebt=fbOnline;await persistDebt(partial,null);}
 
   haptic();closeSettleModal();renderAll();
   const accLabel=accountId?' a '+(accounts.find(a=>a.id===accountId)?.name||''):'';
-  toast(`✅ Saldo con ${p.name} saldado${bal>0&&type==='transfer'?` · Ingreso${accLabel} creado`:''}`);
+  const mov=type!=='transfer'?'':bal>0?` · Ingreso${accLabel} creado`:bal<0?` · Egreso${accLabel} creado`:'';
+  toast(partial?`✅ Pago parcial de ${fmt(amt)} · queda ${fmt(Math.abs(personBalance(personId)))}${mov}`:`✅ Saldo con ${p.name} saldado${mov}`);
 }
 
 // --- EDIT / DELETE ARS & USD ---
@@ -3436,17 +3641,17 @@ function delExp(id,ev){
   ev?.stopPropagation();pendingDel={type:'ars',id};
   const e=expenses.find(x=>x.id===id);
   document.getElementById('conf-txt').textContent=e?`"${e.description}" · ${fmt(e.amount)}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 function editUsdTx(id,ev){ev?.stopPropagation();const t=usdTx.find(x=>x.id===id);if(t)openUsdModal(t);}
 function delUsdTx(id,ev){
   ev?.stopPropagation();pendingDel={type:'usd',id};
   const t=usdTx.find(x=>x.id===id);
   document.getElementById('conf-txt').textContent=t?`"${t.description}" · ${fmtU(t.usdAmount)}${t.linkedArsId?'\n(también se eliminará el ingreso ARS asociado)':''}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 function closeConf(){
-  pendingDel=null;
+  pendingDel=null;_confCb=null;
   document.getElementById('conf-overlay').classList.remove('on');
 }
 
@@ -3481,8 +3686,13 @@ async function doDelete(){
     debts=debts.filter(d=>d.id!==id);renderSaldosTab();toast('🗑️ Deuda eliminada');
     skipNextDebt=fbOnline;await persistDebt(null,id);
   }else if(type==='ars'){
-    expenses=expenses.filter(e=>e.id!==id);renderAll();toast('🗑️ Gasto eliminado');
+    // Las deudas del split que todavía no se saldaron se van con el gasto
+    const linked=debts.filter(d=>d.linkedExpenseId===id&&!d.settled);
+    expenses=expenses.filter(e=>e.id!==id);
+    debts=debts.filter(d=>!linked.includes(d));
+    renderAll();toast(linked.length?`🗑️ Gasto eliminado (y ${linked.length} deuda${linked.length>1?'s':''} del split)`:'🗑️ Gasto eliminado');
     skipNextArs=fbOnline;await persistArs(null,id);
+    for(const d of linked){skipNextDebt=fbOnline;await persistDebt(null,d.id);}
   }else{
     const t=usdTx.find(x=>x.id===id);
     if(t?.linkedArsId){expenses=expenses.filter(e=>e.id!==t.linkedArsId);skipNextArs=fbOnline;await persistArs(null,t.linkedArsId);}
@@ -3721,7 +3931,7 @@ async function confirmRecurring(templateId){
   }
 
   // Wallet recurring — crear copia para este mes
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayStr();
   const exp={
     ...tmpl,
     id:newId(),
@@ -3741,7 +3951,7 @@ async function confirmRecurring(templateId){
 function editRecurringAmt(templateId){
   const tmpl=expenses.find(e=>e.id===templateId);
   if(!tmpl)return;
-  const today=new Date().toISOString().split('T')[0];
+  const today=todayStr();
   // Open pre-filled modal — user can change amount, then save
   openModal({...tmpl,id:null,date:today,ccPaid:false});
   // After save, the new expense is added and won't show in reminders
@@ -3756,7 +3966,7 @@ function getPrevMonth(mk){
 function preloadRecurring(templateId){
   const tmpl=expenses.find(e=>e.id===templateId);
   if(!tmpl)return;
-  openModal({...tmpl,id:null,date:new Date().toISOString().split('T')[0]});
+  openModal({...tmpl,id:null,date:todayStr()});
 }
 
 // --- MONTH COMPARISON CHART ---
@@ -3769,8 +3979,8 @@ function renderMonthlyChart(){
     months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   }
   const labels=months.map(mk=>{ const[,m]=mk.split('-'); return['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(m)-1]; });
-  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effAmt(e),0));
-  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+e.amount,0));
+  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).reduce((s,e)=>s+effArs(e),0));
+  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0));
   const box=document.getElementById('monthly-chart-box');
   if(gastos.every(v=>v===0)&&ingresos.every(v=>v===0)){box.classList.add('hidden');return;}
   box.classList.remove('hidden');
@@ -3801,10 +4011,10 @@ function renderProjection(){
   const dayOfMonth=today.getDate();
   const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
   if(dayOfMonth<3){document.getElementById('proj-card').style.display='none';return;}
-  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso').reduce((s,e)=>s+effAmt(e),0);
+  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).reduce((s,e)=>s+effArs(e),0);
   const dailyRate=spentSoFar/dayOfMonth;
   const projected=Math.round(dailyRate*daysInMonth);
-  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso').reduce((s,e)=>s+e.amount,0);
+  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
   const projCard=document.getElementById('proj-card');
   const projVal=document.getElementById('c-proj');
   const projHint=document.getElementById('c-proj-hint');
@@ -3831,6 +4041,20 @@ function openGlobalSearch(){
   document.getElementById('gsearch-inp').value='';
   document.getElementById('gsearch-results').innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">🔍</div><p>Escribí para buscar en todo</p></div>';
   setTimeout(()=>document.getElementById('gsearch-inp').focus(),200);
+}
+// Movimientos sin billetera (de todos los meses): tocar uno abre la edición para elegirla
+function openUnassigned(ev){
+  ev?.stopPropagation();
+  const rows=expenses.filter(e=>!e.accountId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('gsearch-overlay').classList.add('on');history.pushState({modal:true},'');
+  document.getElementById('gsearch-inp').value='';
+  document.getElementById('gsearch-results').innerHTML=rows.length
+    ?`<div class="div-lbl" style="margin-top:0">Sin billetera (${rows.length})</div>
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">No suman ni restan en ningún saldo. Tocá uno y elegí la billetera.</div>
+      <div id="unassigned-list">${rows.map(e=>expHTML(e,false)).join('')}</div>`
+    :'<div class="empty" style="padding:24px 0"><div class="empty-ico">✅</div><p>Todos los movimientos tienen billetera</p></div>';
+  // En captura: editExp frena la propagación y la lista taparía el formulario
+  document.getElementById('unassigned-list')?.addEventListener('click',closeGlobalSearch,{capture:true});
 }
 function closeGlobalSearch(){document.getElementById('gsearch-overlay').classList.remove('on');}
 function gsearchOverlayClick(ev){if(ev.target===document.getElementById('gsearch-overlay'))closeGlobalSearch();}
@@ -3899,11 +4123,10 @@ document.addEventListener('touchend',()=>{
 });
 
 // --- SERVICE WORKER (PWA) ---
-const APP_VERSION='2.8';
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').then(reg=>{
+    navigator.serviceWorker.register('./sw.js?v='+APP_VERSION).then(reg=>{
       // Check for updates every time the page loads
       reg.update();
       // When a new SW is found, prompt user to refresh
@@ -3976,12 +4199,17 @@ function accountBalance(accId){
       if(t.type==='ingreso'||t.type==='compra') bal+=t.usdAmount;
       else if(t.type==='venta') bal-=t.usdAmount;
     });
+    // Gastos e ingresos en USD con esta billetera (ej. pago del resumen en dólares)
+    expenses.forEach(e=>{
+      if(e.accountId!==accId||e.currency!=='USD')return;
+      if(e.type==='Ingreso')bal+=e.amount;else bal-=effAmt(e);
+    });
   } else {
     // ARS wallet: balance from expenses
     expenses.forEach(e=>{
       if(e.accountId!==accId)return;
-      if(e.type==='Ingreso')bal+=e.amount;
-      else bal-=effAmt(e);
+      if(e.type==='Ingreso')bal+=amtArs(e);
+      else bal-=effArs(e);
     });
     transfers.forEach(t=>{
       if(t.fromId===accId)bal-=t.amount;
@@ -4193,15 +4421,14 @@ function saveAccount(){
   saveAccounts();pushSettings();closeAccountModal();renderCuentasTab();haptic();
   toast(`✅ ${type==='credit'?'Tarjeta':'Billetera'} "${name}" ${id?'actualizada':'creada'}`);
   }catch(err){
-    console.error('[saveAccount]',err);
-    toast('❌ Error al guardar: '+err.message);
+    toast('❌ '+errMsg(err));
   }
 }
 function confirmDeleteAccount(id,ev){
   ev?.stopPropagation?.();const a=accounts.find(x=>x.id===id);
   pendingDel={type:'account',id};
   document.getElementById('conf-txt').textContent=`¿Eliminar "${a?.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- CC PAYMENT MODAL ---
@@ -4219,7 +4446,7 @@ function openCCPayModal(accId){
   document.getElementById('cc-pay-title').textContent=`💳 Pagar ${a.name}`;
   document.getElementById('ccp-real-ars').value='';
   document.getElementById('ccp-real-usd').value='';
-  document.getElementById('ccp-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ccp-date').value=todayStr();
   document.getElementById('ccp-subtotal-ars').textContent=fmt(totalARS);
   const usdRow=document.getElementById('ccp-usd-subtotal-row');
   usdRow.style.display=totalUSD>0?'flex':'none';
@@ -4278,7 +4505,7 @@ async function saveCCPayment(){
     const exp={
       id:newId(),type:'Egreso',date,
       category:'Servicios',
-      description:`Pago resumen ${a.name}`,
+      description:`Pago resumen ${a.name}`,ccPayment:true,
       amount:payARS,myAmount:payARS,
       accountId:walletArsId||null,
       currency:'ARS',shared:false,sharedPercent:100,
@@ -4293,7 +4520,7 @@ async function saveCCPayment(){
     const usdEntry={
       id:newId(),type:'Egreso',date,
       category:'Servicios',
-      description:`Pago resumen ${a.name} (USD)`,
+      description:`Pago resumen ${a.name} (USD)`,ccPayment:true,
       amount:payUSD,myAmount:payUSD,
       accountId:walletUsdId||null,
       currency:'USD',shared:false,sharedPercent:100,
@@ -4341,10 +4568,13 @@ async function saveCCPayment(){
   toast(`✅ Pago registrado · ${summary}`);
 }
 
+// Mismo día del mes siguiente; si no existe (31 → febrero), el último día de ese mes.
+// Antes new Date(y,m,31) se pasaba a marzo y la cuota salteaba un mes.
 function nextMonthDate(dateStr){
   const[y,m,d]=dateStr.split('-').map(Number);
-  const next=new Date(y,m,d); // month is 0-indexed, m is already next month
-  return`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const first=new Date(y,m,1); // month is 0-indexed, m is already next month
+  const last=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+  return`${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(Math.min(d,last)).padStart(2,'0')}`;
 }
 function openTransferModal(){
   const wallets=walletAccounts();
@@ -4356,7 +4586,7 @@ function openTransferModal(){
   if(wallets.length>1)document.getElementById('tf-to').selectedIndex=1;
   document.getElementById('tf-amt').value='';
   document.getElementById('tf-desc').value='';
-  document.getElementById('tf-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('tf-date').value=todayStr();
   document.getElementById('transfer-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('tf-amt').focus(),200);
 }
@@ -4373,17 +4603,21 @@ function saveTransfer(){
   if(!date){toast('⚠️ Completá la fecha');return;}
   const fromAcc=accounts.find(a=>a.id===fromId);
   const toAcc=accounts.find(a=>a.id===toId);
-  transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
-    description:desc||'Transferencia',createdAt:Date.now()});
-  saveAccounts();pushSettings();
-  closeTransferModal();renderCuentasTab();haptic();
-  toast(`✅ ${fromAcc?.name} → ${toAcc?.name} · ${fmt(amt)}`);
+  showConf('⇄','Confirmar transferencia',
+    `${fromAcc?.emoji||''} ${fromAcc?.name||''} → ${toAcc?.emoji||''} ${toAcc?.name||''}\nMonto: ${fmt(amt)}`,
+    ()=>{
+      transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
+        description:desc||'Transferencia',createdAt:Date.now()});
+      saveAccounts();pushSettings();
+      closeTransferModal();renderCuentasTab();haptic();
+      toast(`✅ ${fromAcc?.name} → ${toAcc?.name} · ${fmt(amt)}`);
+    },'Confirmar');
 }
 function deleteTransfer(id,ev){
   ev?.stopPropagation?.();const t=transfers.find(x=>x.id===id);
   pendingDel={type:'transfer',id};
   document.getElementById('conf-txt').textContent=t?`¿Eliminar transferencia "${t.description}"?\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- BUDGETS (PRESUPUESTOS) ---
@@ -4399,13 +4633,13 @@ function renderBudgetsSection(){
   budgetCats.forEach(cat=>{
     const limit=budgets[cat],spent=catData[cat]||0,pct=Math.min(100,Math.round((spent/limit)*100));
     const cls=pct>=100?'over':pct>=80?'warn':'ok';
-    html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget('${esc(cat)}')" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">✕</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' ⚠️ Excedido':pct>=80?' ⚡ Cerca del límite':''}</div></div>`;
+    html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget(${jsArg(cat)})" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">✕</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' ⚠️ Excedido':pct>=80?' ⚡ Cerca del límite':''}</div></div>`;
   });
   el.innerHTML=html;
 }
 function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();renderBudgetsSection();}
 function openBudgetModal(){
-  document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${c}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
+  document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${esc(c)}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
   document.getElementById('bdg-amt').value='';
   document.getElementById('budget-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('bdg-amt').focus(),200);
@@ -4469,17 +4703,17 @@ function addToGoal(id){
 function deleteGoal(id){
   const g=goals.find(x=>x.id===id);pendingDel={type:'goal',id};
   document.getElementById('conf-txt').textContent=`¿Eliminar la meta "${g?.name}"?\nEsta acción no se puede deshacer.`;
-  document.getElementById('conf-overlay').classList.add('on');history.pushState({modal:true},'');
+  openDeleteConf();
 }
 
 // --- STATS ---
 function renderStats(mk){
-  const rows=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso');
+  const rows=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e));
   if(!rows.length){document.getElementById('stats-grid').style.display='none';return;}
   const{ing,real}=calcSummary(mk);
   const rate=ing>0?Math.round((1-real/ing)*100):0;
   const today=new Date().getDate(),dailyAvg=today>0?Math.round(real/today):0;
-  const catMap={};rows.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+effAmt(e);});
+  const catMap={};rows.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+effArs(e);});
   const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
   document.getElementById('stats-grid').style.display='grid';
   document.getElementById('st-rate').textContent=ing>0?rate+'%':'—';
@@ -4492,7 +4726,7 @@ function renderStats(mk){
 let _qaCat='';
 function openQuickAdd(){
   document.getElementById('qa-amt').value='';_qaCat='';
-  document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)&&catTypeFor(c)!=='ingreso').map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat('${esc(c)}')" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
+  document.getElementById('qa-cat-grid').innerHTML=cats.filter(c=>!hiddenCats.has(c)&&catTypeFor(c)!=='ingreso').map(c=>`<button class="qa-cat-btn" id="qa_${c.replace(/[^a-z]/gi,'_')}" onclick="selectQaCat(${jsArg(c)})" title="${esc(displayName(c))}"><span class="qa-ico">${catIcon(c)}</span>${esc(displayName(c).length>7?displayName(c).slice(0,7)+'…':displayName(c))}</button>`).join('');
   document.getElementById('qa-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('qa-amt').focus(),200);
 }
@@ -4507,7 +4741,7 @@ async function saveQuickAdd(){
   const amt=parseFloat(document.getElementById('qa-amt').value);
   if(!amt||amt<=0){toast('⚠️ Ingresá el monto');return;}
   if(!_qaCat){toast('⚠️ Elegí una categoría');return;}
-  const exp={id:newId(),type:'Egreso',date:new Date().toISOString().split('T')[0],category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
+  const exp={id:newId(),type:'Egreso',date:todayStr(),category:_qaCat,description:_qaCat,amount:amt,myAmount:amt,notes:null,splits:null,recurring:false,shared:false,sharedPercent:100,createdAt:Date.now(),updatedAt:Date.now()};
   expenses.push(exp);haptic();closeQuickAdd();renderAll();toast(`✅ ${icon(_qaCat)} ${fmt(amt)} en ${_qaCat}`);
   skipNextArs=fbOnline;await persistArs(exp,null);
 }
@@ -4544,7 +4778,7 @@ function renderPatrimonioCard(){
   const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
   const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');
   const unassigned=expenses.filter(e=>!e.accountId&&e.type==='Egreso').length+expenses.filter(e=>!e.accountId&&e.type==='Ingreso').length;
-  const warn=unassigned>0?`<div style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera</div>`:'';
+  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:32px;display:flex;align-items:center;cursor:pointer;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · no cuentan en los saldos · tocá para asignar ›</div>`:'';
   el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
     <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">▾</span></div>
     <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px">
@@ -4617,7 +4851,7 @@ async function saveAdjust(){
   const exp = {
     id: newId(),
     type: diff > 0 ? 'Ingreso' : 'Egreso',
-    date: new Date().toISOString().split('T')[0],
+    date: todayStr(),
     category: diff > 0 ? 'Sueldo' : 'Otro',
     description: `Ajuste de saldo — ${acc?.name}`,
     amount: Math.abs(diff), myAmount: Math.abs(diff),

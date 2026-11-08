@@ -1,7 +1,7 @@
 {
   "name": "appgastos",
-  "version": "1.0.0",
-  "description": "App de gastos personalea",
+  "version": "2.9.0",
+  "description": "App de gastos personales",
   "main": "sw.js",
   "scripts": {
     "dev": "vite",
