@@ -153,6 +153,7 @@ function renderCuentasTab(){
       </div>
       ${lineItems}
       ${moreCount>0?`<div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:6px">+ ${moreCount} más</div>`:''}
+      ${cardProjectionHTML(a)}
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="btn-pay-cc" onclick="openCCPayModal('${a.id}')">💳 Pagar resumen</button>
         <button onclick="openAccountModal('${a.id}')" class="btn-ico edit" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">✏️</button>
@@ -255,6 +256,7 @@ function saveAccount(){
     closingDay:type==='credit'?closingDay:0,
     dueOffset:type==='credit'?dueOffset:10,
     payWalletId:type==='credit'?payWalletId:null,
+    lastPaid:type==='credit'?(accounts.find(a=>a.id===id)?.lastPaid||null):null,
     createdAt:id?accounts.find(a=>a.id===id)?.createdAt||Date.now():Date.now()
   };
   if(id){const i=accounts.findIndex(a=>a.id===id);if(i>-1)accounts[i]=acc;else accounts.push(acc);}
@@ -348,7 +350,7 @@ async function saveCCPayment(){
     const exp={
       id:newId(),type:'Egreso',date,
       category:'Servicios',
-      description:`Pago resumen ${a.name}`,ccPayment:true,
+      description:`Pago resumen ${a.name}`,ccPayment:true,ccCardId:accId,
       amount:payARS,myAmount:payARS,
       accountId:walletArsId||null,
       currency:'ARS',shared:false,sharedPercent:100,
@@ -363,7 +365,7 @@ async function saveCCPayment(){
     const usdEntry={
       id:newId(),type:'Egreso',date,
       category:'Servicios',
-      description:`Pago resumen ${a.name} (USD)`,ccPayment:true,
+      description:`Pago resumen ${a.name} (USD)`,ccPayment:true,ccCardId:accId,
       amount:payUSD,myAmount:payUSD,
       accountId:walletUsdId||null,
       currency:'USD',shared:false,sharedPercent:100,
@@ -402,6 +404,8 @@ async function saveCCPayment(){
     skipNextArs=fbOnline;await persistArs(e,null);
   }
 
+  // Para los recordatorios: este resumen ya está pago
+  a.lastPaid=date;saveAccounts();pushSettings();
   saveLocal();closeCCPayModal();renderAll();haptic([50,30,50]);
   const arsWallet=walletArsId?walletAccounts().find(w=>w.id===walletArsId)?.name:'';
   const summary=[

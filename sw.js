@@ -48,7 +48,8 @@ self.addEventListener('fetch', e => {
       url.includes('accounts.google.com') ||
       url.includes('__/auth/') ||
       url.includes('apiKey=') ||
-      url.includes('identitytoolkit')) {
+      url.includes('identitytoolkit') ||
+      url.includes('dolarapi.com')) {
     return;
   }
 

@@ -224,7 +224,9 @@ function onAmtOrCurrencyChange(){
   const currency=document.getElementById('f-currency').value;
   const amt=parseFloat(document.getElementById('f-amt').value)||0;
   const tcWrap=document.getElementById('f-tc-wrap');
+  const wasHidden=tcWrap.style.display!=='block';
   tcWrap.style.display=currency==='USD'?'block':'none';
+  if(currency==='USD'&&wasHidden)showExpenseRates();
   if(currency==='USD'){
     const tc=parseFloat(document.getElementById('f-tc').value)||0;
     if(tc>0&&amt>0){
@@ -245,6 +247,8 @@ function onEquivChange(){
 }
 function setCardExpType(t){
   document.getElementById('f-card-exp-type').value=t;
+  // En cuotas, el monto es el de cada cuota: es lo que entra en cada resumen
+  document.getElementById('f-amt-lbl').textContent=t==='installment'?'Monto de cada cuota ($)':'Monto total ($)';
   ['one','rec','inst'].forEach(x=>{
     document.getElementById('fct-'+x).className='type-btn'+(t===({'one':'one','recurring':'rec','installment':'inst'}[t]===x?t:'')?' au':'');
   });
@@ -268,6 +272,7 @@ function onAccountSelected(){
     setCardExpType(document.getElementById('f-card-exp-type').value||'one');
   } else {
     cardWrap.style.display='none';
+    document.getElementById('f-amt-lbl').textContent='Monto total ($)';
   }
 }
 function openModal(data=null){
@@ -283,6 +288,8 @@ function openModal(data=null){
   document.getElementById('f-tc').value=data?.exchangeRate||'';
   document.getElementById('f-ars-equiv').value=data?.arsEquiv||'';
   document.getElementById('f-tc-wrap').style.display=(data?.currency==='USD')?'block':'none';
+  document.getElementById('f-tc-rates').innerHTML='';
+  if(data?.currency==='USD')showExpenseRates();
   // Card type
   document.getElementById('f-card-exp-type').value=data?.cardExpType||'one';
   document.getElementById('f-inst-current').value=data?.installmentCurrent||1;

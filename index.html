@@ -119,6 +119,8 @@
       <div class="stat-card"><div class="stat-val" id="st-daily" style="color:var(--yellow)">—</div><div class="stat-lbl">Gasto diario prom.</div></div>
       <div class="stat-card"><div class="stat-val" id="st-topcat" style="color:var(--p1)">—</div><div class="stat-lbl">Mayor categoría</div></div>
     </div>
+    <!-- Vencimientos de tarjetas -->
+    <div id="card-reminders"></div>
     <!-- Recurring reminders -->
     <div id="recurring-reminders"></div>
     <!-- Presupuestos -->
@@ -131,8 +133,14 @@
     </div>
     <!-- Month comparison chart -->
     <div class="chart-box hidden" id="monthly-chart-box">
-      <div class="box-title">Últimos 6 meses <span class="box-title-sub" id="monthly-chart-sub"></span></div>
+      <div class="box-title"><span id="monthly-chart-title">Últimos 6 meses</span> <span class="box-title-sub" id="monthly-chart-sub"></span></div>
+      <div class="period-tabs" id="period-tabs">
+        <button data-mode="mes" onclick="setPeriodMode('mes')">Meses</button>
+        <button data-mode="trim" onclick="setPeriodMode('trim')">Trimestres</button>
+        <button data-mode="anio" onclick="setPeriodMode('anio')">Años</button>
+      </div>
       <div class="chart-wrap"><canvas id="monthly-chart"></canvas></div>
+      <div id="period-compare"></div>
     </div>
     <div class="div-lbl">Últimos 10 movimientos</div>
     <div id="recent-list"></div>
@@ -287,7 +295,7 @@
       <textarea class="f-ctrl" id="f-notes" placeholder="Detalles adicionales…" rows="2" style="resize:none;line-height:1.5"></textarea>
     </div>
     <div class="f-grp">
-      <label class="f-lbl">Monto total ($)</label>
+      <label class="f-lbl" id="f-amt-lbl">Monto total ($)</label>
       <div style="display:flex;gap:8px">
         <input type="number" class="f-ctrl" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" oninput="recalcSplit();onAmtOrCurrencyChange()" style="flex:1">
         <select class="f-ctrl" id="f-currency" onchange="onAmtOrCurrencyChange()" style="width:90px;flex-shrink:0">
@@ -309,6 +317,7 @@
         </div>
       </div>
       <div id="f-tc-preview" style="font-size:11px;color:var(--txt3);margin-bottom:8px;text-align:right"></div>
+      <div id="f-tc-rates"></div>
     </div>
     <!-- Card expense type — only shown when selected account is a credit card -->
     <div id="f-card-type-wrap" style="display:none">
@@ -398,6 +407,7 @@
       <div class="f-grp">
         <label class="f-lbl" id="uf-ars-lbl">ARS recibidos</label>
         <input type="number" class="f-ctrl gold-focus" id="uf-ars" placeholder="ej: 142500" inputmode="decimal" step="any" min="0" oninput="calcTC()">
+        <div id="uf-rates"></div>
       </div>
       <div class="tc-preview" id="tc-preview">
         <div class="tc-preview-lbl">Tipo de cambio implícito</div>
@@ -904,6 +914,9 @@
 <script src="js/sw-register.js"></script>
 <script src="js/accounts.js"></script>
 <script src="js/budgets.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/periods.js"></script>
+<script src="js/dolar.js"></script>
 <script src="js/init.js"></script>
 </body>
 </html>

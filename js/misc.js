@@ -269,21 +269,22 @@ function preloadRecurring(templateId){
 
 // --- MONTH COMPARISON CHART ---
 // monthlyChart declared in state above
+// Meses, trimestres o años (js/periods.js); la elección queda guardada en el dispositivo
 function renderMonthlyChart(){
-  const months=[];
-  const now=new Date();
-  for(let i=5;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-  }
-  const labels=months.map(mk=>{ const[,m]=mk.split('-'); return['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(m)-1]; });
-  const gastos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).reduce((s,e)=>s+effArs(e),0));
-  const ingresos=months.map(mk=>expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0));
+  const mode=getPeriodMode();
+  const rows=periodTotals(mode,PERIOD_MODES[mode].n);
+  const labels=rows.map(r=>r.label);
+  const gastos=rows.map(r=>r.gastos);
+  const ingresos=rows.map(r=>r.ingresos);
   const box=document.getElementById('monthly-chart-box');
-  if(gastos.every(v=>v===0)&&ingresos.every(v=>v===0)){box.classList.add('hidden');return;}
+  // Si no hay nada en ningún período (ni en el año), la caja no aparece
+  if(gastos.every(v=>v===0)&&ingresos.every(v=>v===0)&&periodTotals('anio',1).every(r=>!r.gastos&&!r.ingresos)){box.classList.add('hidden');return;}
   box.classList.remove('hidden');
+  document.getElementById('monthly-chart-title').textContent=PERIOD_MODES[mode].title;
+  document.querySelectorAll('#period-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
   const avgGasto=Math.round(gastos.slice(0,-1).filter(v=>v>0).reduce((s,v)=>s+v,0)/Math.max(1,gastos.slice(0,-1).filter(v=>v>0).length));
   document.getElementById('monthly-chart-sub').textContent=avgGasto>0?`· promedio ${fmt(avgGasto)}`:'';
+  renderPeriodCompare(rows,mode);
   const ctx=document.getElementById('monthly-chart').getContext('2d');
   if(monthlyChart){monthlyChart.destroy();monthlyChart=null;}
   monthlyChart=new Chart(ctx,{
@@ -296,7 +297,7 @@ function renderMonthlyChart(){
       plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),font:{family:'Outfit',size:11},boxWidth:11,boxHeight:11}},
         tooltip:{bodyFont:{family:'JetBrains Mono',size:12},backgroundColor:chartBgColor(),borderColor:'rgba(102,126,234,.35)',borderWidth:1,padding:10,cornerRadius:10,callbacks:{label:c=>`  ${fmt(c.raw)}`}}},
       scales:{x:{grid:{display:false},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},
-        y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'JetBrains Mono',size:11},callback:v=>v>=1000?'$'+Math.round(v/1000)+'k':fmt(v)}}}}
+        y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'JetBrains Mono',size:11},callback:v=>v>=1e6?'$'+(Math.round(v/1e5)/10)+'M':v>=1000?'$'+Math.round(v/1000)+'k':fmt(v)}}}}
   });
 }
 

@@ -39,6 +39,7 @@ function setUsdType(t){
   document.getElementById('ubtn-buy').className='type-btn'+(t==='compra'?' au':'');
   document.getElementById('ubtn-sell').className='type-btn'+(t==='venta'?' av':'');
   document.getElementById('uf-ars-wrap').style.display=(t==='venta'||t==='compra')?'block':'none';
+  showUsdRates(t);
   if(t==='compra'){
     document.getElementById('uf-ars-lbl').textContent='ARS pagados';
     document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Egreso automático';
