@@ -4501,10 +4501,13 @@ async function saveCCPayment(){
   toast(`✅ Pago registrado · ${summary}`);
 }
 
+// Mismo día del mes siguiente; si no existe (31 → febrero), el último día de ese mes.
+// Antes new Date(y,m,31) se pasaba a marzo y la cuota salteaba un mes.
 function nextMonthDate(dateStr){
   const[y,m,d]=dateStr.split('-').map(Number);
-  const next=new Date(y,m,d); // month is 0-indexed, m is already next month
-  return`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const first=new Date(y,m,1); // month is 0-indexed, m is already next month
+  const last=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+  return`${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(Math.min(d,last)).padStart(2,'0')}`;
 }
 function openTransferModal(){
   const wallets=walletAccounts();
