@@ -27,19 +27,43 @@ Todo, salvo lo que solo mueve plata entre cuentas: el **pago del resumen de la t
 
 | Parte | Dónde |
 |---|---|
-| Toda la app (HTML, estilos y JS) | `index.html` (un solo archivo) |
+| Pantallas y formularios (HTML) | `index.html` |
+| Estilos | `css/app.css` |
+| La app (JS), por tema | `js/` (ver abajo) |
 | Service worker (instalación y caché) | `sw.js` |
 | Manifest de la PWA e íconos | `manifest.json`, `public/icons/` |
-| Reglas de Firebase Realtime Database | `database.rules.json` |
-| Versión modular **sin terminar** (no se publica) | `src/` — ver `ROADMAP.md`, fase 3 |
+| Reglas de Firebase Realtime Database | `database.rules.json` (y `firebase.json`) |
+| Pruebas | `tests/` (lógica), `e2e/` (navegador), `e2e/firebase/` (con emuladores) |
+
+### `js/`
+
+No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts clásicos** que se cargan en orden desde `index.html` y comparten el ámbito global (por eso los `onclick="..."` del HTML encuentran las funciones). El orden importa solo para lo que corre al cargar; hoy eso es únicamente `init.js`, que va último.
+
+| Archivo | Qué tiene |
+|---|---|
+| `config.js` | `APP_VERSION`, configuración de Firebase, constantes y estado global |
+| `storage.js` | copia local, rutas de Firebase, cola sin conexión, guardado |
+| `settings.js` | configuración: armarla, aplicarla y subirla |
+| `sync.js` | login, listeners de Firebase, arranque |
+| `ui.js` | botón atrás, perfil, diagnóstico, borrar todo, diálogo de confirmación |
+| `backup.js` | respaldo completo, ayuda |
+| `calc.js` | formatos y cálculos: montos, USD, resumen del mes, deudas |
+| `render.js` | resumen, lista, USD y saldos |
+| `expense.js` | formulario de gastos, split, contactos, categorías |
+| `usd-debts.js` | USD, deudas, saldar, borrar |
+| `misc.js` | pestañas, tema, CSV, recurrentes, gráficos, búsqueda |
+| `sw-register.js` | registro del service worker y aviso de versión nueva |
+| `accounts.js` | billeteras, tarjetas, saldos, transferencias, pago del resumen |
+| `budgets.js` | presupuestos, metas, estadísticas, carga rápida, patrimonio |
+| `init.js` | arranque |
 
 - **Datos:** Firebase Realtime Database, en `usuarios/{uid}/...`. Cada usuario solo lee y escribe lo suyo. También hay una copia local en `localStorage` para abrir rápido y funcionar sin conexión.
-- **Firebase y Chart.js** se cargan desde CDN (`<script>` al principio de `index.html`).
+- **Firebase (12, modo compat) y Chart.js** se cargan desde CDN (`<script>` al principio de `index.html`). Si cambia la versión, actualizarla también en `CDN_ASSETS` de `sw.js`.
 - **Publicación:** GitHub Pages sirve la rama `main` tal cual. Cada push a `main` se publica solo, en uno o dos minutos.
 
 ## Reglas de Firebase
 
-`database.rules.json` no se publica solo. Para aplicarlo: consola de Firebase → Realtime Database → Reglas → pegar el contenido → Publicar. Cada usuario solo lee y escribe `usuarios/{su uid}`, y se valida la forma de gastos, USD, deudas y configuración.
+`database.rules.json` no se publica solo. Para aplicarlo: consola de Firebase → Realtime Database → Reglas → pegar el contenido → Publicar (o `npx firebase-tools deploy --only database --project gastos-pache`). Cada usuario solo lee y escribe `usuarios/{su uid}`, y se valida la forma de gastos, USD, deudas y configuración.
 
 ## Respaldo
 
@@ -47,18 +71,28 @@ Perfil → Respaldo → **Descargar respaldo completo** baja un JSON con todo. *
 
 ## Versión
 
-La versión está en **una sola constante**: `APP_VERSION` al principio del `<script>` de `index.html`. Se muestra en el encabezado y le da nombre a la caché del service worker (`sw.js?v=...`), así que **subirla hace que los celulares vean "Nueva versión disponible"**.
+La versión está en **una sola constante**: `APP_VERSION` en `js/config.js`. Se muestra en el encabezado y le da nombre a la caché del service worker (`sw.js?v=...`), así que **subirla hace que los celulares vean "Nueva versión disponible"**.
 
 Al publicar una versión: subir `APP_VERSION` (y `version` en `package.json`) y sumar la entrada en `CHANGELOG.md`.
 
 ## Trabajar en local
 
 ```bash
-npx serve .          # o cualquier servidor estático
-# abrir http://localhost:3000/
+npm install
+npm run dev          # http://localhost:8765/AppGastos/
 ```
 
 El login de Google necesita que el dominio esté autorizado en Firebase Authentication (`localhost` ya lo está por defecto).
+
+## Pruebas
+
+| Comando | Qué prueba |
+|---|---|
+| `npm test` | lógica: saldos, resumen del mes, USD, cuotas, deudas repetidas, configuración (vitest, sin navegador) |
+| `npm run test:e2e` | la app en Chromium: formularios, diálogos, fecha a distintas horas, cálculos en pantalla, sin conexión |
+| `npm run test:firebase` | contra los emuladores de Firebase (necesita Java): sincronización entre dos dispositivos, reglas, deudas, respaldo |
+
+Las tres corren en GitHub en cada PR (`.github/workflows/pruebas.yml`). Para usar un Chromium ya instalado: `CHROMIUM_PATH=/ruta/a/chromium npm run test:e2e`.
 
 ## Documentos
 

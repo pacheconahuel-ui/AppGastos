@@ -1,5 +1,15 @@
 # Cambios
 
+## 3.0 — noviembre 2026
+
+Por dentro; la app se ve y funciona igual que la 2.9.
+
+- **El código está partido en archivos** (`css/app.css` y 15 archivos en `js/`) en lugar de un `index.html` de 4.600 líneas. Sigue sin compilación: GitHub Pages lo publica tal cual.
+- **Firebase 12** (antes 10.7, de 2023), en modo compat.
+- **Pruebas automáticas:** 17 de lógica, 14 en el navegador y 6 contra los emuladores de Firebase, en GitHub en cada PR.
+- **Service worker:** los archivos de la app se piden siempre a la red (la caché queda para sin conexión), así una versión nueva no mezcla archivos viejos y nuevos.
+- Se sacaron la carpeta `src/` (la migración de junio, desactualizada) y Vite.
+
 ## 2.9 — noviembre 2026
 
 ### Nuevo

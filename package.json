@@ -1,32 +1,23 @@
 {
   "name": "appgastos",
-  "version": "2.9.0",
-  "description": "App de gastos personales",
-  "main": "sw.js",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Mis Gastos: app de gastos personales (PWA)",
+  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node e2e/server.mjs",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:firebase": "npx -y firebase-tools@14.27.0 emulators:exec --only database,auth --project gastos-pache \"playwright test -c playwright.firebase.config.js\""
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pacheconahuel-ui/AppGastos.git"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/pacheconahuel-ui/AppGastos/issues"
-  },
-  "homepage": "https://github.com/pacheconahuel-ui/AppGastos#readme",
   "devDependencies": {
-    "esbuild": "^0.28.0",
+    "@playwright/test": "1.64.1",
     "sharp": "^0.34.5",
-    "terser": "^5.47.1",
-    "vite": "^8.0.13"
-  },
-  "dependencies": {
-    "firebase": "^12.13.0"
+    "vitest": "4.1.12"
   }
 }
