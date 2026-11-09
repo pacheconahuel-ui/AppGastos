@@ -191,3 +191,22 @@ describe('avisos entre personas vinculadas', () => {
     expect(app.run('avisoTexto(__a)')).toContain('Nahu registró');
   });
 });
+
+describe('movimientos programados (fecha futura)', () => {
+  it('no cuentan en el saldo de la billetera hasta su fecha', () => {
+    app.set('expenses', [
+      mov({ id: 'a', type: 'Ingreso', amount: 1000, accountId: 'acc_mp', date: '2020-01-01' }),
+      mov({ id: 'b', amount: 300, accountId: 'acc_mp', date: '2020-01-02' }),
+      mov({ id: 'c', amount: 500, accountId: 'acc_mp', date: '2099-12-07' }), // programado
+    ]);
+    expect(app.run('accountBalance("acc_mp")')).toBe(700);
+    expect(app.run('esFuturo(expenses[2])')).toBe(true);
+    expect(app.run('esFuturo(expenses[1])')).toBe(false);
+  });
+  it('hoy ya cuenta, y las transferencias programadas tampoco mueven plata todavía', () => {
+    app.set('expenses', [mov({ id: 'h', amount: 100, accountId: 'acc_mp', date: app.run('todayStr()') })]);
+    app.set('transfers', [{ id: 't', fromId: 'acc_mp', toId: 'acc_efectivo', amount: 50, date: '2099-01-01' }]);
+    expect(app.run('accountBalance("acc_mp")')).toBe(-100);
+    expect(app.run('accountBalance("acc_efectivo")')).toBe(0);
+  });
+});

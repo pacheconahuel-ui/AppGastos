@@ -1,5 +1,11 @@
 # Cambios
 
+## 3.9.1 — noviembre 2026
+
+- **Movimientos programados:** un gasto o ingreso con **fecha futura** (por ejemplo la cuota del curso con fecha 7 de diciembre) ya no resta ni suma en tu billetera hasta ese día. Antes se descontaba en el momento. En la lista aparece con la etiqueta **Programado**, y el formulario avisa "Programado para el …: no resta de tu saldo hasta ese día". También vale para transferencias con fecha futura, y la proyección de fin de mes no cuenta lo programado.
+- Para gastos que se repiten todos los meses (curso, dentista, cuota de la heladera): cargá el primero con la fecha en que arranca y marcá **Se repite todos los meses** (en "Más opciones"). Cada mes la app te lo recuerda en el resumen para confirmarlo.
+- Pruebas nuevas: saldo con movimientos programados (lógica y navegador, con el reloj fijado antes y el día del gasto).
+
 ## 3.9 — noviembre 2026
 
 **Vincular contactos con otras personas que usan la app**, solo para avisarse deudas y pagos.

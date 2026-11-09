@@ -281,6 +281,7 @@ function openModal(data=null){
   document.getElementById('m-title').textContent=data?'Editar movimiento':'Nuevo movimiento';
   document.getElementById('f-id').value=data?.id||'';
   document.getElementById('f-date').value=data?.date||todayStr();
+  updateFutureHint();
   document.getElementById('f-desc').value=data?.description||'';
   document.getElementById('f-notes').value=data?.notes||'';
   document.getElementById('f-amt').value=data?.amount||'';
@@ -330,6 +331,12 @@ function openModal(data=null){
   recalcSplit();
   document.getElementById('m-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('f-amt').focus(),200);
+}
+// Con fecha futura el movimiento queda programado: no toca el saldo hasta ese día
+function updateFutureHint(){
+  const el=document.getElementById('f-future-hint');if(!el)return;
+  const d=document.getElementById('f-date').value;
+  el.textContent=d&&d>todayStr()?`Programado para el ${fmtDate(d)}: no resta de tu saldo hasta ese día.`:'';
 }
 function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;backToUnassigned();}
 function overlayClick(ev){if(ev.target===document.getElementById('m-overlay'))closeModal();}

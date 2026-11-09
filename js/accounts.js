@@ -44,17 +44,18 @@ function accountBalance(accId){
     });
     // Gastos e ingresos en USD con esta billetera (ej. pago del resumen en dólares)
     expenses.forEach(e=>{
-      if(e.accountId!==accId||e.currency!=='USD')return;
+      if(e.accountId!==accId||e.currency!=='USD'||esFuturo(e))return;
       if(e.type==='Ingreso')bal+=e.amount;else bal-=effAmt(e);
     });
   } else {
     // ARS wallet: balance from expenses
     expenses.forEach(e=>{
-      if(e.accountId!==accId)return;
+      if(e.accountId!==accId||esFuturo(e))return;
       if(e.type==='Ingreso')bal+=amtArs(e);
       else bal-=effArs(e);
     });
     transfers.forEach(t=>{
+      if(esFuturo(t))return;
       if(t.fromId===accId)bal-=t.amount;
       if(t.toId===accId)bal+=t.amount;
     });

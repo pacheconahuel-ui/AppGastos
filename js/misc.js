@@ -325,7 +325,7 @@ function renderProjection(){
   const dayOfMonth=today.getDate();
   const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
   if(dayOfMonth<3){document.getElementById('proj-card').style.display='none';return;}
-  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).reduce((s,e)=>s+effArs(e),0);
+  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)&&!esFuturo(e)).reduce((s,e)=>s+effArs(e),0);
   const dailyRate=spentSoFar/dayOfMonth;
   const projected=Math.round(dailyRate*daysInMonth);
   const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
