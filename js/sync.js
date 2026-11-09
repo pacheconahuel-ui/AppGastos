@@ -26,6 +26,9 @@ function loginEmail(){
   action.catch(e=>{const m={'auth/user-not-found':'No existe esa cuenta.','auth/wrong-password':'Contraseña incorrecta.','auth/email-already-in-use':'Email ya registrado.','auth/weak-password':'Mínimo 6 caracteres.','auth/invalid-email':'Email inválido.'};errEl.textContent=m[e.code]||e.message;});
 }
 function toggleRegister(){isRegisterMode=!isRegisterMode;document.getElementById('btn-email-action').textContent=isRegisterMode?'Crear cuenta':'Iniciar sesión';document.getElementById('toggle-txt').textContent=isRegisterMode?'Ya tengo cuenta':'Registrarse';document.getElementById('login-err').textContent='';}
+function confirmLogout(){
+  showConf('logout','¿Cerrar sesión?','Tus datos quedan guardados en tu cuenta. Para volver a entrar vas a necesitar iniciar sesión de nuevo.',()=>{closeProfilePanel();doLogout();},'Cerrar sesión');
+}
 function doLogout(){
   if(arsListener)db?.ref(arsBase()).off('value',arsListener);
   if(usdListener)db?.ref(usdBase()).off('value',usdListener);

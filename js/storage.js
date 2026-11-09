@@ -60,7 +60,10 @@ function setStatus(state,label){
     pill.classList.remove('online');pill.classList.add('syncing');
     span.textContent='⚙ Config pendiente';
   }
+  // El encabezado muestra solo el punto de color; el texto queda para lectores de pantalla y para el toque
+  pill.setAttribute('aria-label','Estado de sincronización: '+span.textContent.replace(/^[●⚠↑⚙]\s*/,''));
 }
+function showSyncStatus(){toast(document.getElementById('sync-label').textContent.replace(/^[●]\s*/,'● '));}
 
 // --- FIREBASE OPS ---
 // Mensaje para el usuario a partir de un error técnico (el detalle va a la consola)

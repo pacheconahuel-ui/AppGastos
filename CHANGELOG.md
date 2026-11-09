@@ -1,5 +1,16 @@
 # Cambios
 
+## 3.8 — noviembre 2026
+
+Encabezado, menú y resumen más claros, y una auditoría con datos de prueba parecidos a los de uso real (varios meses, 56 movimientos sin billetera, un contacto borrado con deudas, USD, tarjeta, presupuestos y metas).
+
+- **Encabezado:** quedan solo el título con la versión, la lupa y el botón de perfil. El perfil ahora se ve como botón (borde, avatar, nombre y flecha). **Cerrar sesión** y el **cambio de tema** ya no están sueltos arriba: están en el perfil, y cerrar sesión pide confirmación (antes se apretaba sin querer).
+- **Sincronización:** en lugar del cartel "● Sincronizado" queda solo el punto de color al lado de la versión (verde, azul o amarillo según el estado). Tocarlo dice el estado con palabras.
+- **Resumen más corto:** menos texto ("4 billeteras" sin la explicación, sin "mes actual", la proyección en una línea) y **Presupuestos y metas en una tarjeta chica** con lo más cerca del tope; "Editar" abre el detalle completo. Los **gráficos** se ven de a uno ("Por categoría" o "Evolución"). El resumen con datos de prueba pasó de 2470 a 1572 px de alto.
+- **Movimientos sin billetera:** cada uno trae botones con las billeteras para asignarla con un toque (la fila sale de la lista y el saldo se actualiza). Si tocás la fila para editarla, al guardar **volvés a la lista** y seguís con el resto. Los de dólares se eligen uno por uno.
+- **Controles de 44 px en toda la app:** la auditoría encontró más de 20 botones más chicos (Cobrar, Contactos, CSV, Nueva, Ajustar saldo, borrar, saldar, Transferencia/Compensación, etc.); ahora todos miden 44 px como mínimo. Sin desbordes laterales a 320, 360 y 390 px ni errores en ninguna pantalla.
+- Pruebas nuevas: encabezado a 320/360/390 px, punto de sincronización, cerrar sesión con confirmación, tarjeta de presupuestos y metas, gráficos de a uno y asignación desde la lista.
+
 ## 3.7 — noviembre 2026
 
 Arreglos a partir de capturas del celular.

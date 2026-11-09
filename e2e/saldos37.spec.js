@@ -54,7 +54,7 @@ test('el encabezado muestra solo la versión y un mes pasado ofrece volver al ac
   await expect(go).toBeVisible();
   expect((await go.boundingBox()).height).toBeGreaterThanOrEqual(43.5);
   await go.click();
-  await expect(page.locator('#dash-month-hint')).toHaveText('mes actual');
+  await expect(page.locator('#dash-month-hint')).toHaveText('');
   noErrors(page);
 });
 

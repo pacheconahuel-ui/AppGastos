@@ -15,7 +15,7 @@ test('los íconos del HTML se dibujan y no queda ninguno sin reemplazar', async 
   await openApp(page);
   expect(await page.locator('i[data-ico]').count()).toBe(0);
   expect(await page.locator('.bnav .ico').count()).toBe(0); // la barra de abajo trae sus SVG propios
-  expect(await page.locator('#btn-theme .ico').count()).toBe(1);
+  expect(await page.locator('.hdr-btn .ico').count()).toBe(1);
   expect(await page.locator('#usd-overlay .btn-save .ico').count()).toBe(1);
   // cada ícono tiene tamaño (no quedó en 0 por falta de CSS)
   for (const b of await page.locator('.ico').all()) {
@@ -54,13 +54,13 @@ test('el aviso "sin billetera" lista los movimientos y permite asignarla (360 px
     renderAll();
   });
   expect(await page.evaluate(() => accountBalance('acc_mp'))).toBe(-30000);
-  await page.getByText('tocá para asignar').click();
+  await page.getByText('asignar ›').click();
   await expect(page.locator('#gsearch-results')).toContainText('Sin billetera (1)');
   await page.locator('#unassigned-list .exp-item').first().click();
   await expect(page.locator('#gsearch-overlay')).not.toHaveClass(/\bon\b/);
   await page.evaluate(async () => { document.getElementById('f-account').value = 'acc_mp'; onAccountSelected(); await saveExpense(); });
   expect(await page.evaluate(() => accountBalance('acc_mp'))).toBe(470000);
-  await expect(page.getByText('tocá para asignar')).toHaveCount(0);
+  await expect(page.getByText('asignar ›')).toHaveCount(0);
   noErrors(page);
 });
 

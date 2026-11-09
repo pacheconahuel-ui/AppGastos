@@ -2,6 +2,8 @@
 // escalan con el tamaño de letra. Los emojis de categorías, billeteras, contactos y metas son
 // datos de cada persona y se quedan como están.
 const ICO_PATHS={
+  chevron:'<path d="m6 9 6 6 6-6"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   trash:'<path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>',

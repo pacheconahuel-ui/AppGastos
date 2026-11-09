@@ -20,11 +20,11 @@ async function cargar(page, extra = {}) {
   }, extra);
 }
 
-test('orden: avisos, disponible, el mes, presupuestos, últimos movimientos', async ({ page }) => {
+test('orden: avisos, disponible, el mes, últimos movimientos, presupuestos y metas, gráficos', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await cargar(page);
   const y = sel => page.locator(sel).first().evaluate(el => el.getBoundingClientRect().top + window.scrollY);
-  const orden = [await y('#card-reminders .card-reminder'), await y('#patrimonio-card'), await y('.sum-card'), await y('#budgets-section'), await y('#recent-list')];
+  const orden = [await y('#card-reminders .card-reminder'), await y('#patrimonio-card'), await y('.sum-card'), await y('#recent-list'), await y('#bg-card'), await y('#chart-seg')];
   expect([...orden].sort((a, b) => a - b)).toEqual(orden);
   await expect(page.locator('#c-ing')).toHaveText('$1.000.000');
   await expect(page.locator('#c-real')).toHaveText('$70.000');
@@ -49,7 +49,7 @@ test('con gastos compartidos aparece lo pagado en total', async ({ page }) => {
 
 test('sin presupuestos ni metas: botones para agregarlos', async ({ page }) => {
   await cargar(page);
-  await page.getByRole('button', { name: '＋ Presupuesto por categoría' }).click();
+  await page.getByRole('button', { name: '＋ Presupuesto', exact: true }).click();
   await expect(page.locator('#budget-overlay')).toHaveClass(/\bon\b/);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '＋ Meta de ahorro' }).click();
@@ -62,8 +62,9 @@ for (const ancho of [320, 360, 390]) {
     await page.setViewportSize({ width: ancho, height: 760 });
     await cargar(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    for (const sel of ['.sum-nav', '.sec-link', '.add-row']) {
+    for (const sel of ['.sum-nav', '.sec-link', '.add-row', '.seg button']) {
       for (const b of await page.locator('#tab-dashboard ' + sel).all()) {
+        if (!(await b.isVisible())) continue;
         const r = await b.boundingBox();
         expect(Math.min(r.width, r.height), sel).toBeGreaterThanOrEqual(44);
       }

@@ -330,7 +330,7 @@ function openModal(data=null){
   document.getElementById('m-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('f-amt').focus(),200);
 }
-function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;}
+function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;backToUnassigned();}
 function overlayClick(ev){if(ev.target===document.getElementById('m-overlay'))closeModal();}
 function setType(t){
   document.getElementById('f-type').value=t;
