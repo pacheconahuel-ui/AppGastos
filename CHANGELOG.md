@@ -1,5 +1,14 @@
 # Cambios
 
+## 3.6 — noviembre 2026
+
+Última parte del rediseño: íconos.
+
+- **Íconos de línea en lugar de emojis** en botones, títulos, menús, ayuda, avisos y pantallas vacías (cerca de 130 lugares). Heredan el color del texto, así quedan bien en el tema claro y el oscuro, y no cambian de aspecto según el celular. Los emojis de **categorías, billeteras, contactos y metas** siguen: son los que elegís vos.
+- **Ícono de la app** (el del celular y el de la pestaña del navegador) con la paleta nueva: cuadrado índigo con un "$" blanco. En el celular hay que sacar el acceso directo y volver a agregarlo para que tome el ícono nuevo.
+- Todos los botones de "Guardar" usan el mismo color (el de USD era blanco).
+- Pruebas que avisan si se pide un ícono que no existe o si vuelve a aparecer un emoji en un botón o título.
+
 ## 3.5 — noviembre 2026
 
 Cuarta parte del rediseño: el formulario para cargar un movimiento.

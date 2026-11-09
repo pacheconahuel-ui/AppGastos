@@ -101,7 +101,7 @@ function cardProjectionHTML(a){
   if(!rows.some((r,k)=>k>0&&(r.ars||r.usd)))return'';
   const max=Math.max(...rows.map(r=>r.ars),1);
   return`<details class="cc-proj">
-    <summary>📅 Próximos resúmenes (cuotas y fijos)</summary>
+    <summary>${ic('calendar')} Próximos resúmenes (cuotas y fijos)</summary>
     ${rows.map((r,k)=>`<div class="cc-proj-row">
       <span class="cc-proj-lbl">${r.label}${k===0?' · próximo':''}</span>
       <span class="cc-proj-bar"><span style="width:${Math.round(r.ars/max*100)}%"></span></span>

@@ -62,7 +62,7 @@ function openProfilePanel(){
   const initial=name.charAt(0).toUpperCase();
   const isLight=document.body.classList.contains('light');
   document.getElementById('profile-panel-body').innerHTML=`
-    <div class="m-title" style="margin-bottom:16px">👤 Perfil</div>
+    <div class="m-title" style="margin-bottom:16px">${ic('user')} Perfil</div>
     <div class="profile-user-card">
       <div class="profile-user-ava">${initial}</div>
       <div class="profile-user-info">
@@ -72,47 +72,47 @@ function openProfilePanel(){
     </div>
     <div class="profile-sec-lbl">Configuración</div>
     <button class="profile-action-row" onclick="toggleTheme();renderProfileThemeRow()">
-      <span class="par-ico" id="par-theme-ico">${isLight?'🌙':'☀️'}</span>
+      <span class="par-ico" id="par-theme-ico">${ic(isLight?'moon':'sun')}</span>
       <span id="par-theme-lbl">${isLight?'Modo oscuro':'Modo claro'}</span>
       <span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="closeProfilePanel();openCatManager()">
-      <span class="par-ico">🏷️</span>Gestionar categorías<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('tag')}</span>Gestionar categorías<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="closeProfilePanel();openContactsModal()">
-      <span class="par-ico">👥</span>Contactos<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('users')}</span>Contactos<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="closeProfilePanel();switchTab('cuentas')">
-      <span class="par-ico">💼</span>Cuentas y tarjetas<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('card')}</span>Cuentas y tarjetas<span class="par-chevron">›</span>
     </button>
     <div class="profile-sec-lbl">Ayuda</div>
     <button class="profile-action-row" onclick="closeProfilePanel();openHelpModal()">
-      <span class="par-ico">❓</span>Guía rápida<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('help')}</span>Guía rápida<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="closeProfilePanel();openGlobalSearch()">
-      <span class="par-ico">🔍</span>Búsqueda global<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('search')}</span>Búsqueda global<span class="par-chevron">›</span>
     </button>
     <div class="profile-sec-lbl">Diagnóstico</div>
     <button class="profile-action-row" onclick="runDiagnostics()">
-      <span class="par-ico">🔬</span>Verificar datos en Firebase<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('activity')}</span>Verificar datos en Firebase<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="forceSyncSettings(this)">
-      <span class="par-ico">⬇️</span>Traer config del servidor<span class="par-chevron" id="force-sync-status">›</span>
+      <span class="par-ico">${ic('download')}</span>Traer config del servidor<span class="par-chevron" id="force-sync-status">›</span>
     </button>
     <button class="profile-action-row" onclick="forcePushSettings(this)">
-      <span class="par-ico">⬆️</span>Subir mi config al servidor<span class="par-chevron" id="force-push-status">›</span>
+      <span class="par-ico">${ic('upload')}</span>Subir mi config al servidor<span class="par-chevron" id="force-push-status">›</span>
     </button>
     <div id="diag-result"></div>
     <div class="profile-sec-lbl">Respaldo</div>
     <button class="profile-action-row" onclick="exportBackup()">
-      <span class="par-ico">💾</span>Descargar respaldo completo<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('save')}</span>Descargar respaldo completo<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="document.getElementById('backup-file').click()">
-      <span class="par-ico">♻️</span>Restaurar un respaldo<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('restore')}</span>Restaurar un respaldo<span class="par-chevron">›</span>
     </button>
     <div class="profile-sec-lbl">Cuenta</div>
     <button class="profile-action-row" onclick="confirmResetAll()" style="color:var(--red)">
-      <span class="par-ico">🗑️</span>Borrar todos mis datos<span class="par-chevron">›</span>
+      <span class="par-ico">${ic('trash')}</span>Borrar todos mis datos<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="doLogout()" style="color:var(--txt3)">
       <span class="par-ico">⏏</span>Cerrar sesión<span class="par-chevron">›</span>
@@ -124,7 +124,7 @@ function renderProfileThemeRow(){
   const isLight=document.body.classList.contains('light');
   const ico=document.getElementById('par-theme-ico');
   const lbl=document.getElementById('par-theme-lbl');
-  if(ico)ico.textContent=isLight?'🌙':'☀️';
+  if(ico)ico.innerHTML=ic(isLight?'moon':'sun');
   if(lbl)lbl.textContent=isLight?'Modo oscuro':'Modo claro';
 }
 function closeProfilePanel(){document.getElementById('profile-overlay').classList.remove('on');}
@@ -155,13 +155,13 @@ async function forcePushSettings(btn){
     const ok=await fbSet(settingsPath(),{...buildSettingsPayload(ts),_pushId:pushId});
     if(!ok)throw Object.assign(new Error('fbSet failed'),{userMsg:'No se pudo subir la configuración. Cerrá sesión y volvé a entrar.'});
     localStorage.removeItem('gp_settings_pending');
-    if(statusEl)statusEl.textContent='✅';
+    if(statusEl)statusEl.innerHTML=ic('check');
     if(btn)btn.style.opacity='1';
     toast(`✅ Config subida — ${transfers.length} transferencia${transfers.length!==1?'s':''}${accounts.length?' · '+accounts.length+' cuentas':''}`);
     setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
   }catch(e){
     
-    if(statusEl)statusEl.textContent='❌';
+    if(statusEl)statusEl.innerHTML=ic('x');
     if(btn)btn.style.opacity='1';
     toast('❌ '+errMsg(e));
   }
@@ -182,11 +182,11 @@ async function forceSyncSettings(btn){
     } else {
       toast('ℹ Sin configuración en el servidor aún');
     }
-    if(statusEl)statusEl.textContent='✅';
+    if(statusEl)statusEl.innerHTML=ic('check');
     if(btn)btn.style.opacity='1';
     setTimeout(()=>{ if(statusEl)statusEl.textContent='›'; },3000);
   }catch(e){
-    if(statusEl)statusEl.textContent='❌';
+    if(statusEl)statusEl.innerHTML=ic('x');
     if(btn)btn.style.opacity='1';
     toast('❌ '+errMsg(e,'No se pudo traer la configuración. Probá de nuevo en un rato.'));
   }

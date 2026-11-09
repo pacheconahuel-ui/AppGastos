@@ -32,7 +32,7 @@ function onBackupFile(input){
     if(!fbOnline||!db||!currentUID){toast('⚠️ Necesitás conexión para restaurar');return;}
     const when=b.exportedAt?new Date(b.exportedAt).toLocaleDateString('es-AR'):'?';
     closeProfilePanel();
-    showConf('♻️','Restaurar respaldo',
+    showConf('restore','Restaurar respaldo',
       `Respaldo del ${when}: ${b.expenses.length} movimientos, ${b.usdTx.length} en USD, ${b.debts.length} deudas, ${(b.settings.accounts||[]).length} billeteras.\n\nReemplaza TODOS tus datos actuales. Antes se descarga un respaldo de lo que tenés hoy.`,
       ()=>restoreBackup(b),'Restaurar');
   };
@@ -72,7 +72,7 @@ function confirmResetAll(){
   closeProfilePanel();
   // First confirmation
   showConf(
-    '🗑️',
+    'trash',
     'Borrar todos mis datos',
     'Esto eliminará TODOS tus gastos, ingresos, deudas, billeteras y configuración.\n\nEsta acción no se puede deshacer.',
     ()=>{
@@ -90,7 +90,7 @@ function confirmResetAll(){
 }
 
 async function resetAllData(){
-  setStatus('syncing','🗑️ Borrando…');
+  setStatus('syncing','Borrando…');
   try{
     if(db&&currentUID){
       // Delete all Firebase data for this user
@@ -112,7 +112,7 @@ async function resetAllData(){
 // así puede usar las variables del lugar que la llama.
 let _confCb=null;
 function showConf(ico,title,msg,onConfirm,confirmLabel='Confirmar',cancelLabel='Cancelar'){
-  document.getElementById('conf-ico').textContent=ico;
+  document.getElementById('conf-ico').innerHTML=ICO_PATHS[ico]?ic(ico):esc(ico);
   document.getElementById('conf-ttl').textContent=title;
   if(msg!=null)document.getElementById('conf-txt').textContent=msg;
   document.getElementById('conf-btns').innerHTML=`
@@ -126,7 +126,7 @@ function confYes(){const cb=_confCb;closeConf();if(cb)cb();}
 // Para borrar: el texto ya lo puso quien llama (conf-txt) junto con pendingDel
 function openDeleteConf(){
   const pd=pendingDel;
-  showConf('🗑️','¿Eliminar?',null,()=>{pendingDel=pd;doDelete();},'Eliminar');
+  showConf('trash','¿Eliminar?',null,()=>{pendingDel=pd;doDelete();},'Eliminar');
 }
 
 async function runDiagnostics(){
@@ -150,25 +150,25 @@ async function runDiagnostics(){
     const rawS=fbS.val();
     const fbAccounts=rawS?.accounts?.length||0;
     let msg='';
-    if(fbG>expenses.length) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Hay más gastos en Firebase que en pantalla — cerrá sesión, volvé a entrar</div>';
-    else if(fbG===0&&expenses.length===0) msg='<div style="color:var(--red);font-size:11px;margin-top:6px">❌ Sin gastos — revisá que sea la cuenta correcta</div>';
-    else if(fbG>0&&expenses.length===0) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ Gastos en Firebase pero no cargados — cerrá sesión y volvé a entrar</div>';
-    else msg='<div style="color:var(--green);font-size:11px;margin-top:6px">✅ Todo sincronizado</div>';
+    if(fbG>expenses.length) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">'+ic('warn')+' Hay más gastos en Firebase que en pantalla — cerrá sesión, volvé a entrar</div>';
+    else if(fbG===0&&expenses.length===0) msg='<div style="color:var(--red);font-size:11px;margin-top:6px">'+ic('x')+' Sin gastos — revisá que sea la cuenta correcta</div>';
+    else if(fbG>0&&expenses.length===0) msg='<div style="color:var(--yellow);font-size:11px;margin-top:6px">'+ic('warn')+' Gastos en Firebase pero no cargados — cerrá sesión y volvé a entrar</div>';
+    else msg='<div style="color:var(--green);font-size:11px;margin-top:6px">'+ic('check')+' Todo sincronizado</div>';
     el.innerHTML=`<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-top:8px;font-size:12px;line-height:2">
-      <div>📧 Email: <b>${esc(email)}</b></div>
-      <div>🔑 UID: <code style="font-size:10px;color:var(--txt3)">${uid.substring(0,20)}…</code></div>
+      <div>Email: <b>${esc(email)}</b></div>
+      <div>UID: <code style="font-size:10px;color:var(--txt3)">${uid.substring(0,20)}…</code></div>
       <div style="margin-top:4px;border-top:0.5px solid var(--bdr);padding-top:4px">
-      <div>☁️ Gastos Firebase: <b style="color:${colorG}">${fbG}</b> · pantalla: <b>${expenses.length}</b></div>
-      <div>🤝 Deudas Firebase: <b style="color:${colorD}">${fbD}</b> · pantalla: <b>${debts.length}</b></div>
-      <div>💼 Cuentas Firebase: <b style="color:${fbAccounts>0?'var(--green)':'var(--red)'}">${fbAccounts}</b> · pantalla: <b>${accounts.length}</b></div>
-      <div>🔄 Transferencias Firebase: <b style="color:var(--txt3)">${rawS?.transfers?.length||0}</b> · pantalla: <b>${transfers.length}</b></div>
-      <div>💵 USD Firebase: <b>${fbU}</b></div>
-      <div>🌐 Online: <b style="color:${fbOnline?'var(--green)':'var(--red)'}">${fbOnline?'Sí':'No'}</b></div>
+      <div>Gastos Firebase: <b style="color:${colorG}">${fbG}</b> · pantalla: <b>${expenses.length}</b></div>
+      <div>Deudas Firebase: <b style="color:${colorD}">${fbD}</b> · pantalla: <b>${debts.length}</b></div>
+      <div>Cuentas Firebase: <b style="color:${fbAccounts>0?'var(--green)':'var(--red)'}">${fbAccounts}</b> · pantalla: <b>${accounts.length}</b></div>
+      <div>Transferencias Firebase: <b style="color:var(--txt3)">${rawS?.transfers?.length||0}</b> · pantalla: <b>${transfers.length}</b></div>
+      <div>USD Firebase: <b>${fbU}</b></div>
+      <div>Online: <b style="color:${fbOnline?'var(--green)':'var(--red)'}">${fbOnline?'Sí':'No'}</b></div>
       </div>
       ${msg}
     </div>`;
   }catch(e){
-    el.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px;padding:8px;background:var(--surf);border-radius:10px">❌ Error al consultar: ${esc(e.message)}</div>`;
+    el.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px;padding:8px;background:var(--surf);border-radius:10px">${ic('x')} Error al consultar: ${esc(e.message)}</div>`;
   }
 }
 

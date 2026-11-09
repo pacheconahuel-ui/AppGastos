@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mis Gastos">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='12'>💸</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='12'>💸</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%235d68e0'/><text x='50' y='71' text-anchor='middle' font-size='64' font-weight='700' font-family='Arial,sans-serif' fill='white'>$</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%235d68e0'/><text x='50' y='71' text-anchor='middle' font-size='64' font-weight='700' font-family='Arial,sans-serif' fill='white'>$</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
@@ -24,7 +24,7 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">💸</div>
+    <div class="login-logo"><i data-ico="dollar"></i></div>
     <div class="login-title">Mis Gastos</div>
     <div class="login-sub">Iniciá sesión para acceder a tus finanzas</div>
     <button class="btn-google" onclick="loginGoogle()">
@@ -38,8 +38,8 @@
     </div>
     <div class="login-err" id="login-err"></div>
     <button class="btn-email" id="btn-email-action" onclick="loginEmail()">Iniciar sesión</button>
-    <button onclick="sendMagicLink()" style="width:100%;padding:13px;background:transparent;border:1px solid var(--bdr2);border-radius:14px;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;transition:all .2s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">✉️ Enviar link mágico al email</button>
-    <div id="magic-link-sent" style="display:none;font-size:12px;color:var(--green);margin-top:8px;text-align:center">✅ ¡Link enviado! Revisá tu email.</div>
+    <button onclick="sendMagicLink()" style="width:100%;padding:13px;background:transparent;border:1px solid var(--bdr2);border-radius:14px;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;transition:all .2s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'"><i data-ico="mail"></i> Enviar link mágico al email</button>
+    <div id="magic-link-sent" style="display:none;font-size:12px;color:var(--green);margin-top:8px;text-align:center"><i data-ico="check"></i> ¡Link enviado! Revisá tu email.</div>
     <div class="login-toggle" onclick="toggleRegister()">¿No tenés cuenta? <span id="toggle-txt">Registrarse</span></div>
   </div>
 </div>
@@ -48,7 +48,7 @@
 <div id="app" class="hidden">
   <div class="hdr">
     <div>
-      <div class="hdr-title"><span style="-webkit-text-fill-color:initial;background:none">💸</span> Mis Gastos</div>
+      <div class="hdr-title">Mis Gastos</div>
       <div class="hdr-sub" id="hdr-month">—</div>
     </div>
     <div class="hdr-right">
@@ -57,8 +57,8 @@
           <span class="profile-avatar-ico" id="profile-avatar-ico">U</span>
           <span class="profile-name" id="hdr-badge">—</span>
         </button>
-        <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
-        <button class="btn-theme" onclick="openGlobalSearch()" title="Búsqueda global">🔍</button>
+        <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema"><i data-ico="moon"></i></button>
+        <button class="btn-theme" onclick="openGlobalSearch()" title="Búsqueda global"><i data-ico="search"></i></button>
         <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
       </div>
       <div class="sync-pill connecting" id="sync-pill">
@@ -69,21 +69,21 @@
 
   <div class="tabs">
     <button class="tabs-new" onclick="openNewSheet()">＋ Nuevo</button>
-    <button class="tab on" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="tab-ico">📊</span>Resumen</button>
-    <button class="tab" data-tab="lista" onclick="switchTab('lista')"><span class="tab-ico">📋</span>Lista</button>
-    <button class="tab usd-tab" data-tab="usd" onclick="switchTab('usd')"><span class="tab-ico">💵</span>USD</button>
-    <button class="tab saldos-tab" data-tab="saldos" onclick="switchTab('saldos')"><span class="tab-ico">🤝</span>Saldos</button>
-    <button class="tab cuentas-tab" data-tab="cuentas" onclick="switchTab('cuentas')"><span class="tab-ico">💼</span>Cuentas</button>
+    <button class="tab on" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="tab-ico"><i data-ico="chart"></i></span>Resumen</button>
+    <button class="tab" data-tab="lista" onclick="switchTab('lista')"><span class="tab-ico"><i data-ico="list"></i></span>Lista</button>
+    <button class="tab usd-tab" data-tab="usd" onclick="switchTab('usd')"><span class="tab-ico"><i data-ico="dollar"></i></span>USD</button>
+    <button class="tab saldos-tab" data-tab="saldos" onclick="switchTab('saldos')"><span class="tab-ico"><i data-ico="users"></i></span>Saldos</button>
+    <button class="tab cuentas-tab" data-tab="cuentas" onclick="switchTab('cuentas')"><span class="tab-ico"><i data-ico="card"></i></span>Cuentas</button>
   </div>
 
   <!-- MIGRATION BANNER -->
   <div class="mig-banner" id="mig-banner">
-    <div class="mig-ico">📦</div>
+    <div class="mig-ico"><i data-ico="box"></i></div>
     <div class="mig-body">
       <div class="mig-title">Datos anteriores encontrados</div>
       <div class="mig-txt">Tenés gastos guardados antes de crear tu cuenta. ¿Querés importarlos?</div>
       <div class="mig-btns">
-        <button class="btn-mig yes" onclick="runMigration()">✅ Sí, importar</button>
+        <button class="btn-mig yes" onclick="runMigration()"><i data-ico="check"></i> Sí, importar</button>
         <button class="btn-mig no"  onclick="dismissMigration()">No, ignorar</button>
       </div>
     </div>
@@ -146,12 +146,12 @@
     <div class="list-filters">
       <div class="list-filters-row1">
         <select class="f-ctrl" id="fil-month" onchange="renderListSec()" style="flex:1"></select>
-        <button onclick="exportCSV()" style="padding:10px 14px;background:color-mix(in srgb,var(--pos) 10%,transparent);border:1px solid color-mix(in srgb,var(--pos) 25%,transparent);border-radius:11px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0">📥 CSV</button>
+        <button onclick="exportCSV()" style="padding:10px 14px;background:color-mix(in srgb,var(--pos) 10%,transparent);border:1px solid color-mix(in srgb,var(--pos) 25%,transparent);border-radius:11px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0"><i data-ico="download"></i> CSV</button>
         <span class="list-count" id="list-count"></span>
       </div>
       <div class="list-filters-row2">
         <div class="search-wrap">
-          <span class="search-ico">🔍</span>
+          <span class="search-ico"><i data-ico="search"></i></span>
           <input type="text" class="f-ctrl search-inp" id="fil-search" placeholder="Buscar…" oninput="renderListSec()">
         </div>
         <select class="f-ctrl" id="fil-cat" onchange="renderListSec()" style="flex:1"></select>
@@ -172,7 +172,7 @@
   <div class="sec" id="tab-usd">
     <button class="back-link" onclick="switchTab('cuentas')">‹ Cuentas</button>
     <div class="usd-banner">
-      <div class="usd-banner-icon">💵</div>
+      <div class="usd-banner-icon"><i data-ico="dollar"></i></div>
       <div>
         <div class="usd-banner-label">Stock actual</div>
         <div class="usd-banner-val" id="usd-stock">U$S 0</div>
@@ -197,7 +197,7 @@
   <div class="sec" id="tab-saldos">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:14px;font-weight:700;color:var(--txt2)">Saldos</div>
-      <button onclick="openContactsModal()" style="padding:7px 14px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);border-radius:10px;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s" onmouseover="this.style.background='color-mix(in srgb,var(--acc) 20%,transparent)'" onmouseout="this.style.background='color-mix(in srgb,var(--acc) 10%,transparent)'">👥 Contactos</button>
+      <button onclick="openContactsModal()" style="padding:7px 14px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);border-radius:10px;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s" onmouseover="this.style.background='color-mix(in srgb,var(--acc) 20%,transparent)'" onmouseout="this.style.background='color-mix(in srgb,var(--acc) 10%,transparent)'"><i data-ico="users"></i> Contactos</button>
     </div>
     <div class="saldos-summary" id="saldos-summary">
       <div class="saldos-sum-item">
@@ -316,7 +316,7 @@
           <div id="cat-dropdown" style="display:none;position:fixed;background:var(--modal-bg);border:1px solid var(--bdr2);border-radius:12px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:200px"></div>
         </div>
         <button class="btn-plus" onclick="addCatPrompt()" aria-label="Nueva categoría">＋</button>
-        <button class="btn-manage-cats" onclick="openCatManager()" aria-label="Administrar categorías">⚙️</button>
+        <button class="btn-manage-cats" onclick="openCatManager()" aria-label="Administrar categorías"><i data-ico="sliders"></i></button>
       </div>
     </div>
     <!-- Billetera o tarjeta como botones (el select queda para la lógica) -->
@@ -402,9 +402,9 @@
     <div class="f-grp">
       <label class="f-lbl">Tipo</label>
       <div class="type-tog">
-        <button class="type-btn au" id="ubtn-in"   onclick="setUsdType('ingreso')">📥 Ingreso</button>
-        <button class="type-btn"   id="ubtn-buy"   onclick="setUsdType('compra')">🏦 Compra</button>
-        <button class="type-btn"   id="ubtn-sell"  onclick="setUsdType('venta')">💸 Venta</button>
+        <button class="type-btn au" id="ubtn-in"   onclick="setUsdType('ingreso')"><i data-ico="download"></i> Ingreso</button>
+        <button class="type-btn"   id="ubtn-buy"   onclick="setUsdType('compra')"><i data-ico="bank"></i> Compra</button>
+        <button class="type-btn"   id="ubtn-sell"  onclick="setUsdType('venta')"><i data-ico="upload"></i> Venta</button>
       </div>
       <input type="hidden" id="uf-type" value="ingreso">
     </div>
@@ -441,33 +441,33 @@
     </div>
     <!-- USD wallet destination/origin -->
     <div class="f-grp" id="uf-usd-acc-wrap">
-      <label class="f-lbl" id="uf-usd-acc-lbl">💵 USD van a</label>
+      <label class="f-lbl" id="uf-usd-acc-lbl"><i data-ico="dollar"></i> USD van a</label>
       <select class="f-ctrl gold-focus" id="uf-usd-acc">
         <option value="">— Sin asignar —</option>
       </select>
     </div>
     <!-- Ingreso USD: ARS wallet destination (optional) -->
     <div class="f-grp" id="uf-acc-ingreso-wrap">
-      <label class="f-lbl">💼 ARS acreditar en (opcional)</label>
+      <label class="f-lbl"><i data-ico="wallet"></i> ARS acreditar en (opcional)</label>
       <select class="f-ctrl gold-focus" id="uf-acc-ingreso">
         <option value="">— Sin asignar —</option>
       </select>
     </div>
     <!-- Compra USD: ARS origin wallet -->
     <div class="f-grp" id="uf-acc-compra-wrap" style="display:none">
-      <label class="f-lbl">💼 ARS salen de</label>
+      <label class="f-lbl"><i data-ico="wallet"></i> ARS salen de</label>
       <select class="f-ctrl gold-focus" id="uf-acc-compra">
         <option value="">— Sin asignar —</option>
       </select>
     </div>
     <!-- Venta USD: ARS destination wallet -->
     <div class="f-grp" id="uf-acc-venta-wrap" style="display:none">
-      <label class="f-lbl">💼 ARS llegan a</label>
+      <label class="f-lbl"><i data-ico="wallet"></i> ARS llegan a</label>
       <select class="f-ctrl gold-focus" id="uf-acc-venta">
         <option value="">— Sin asignar —</option>
       </select>
     </div>
-    <button class="btn-save gold-btn" onclick="saveUsdTx()">💾 Guardar</button>
+    <button class="btn-save gold-btn" onclick="saveUsdTx()"><i data-ico="save"></i> Guardar</button>
     <button class="btn-cancel" onclick="closeUsdModal()">Cancelar</button>
   </div>
 </div>
@@ -507,7 +507,7 @@
       <label class="f-lbl">Descripción</label>
       <input type="text" class="f-ctrl teal-focus" id="df-desc" placeholder="ej: Vicky pagó Anónima, Asado pibes…">
     </div>
-    <button class="btn-save teal-btn" onclick="saveDebt()">💾 Guardar</button>
+    <button class="btn-save teal-btn" onclick="saveDebt()"><i data-ico="save"></i> Guardar</button>
     <button class="btn-cancel" onclick="closeDebtModal()">Cancelar</button>
   </div>
 </div>
@@ -528,8 +528,8 @@
 
     <label class="f-lbl">¿Cómo se saldó?</label>
     <div class="settle-type-row" style="margin-bottom:16px">
-      <button class="settle-type-btn on" id="stype-transfer" onclick="setSettleType('transfer')">💸 Transferencia</button>
-      <button class="settle-type-btn" id="stype-comp" onclick="setSettleType('comp')">🔄 Compensación</button>
+      <button class="settle-type-btn on" id="stype-transfer" onclick="setSettleType('transfer')"><i data-ico="transfer"></i> Transferencia</button>
+      <button class="settle-type-btn" id="stype-comp" onclick="setSettleType('comp')"><i data-ico="refresh"></i> Compensación</button>
     </div>
     <input type="hidden" id="settle-type" value="transfer">
 
@@ -542,13 +542,13 @@
       <input type="date" class="f-ctrl teal-focus" id="settle-date">
     </div>
     <div class="f-grp" id="settle-acc-wrap">
-      <label class="f-lbl" id="settle-acc-lbl">💼 Acreditar en</label>
+      <label class="f-lbl" id="settle-acc-lbl"><i data-ico="wallet"></i> Acreditar en</label>
       <select class="f-ctrl teal-focus" id="settle-acc">
         <option value="">— Sin asignar —</option>
       </select>
     </div>
 
-    <button class="btn-save teal-btn" onclick="doSettle()">✅ Confirmar</button>
+    <button class="btn-save teal-btn" onclick="doSettle()"><i data-ico="check"></i> Confirmar</button>
     <button class="btn-cancel" onclick="closeSettleModal()">Cancelar</button>
   </div>
 </div>
@@ -557,7 +557,7 @@
 <div class="m-overlay" id="cat-overlay" onclick="catOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title">⚙️ Categorías</div>
+    <div class="m-title"><i data-ico="sliders"></i> Categorías</div>
     <div id="cat-manager-body"></div>
     <button class="btn-cancel" onclick="closeCatManager()">Cerrar</button>
   </div>
@@ -567,7 +567,7 @@
 <div class="m-overlay" id="contacts-overlay" onclick="contactsOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title">👥 Mis contactos</div>
+    <div class="m-title"><i data-ico="users"></i> Mis contactos</div>
     <div id="contacts-body"></div>
     <button class="btn-save teal-btn" onclick="openAddContactModal()" style="margin-top:4px">＋ Agregar contacto</button>
     <button class="btn-cancel" onclick="closeContactsModal()">Cerrar</button>
@@ -591,13 +591,13 @@
     <div class="f-grp">
       <label class="f-lbl">Tipo</label>
       <div class="type-tog">
-        <button class="type-btn" id="ac-btn-fav" onclick="setContactType('recurrent')">⭐ Favorito</button>
-        <button class="type-btn" id="ac-btn-occ" onclick="setContactType('occasional')">👥 Ocasional</button>
+        <button class="type-btn" id="ac-btn-fav" onclick="setContactType('recurrent')"><i data-ico="star"></i> Favorito</button>
+        <button class="type-btn" id="ac-btn-occ" onclick="setContactType('occasional')"><i data-ico="users"></i> Ocasional</button>
       </div>
       <input type="hidden" id="ac-type" value="recurrent">
       <div style="font-size:11px;color:var(--txt3);margin-top:6px" id="ac-type-hint">Favorito: siempre visible en Saldos aunque esté en cero</div>
     </div>
-    <button class="btn-save teal-btn" onclick="saveContact()">💾 Guardar</button>
+    <button class="btn-save teal-btn" onclick="saveContact()"><i data-ico="save"></i> Guardar</button>
     <button class="btn-cancel" onclick="closeAddContactModal()">Cancelar</button>
   </div>
 </div>
@@ -606,14 +606,14 @@
 <div class="m-overlay quick-add-modal" id="qa-overlay" onclick="qaOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title">⚡ Gasto rápido</div>
+    <div class="m-title"><i data-ico="bolt"></i> Gasto rápido</div>
     <input type="number" class="qa-amount" id="qa-amt" placeholder="0" inputmode="decimal" step="any" min="0">
     <div class="f-grp">
       <label class="f-lbl">Categoría</label>
       <div class="qa-cat-grid" id="qa-cat-grid"></div>
     </div>
     <input type="hidden" id="qa-cat">
-    <button class="btn-save" onclick="saveQuickAdd()">💾 Guardar</button>
+    <button class="btn-save" onclick="saveQuickAdd()"><i data-ico="save"></i> Guardar</button>
     <button class="btn-cancel" onclick="closeQuickAdd()">Cancelar · ir al formulario completo</button>
   </div>
 </div>
@@ -622,7 +622,7 @@
 <div class="m-overlay" id="budget-overlay" onclick="budgetOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title">🎯 Presupuesto mensual</div>
+    <div class="m-title"><i data-ico="target"></i> Presupuesto mensual</div>
     <div class="f-grp">
       <label class="f-lbl">Categoría</label>
       <select class="f-ctrl" id="bdg-cat"></select>
@@ -631,7 +631,7 @@
       <label class="f-lbl">Límite mensual ($)</label>
       <input type="number" class="f-ctrl" id="bdg-amt" placeholder="0" inputmode="decimal" min="0">
     </div>
-    <button class="btn-save" onclick="saveBudget()">💾 Guardar</button>
+    <button class="btn-save" onclick="saveBudget()"><i data-ico="save"></i> Guardar</button>
     <button class="btn-cancel" onclick="closeBudgetModal()">Cancelar</button>
   </div>
 </div>
@@ -650,8 +650,8 @@
     <div class="f-grp">
       <label class="f-lbl">Tipo</label>
       <div class="type-tog">
-        <button class="type-btn" id="acc-btn-wallet" onclick="setAccType('wallet')">💰 Billetera/Banco</button>
-        <button class="type-btn" id="acc-btn-cc"     onclick="setAccType('credit')">💳 Tarjeta de crédito</button>
+        <button class="type-btn" id="acc-btn-wallet" onclick="setAccType('wallet')"><i data-ico="wallet"></i> Billetera/Banco</button>
+        <button class="type-btn" id="acc-btn-cc"     onclick="setAccType('credit')"><i data-ico="card"></i> Tarjeta de crédito</button>
       </div>
       <input type="hidden" id="acc-type" value="wallet">
     </div>
@@ -660,7 +660,7 @@
       <label class="f-lbl">Moneda</label>
       <div class="type-tog">
         <button class="type-btn ai" id="acc-btn-ars" onclick="setAccCurrency('ARS')">🇦🇷 Pesos ARS</button>
-        <button class="type-btn"    id="acc-btn-usd" onclick="setAccCurrency('USD')">💵 Dólares USD</button>
+        <button class="type-btn"    id="acc-btn-usd" onclick="setAccCurrency('USD')"><i data-ico="dollar"></i> Dólares USD</button>
       </div>
       <input type="hidden" id="acc-currency" value="ARS">
     </div>
@@ -692,7 +692,7 @@
         </select>
       </div>
     </div>
-    <button class="btn-save" onclick="saveAccount()">💾 Guardar</button>
+    <button class="btn-save" onclick="saveAccount()"><i data-ico="save"></i> Guardar</button>
     <button class="btn-cancel" onclick="closeAccountModal()">Cancelar</button>
   </div>
 </div>
@@ -701,7 +701,7 @@
 <div class="m-overlay" id="cc-pay-overlay" onclick="ccPayOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title" id="cc-pay-title">💳 Pagar resumen</div>
+    <div class="m-title" id="cc-pay-title"><i data-ico="card"></i> Pagar resumen</div>
     <input type="hidden" id="ccp-acc-id">
 
     <!-- Consumos del período -->
@@ -724,8 +724,8 @@
     <div class="f-grp">
       <label class="f-lbl">¿Cómo pagás?</label>
       <div class="type-tog">
-        <button class="type-btn ai" id="ccp-btn-ars"  onclick="setCCPayMode('ars')">💵 Todo en pesos</button>
-        <button class="type-btn"    id="ccp-btn-mix"  onclick="setCCPayMode('mix')">💱 Pesos + dólares</button>
+        <button class="type-btn ai" id="ccp-btn-ars"  onclick="setCCPayMode('ars')"><i data-ico="dollar"></i> Todo en pesos</button>
+        <button class="type-btn"    id="ccp-btn-mix"  onclick="setCCPayMode('mix')"><i data-ico="transfer"></i> Pesos + dólares</button>
       </div>
       <input type="hidden" id="ccp-pay-mode" value="ars">
     </div>
@@ -753,7 +753,7 @@
       <input type="date" class="f-ctrl" id="ccp-date">
     </div>
 
-    <button class="btn-save gold-btn" onclick="saveCCPayment()">💳 Registrar pago</button>
+    <button class="btn-save gold-btn" onclick="saveCCPayment()"><i data-ico="card"></i> Registrar pago</button>
     <button class="btn-cancel" onclick="closeCCPayModal()">Cancelar</button>
   </div>
 </div>
@@ -787,7 +787,7 @@
       <label class="f-lbl">Nota (opcional)</label>
       <input type="text" class="f-ctrl" id="tf-desc" placeholder="ej: Pasé de Santander a MP">
     </div>
-    <button class="btn-save" onclick="saveTransfer()">💾 Transferir</button>
+    <button class="btn-save" onclick="saveTransfer()"><i data-ico="save"></i> Transferir</button>
     <button class="btn-cancel" onclick="closeTransferModal()">Cancelar</button>
   </div>
 </div>
@@ -815,7 +815,7 @@
         <input type="number" class="f-ctrl" id="gl-current" placeholder="0" inputmode="decimal" step="any" min="0">
       </div>
     </div>
-    <button class="btn-save" onclick="saveGoal()">💾 Guardar meta</button>
+    <button class="btn-save" onclick="saveGoal()"><i data-ico="save"></i> Guardar meta</button>
     <button class="btn-cancel" onclick="closeGoalModal()">Cancelar</button>
   </div>
 </div>
@@ -824,9 +824,9 @@
 <div class="m-overlay" id="gsearch-overlay" onclick="gsearchOverlayClick(event)">
   <div class="modal" style="max-height:80vh">
     <div class="m-handle"></div>
-    <div class="m-title">🔍 Búsqueda global</div>
+    <div class="m-title"><i data-ico="search"></i> Búsqueda global</div>
     <div class="search-wrap" style="margin-bottom:14px">
-      <span class="search-ico">🔍</span>
+      <span class="search-ico"><i data-ico="search"></i></span>
       <input type="text" class="f-ctrl search-inp" id="gsearch-inp" placeholder="Buscar en gastos, USD y deudas…" oninput="runGlobalSearch()">
     </div>
     <div id="gsearch-results"></div>
@@ -847,29 +847,29 @@
 <div class="m-overlay" id="help-overlay" onclick="helpOverlayClick(event)">
   <div class="modal" style="max-height:86vh;overflow-y:auto">
     <div class="m-handle"></div>
-    <div class="m-title" style="margin-bottom:18px">❓ Guía rápida</div>
+    <div class="m-title" style="margin-bottom:18px"><i data-ico="help"></i> Guía rápida</div>
     <div class="help-section">
-      <div class="help-section-hdr"><span>📊</span><span>Resumen y lista</span></div>
+      <div class="help-section-hdr"><span><i data-ico="chart"></i></span><span>Resumen y lista</span></div>
       <div class="help-section-body">Usá <b>Resumen</b> para ver el mes, gráficos, presupuestos y recurrentes. En <b>Lista</b> podés buscar, filtrar, exportar CSV, editar o eliminar movimientos.</div>
     </div>
     <div class="help-section">
-      <div class="help-section-hdr"><span>💵</span><span>Billetera USD</span></div>
+      <div class="help-section-hdr"><span><i data-ico="dollar"></i></span><span>Billetera USD</span></div>
       <div class="help-section-body">Anotá ingresos de USD (Wise, efectivo) y ventas P2P. Al vender, la app crea el ingreso ARS automáticamente con el tipo de cambio implícito.</div>
     </div>
     <div class="help-section">
-      <div class="help-section-hdr"><span>🤝</span><span>Saldos compartidos</span></div>
+      <div class="help-section-hdr"><span><i data-ico="users"></i></span><span>Saldos compartidos</span></div>
       <div class="help-section-body">Cuando pagás un gasto compartido, activá <b>Dividir con alguien</b> y poné el monto de cada persona. El saldo queda registrado en Saldos y podés saldarlo cuando te transfieran.</div>
     </div>
     <div class="help-section">
-      <div class="help-section-hdr"><span>💳</span><span>Tarjetas de crédito</span></div>
+      <div class="help-section-hdr"><span><i data-ico="card"></i></span><span>Tarjetas de crédito</span></div>
       <div class="help-section-body">Creá una cuenta de tipo Tarjeta en <b>Cuentas</b>. Al agregar un gasto con esa tarjeta, elegís si es único, fijo mensual o en cuotas (X/Y). En la tab Cuentas ves el estimado del próximo resumen y podés pagarlo.</div>
     </div>
     <div class="help-section">
-      <div class="help-section-hdr"><span>🔁</span><span>Movimientos recurrentes</span></div>
+      <div class="help-section-hdr"><span><i data-ico="repeat"></i></span><span>Movimientos recurrentes</span></div>
       <div class="help-section-body">Marcá un gasto como <b>Movimiento recurrente</b> y el mes siguiente aparecerá en el banner del dashboard para confirmar, editar el monto o saltear.</div>
     </div>
     <div class="help-section">
-      <div class="help-section-hdr"><span>🎯</span><span>Presupuestos y metas</span></div>
+      <div class="help-section-hdr"><span><i data-ico="target"></i></span><span>Presupuestos y metas</span></div>
       <div class="help-section-body">Desde el dashboard podés agregar presupuestos por categoría (te avisa cuando te acercás al límite) y metas de ahorro con barra de progreso.</div>
     </div>
     <button class="btn-cancel" onclick="closeHelpModal()" style="margin-top:4px">Cerrar</button>
@@ -880,7 +880,7 @@
 <div class="m-overlay" id="adjust-overlay" onclick="adjustOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title">⚖️ Ajustar saldo</div>
+    <div class="m-title"><i data-ico="scale"></i> Ajustar saldo</div>
     <div style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.5">
       Usá esto cuando la app no coincide con tu billetera real.<br>
       Se crea un movimiento con la diferencia para corregir el saldo.
@@ -894,7 +894,7 @@
       <input type="number" class="f-ctrl" id="adj-real" placeholder="ej: 20000" inputmode="decimal" step="any" min="0" oninput="updateAdjHint()">
     </div>
     <div id="adj-hint" style="background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:11px 13px;font-size:13px;color:var(--txt3);margin-bottom:14px;min-height:44px;display:flex;align-items:center"></div>
-    <button class="btn-save" onclick="saveAdjust()">✅ Registrar ajuste</button>
+    <button class="btn-save" onclick="saveAdjust()"><i data-ico="check"></i> Registrar ajuste</button>
     <button class="btn-cancel" onclick="closeAdjustModal()">Cancelar</button>
   </div>
 </div>
@@ -902,7 +902,7 @@
 <!-- CONFIRM -->
 <div class="conf-overlay" id="conf-overlay">
   <div class="conf-dlg">
-    <div class="conf-ico" id="conf-ico">🗑️</div>
+    <div class="conf-ico" id="conf-ico"><i data-ico="trash"></i></div>
     <div class="conf-ttl" id="conf-ttl">¿Eliminar?</div>
     <div class="conf-txt" id="conf-txt">Esta acción no se puede deshacer.</div>
     <div class="conf-btns" id="conf-btns">
@@ -917,6 +917,7 @@
 
 <!-- La app: scripts clásicos que comparten el ámbito global, en este orden (ver README) -->
 <script src="js/config.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/sync.js"></script>

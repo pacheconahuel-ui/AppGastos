@@ -121,7 +121,7 @@ function confirmCleanDuplicates(){
   if(!dups.length)return;
   const byPerson={};dups.forEach(d=>{byPerson[d.personName||'?']=(byPerson[d.personName||'?']||0)+d.amount;});
   const lines=Object.entries(byPerson).map(([n,a])=>`• ${n}: ${a>0?'te debe':'le debés'} ${fmt(Math.abs(a))} de más`).join('\n');
-  showConf('🧹','Limpiar deudas repetidas',
+  showConf('trash','Limpiar deudas repetidas',
     `Se borran ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''}. De cada gasto queda la última versión.\n\n${lines}`,
     async()=>{
       const ids=new Set(dups.map(d=>d.id));

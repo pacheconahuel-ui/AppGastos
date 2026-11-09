@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.5**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.6**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -32,7 +32,7 @@ Estado a **noviembre 2026**: versión **3.5**. El código está en `index.html`,
 - [x] `index.html` partido en `css/app.css` y 15 archivos en `js/` (scripts clásicos, sin compilación).
 - [x] Firebase 12 en modo compat. El SDK modular pediría pasar a módulos ES y cambiar las ~60 llamadas a `db`/`auth`; hoy no trae una mejora visible.
 - [x] Pruebas: lógica (vitest), navegador (Playwright) y emuladores de Firebase, con CI.
-- [ ] Sacar los estilos en línea a clases: quedan muchos `style="..."` en `index.html` y en los templates de `js/`. Conviene hacerlo de a una pantalla, comparando capturas antes y después.
+- [x] Estilos en línea: revisados y **no se pasan a clases**. Son 239 y 157 distintos: casi todos aparecen una sola vez, y los pocos repetidos son de una propiedad (`margin-bottom:0`, `display:none`). Moverlos daría clases con nombres sin sentido y el riesgo de que otra regla del CSS les gane de mano, sin ningún cambio para quien usa la app.
 
 ## Fase 4 — Funciones nuevas ✅ (3.1)
 
@@ -47,8 +47,13 @@ Estado a **noviembre 2026**: versión **3.5**. El código está en `index.html`,
 - [x] Navegación abajo con un único botón + (3.3).
 - [x] Resumen reordenado (3.4).
 - [x] Formulario de gasto nuevo (3.5).
-- [ ] Íconos de línea en vez de emojis en botones y títulos (los de categoría quedan).
+- [x] Íconos de línea en vez de emojis en botones y títulos (3.6). Los de categoría, billetera, contacto y meta quedan: son datos de cada persona.
 
 ## Ideas para después
 
-- [ ] Notificaciones del celular para los vencimientos (hoy el aviso se ve al abrir la app).
+- [ ] Notificaciones del celular para los vencimientos (hoy el aviso se ve al abrir la app). Necesita un servidor que las mande a una hora (Firebase Cloud Messaging más una función programada) y permiso del celular: hoy la app es solo archivos en GitHub Pages, así que implica sumar un backend. No se hace salvo que lo pidas.
+
+## Pasos manuales (no los hace el código)
+
+- [ ] Publicar `database.rules.json` en la consola de Firebase (Realtime Database → Reglas → Publicar). Hasta entonces las reglas son las viejas: la app anda igual, pero no se valida la forma de los datos.
+- [ ] En cada celular: tocar **Actualizar** cuando aparece la versión nueva; para ver el ícono nuevo de la app, sacar el acceso directo y volver a agregarlo.

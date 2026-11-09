@@ -93,7 +93,7 @@ function renderCuentasTab(){
     const balStr=isUsd
       ?`<div class="account-bal-val card-val" style="color:var(--gold)">${fmtU(bal)}</div>`
       :`<div class="account-bal-val card-val ${bc}">${bal<0?'-':''}${fmt(bal)}</div>`;
-    const negAlert=!isUsd&&bal<0?'<span style="font-size:10px;color:var(--red);font-weight:700">⚠️ Negativa</span>':'';
+    const negAlert=!isUsd&&bal<0?'<span style="font-size:10px;color:var(--red);font-weight:700">'+ic('warn')+' Negativa</span>':'';
     const movCount=isUsd
       ?usdTx.filter(t=>t.usdAccountId===a.id&&monthKey(t.date)===mk).length
       :expenses.filter(e=>e.accountId===a.id&&monthKey(e.date)===mk).length;
@@ -105,13 +105,13 @@ function renderCuentasTab(){
       </div>
       <div class="account-bal">
         ${balStr}
-        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin-top:6px;width:26px;height:26px;font-size:11px">🗑️</button>
+        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin-top:6px;width:26px;height:26px;font-size:11px">${ic('trash')}</button>
       </div>
     </div>`;
   };
 
   const arsWalletHtml=arsAccs.map(a=>makeWalletCard(a,false)).join('')
-    ||'<div class="empty" style="padding:16px 0"><div class="empty-ico" style="font-size:28px">💰</div><p>Sin billeteras ARS</p></div>';
+    ||'<div class="empty" style="padding:16px 0"><div class="empty-ico" style="font-size:28px">'+ic('wallet')+'</div><p>Sin billeteras ARS</p></div>';
   const usdWalletHtml=usdAccs.map(a=>makeWalletCard(a,true)).join('');
 
   let ccHtml='';
@@ -124,8 +124,8 @@ function renderCuentasTab(){
       const isInst=e.cardExpType==='installment';
       const isUSD=e.currency==='USD';
       const badges=[
-        isRec?'<span class="cc-line-badge cc-badge-rec">🔁 fijo</span>':'',
-        isInst?`<span class="cc-line-badge cc-badge-inst">📅 ${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
+        isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':'',
+        isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
         isUSD?`<span class="cc-line-badge cc-badge-usd">U$S ${e.amount}</span>`:'',
       ].join('');
       const displayAmt=isUSD?`~${fmt(e.arsAmt)}`:`${fmt(e.arsAmt)}`;
@@ -155,9 +155,9 @@ function renderCuentasTab(){
       ${moreCount>0?`<div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:6px">+ ${moreCount} más</div>`:''}
       ${cardProjectionHTML(a)}
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn-pay-cc" onclick="openCCPayModal('${a.id}')">💳 Pagar resumen</button>
-        <button onclick="openAccountModal('${a.id}')" class="btn-ico edit" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">✏️</button>
-        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">🗑️</button>
+        <button class="btn-pay-cc" onclick="openCCPayModal('${a.id}')">${ic('card')} Pagar resumen</button>
+        <button onclick="openAccountModal('${a.id}')" class="btn-ico edit" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">${ic('edit')}</button>
+        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">${ic('trash')}</button>
       </div>
     </div>`;
   });
@@ -169,11 +169,11 @@ function renderCuentasTab(){
     `<div class="div-lbl">Billeteras ARS</div>${arsWalletHtml}`+
     (usdAccs.length?`<div class="div-lbl" style="margin-top:12px;color:var(--gold)">Billeteras USD</div>${usdWalletHtml}`:'') +
     (cards.length?`<div class="div-lbl" style="margin-top:12px">Tarjetas de crédito</div>${ccHtml}`:'') +
-    (!arsAccs.length&&!usdAccs.length&&!cards.length?'<div class="empty"><div class="empty-ico">💼</div><p>Sin cuentas. Tocá ＋ para agregar.</p></div>':'');
+    (!arsAccs.length&&!usdAccs.length&&!cards.length?'<div class="empty"><div class="empty-ico">'+ic('wallet')+'</div><p>Sin cuentas. Tocá ＋ para agregar.</p></div>':'');
 
   if(arsAccs.length||usdAccs.length){
     document.getElementById('cuentas-list').insertAdjacentHTML('beforeend',
-      `<button onclick="openAdjustModal(null,null)" style="width:100%;padding:11px;margin-top:8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">⚖️ Ajustar saldo de una billetera</button>`
+      `<button onclick="openAdjustModal(null,null)" style="width:100%;padding:11px;margin-top:8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;color:var(--txt3);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">${ic('scale')} Ajustar saldo de una billetera</button>`
     );
   }
 
@@ -186,7 +186,7 @@ function renderCuentasTab(){
     return`<div class="transfer-box"><div style="font-size:20px">${fr?.emoji||'💼'}</div>
       <div class="exp-info"><div class="exp-desc">${esc(t.description||'Transferencia')}</div><div class="exp-meta">${fmtDate(t.date)} · ${esc(fr?.name||'?')} → ${esc(to?.name||'?')}</div></div>
       <div class="exp-amt e">${fmt(t.amount)}</div>
-      <button class="btn-ico del" onclick="deleteTransfer('${t.id}',event)" style="width:28px;height:28px;font-size:12px">🗑️</button></div>`;
+      <button class="btn-ico del" onclick="deleteTransfer('${t.id}',event)" style="width:28px;height:28px;font-size:12px">${ic('trash')}</button></div>`;
   }).join(''):'<div class="empty"><div class="empty-ico">⇄</div><p>Sin transferencias</p></div>';
   document.getElementById('transfers-list').innerHTML=tHtml;
 }
@@ -288,7 +288,7 @@ function openCCPayModal(accId){
   const a=accounts.find(x=>x.id===accId);if(!a)return;
   const{lines,totalARS,totalUSD}=ccEstimated(accId);
   document.getElementById('ccp-acc-id').value=accId;
-  document.getElementById('cc-pay-title').textContent=`💳 Pagar ${a.name}`;
+  document.getElementById('cc-pay-title').innerHTML=ic('card')+' Pagar '+esc(a.name);
   document.getElementById('ccp-real-ars').value='';
   document.getElementById('ccp-real-usd').value='';
   document.getElementById('ccp-date').value=todayStr();
@@ -302,8 +302,8 @@ function openCCPayModal(accId){
     const isRec=e.cardExpType==='recurring';
     const isInst=e.cardExpType==='installment';
     const isUSD=e.currency==='USD';
-    const badge=isRec?'<span class="cc-line-badge cc-badge-rec">🔁 fijo</span>':
-                 isInst?`<span class="cc-line-badge cc-badge-inst">📅 ${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
+    const badge=isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':
+                 isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
     const amt=isUSD?`<span style="color:var(--gold)">U$S ${e.amount}</span>`:fmt(e.arsAmt);
     return`<div class="cc-line"><span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badge}</span><span class="cc-line-amt">${amt}</span></div>`;
   }).join(''):'<div style="color:var(--txt3);font-size:12px;text-align:center;padding:8px">Sin consumos pendientes</div>';
@@ -450,7 +450,7 @@ function saveTransfer(){
   if(!date){toast('⚠️ Completá la fecha');return;}
   const fromAcc=accounts.find(a=>a.id===fromId);
   const toAcc=accounts.find(a=>a.id===toId);
-  showConf('⇄','Confirmar transferencia',
+  showConf('transfer','Confirmar transferencia',
     `${fromAcc?.emoji||''} ${fromAcc?.name||''} → ${toAcc?.emoji||''} ${toAcc?.name||''}\nMonto: ${fmt(amt)}`,
     ()=>{
       transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
