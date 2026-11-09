@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.2**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.3**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -44,7 +44,7 @@ Estado a **noviembre 2026**: versión **3.2**. El código está en `index.html`,
 ## Rediseño visual
 
 - [x] Paleta y tipografía (3.2).
-- [ ] Navegación abajo con un único botón + (reemplaza pestañas de arriba y botones flotantes).
+- [x] Navegación abajo con un único botón + (3.3).
 - [ ] Resumen reordenado: avisos arriba, una tarjeta con Disponible e Ingresos · Gastos · Balance.
 - [ ] Formulario de gasto nuevo: monto primero, categorías y billeteras como botones.
 - [ ] Íconos de línea en vez de emojis en botones y títulos (los de categoría quedan).

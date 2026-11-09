@@ -27,7 +27,7 @@ window.addEventListener('popstate', e => {
     'cat-overlay','contacts-overlay','add-contact-overlay',
     'gsearch-overlay','qa-overlay','transfer-overlay','account-overlay',
     'goal-overlay','budget-overlay','cc-pay-overlay','profile-overlay',
-    'help-overlay','adjust-overlay','conf-overlay'
+    'help-overlay','adjust-overlay','conf-overlay','new-overlay'
   ].some(id => document.getElementById(id)?.classList.contains('on'));
 
   if(anyOpen){
@@ -35,7 +35,7 @@ window.addEventListener('popstate', e => {
     closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
     closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
     closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
-    closeHelpModal();closeAdjustModal();
+    closeHelpModal();closeAdjustModal();closeNewSheet();
     history.pushState({modal:true}, '');
     return;
   }
