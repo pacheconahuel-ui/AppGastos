@@ -25,13 +25,21 @@ for (const ancho of [320, 360, 390]) {
 
 test('el punto de sincronización cambia de color y su texto va para lectores de pantalla', async ({ page }) => {
   await openApp(page);
-  await page.evaluate(() => setStatus('online', '● Sincronizado'));
-  await expect(page.locator('#sync-pill')).toHaveClass(/online/);
-  await expect(page.locator('#sync-pill')).toHaveAttribute('aria-label', /Sincronizado/);
-  await page.evaluate(() => setStatus('offline', '⚠ Offline'));
-  await expect(page.locator('#sync-pill')).toHaveAttribute('aria-label', /Offline/);
-  await page.locator('#sync-pill').click();
-  await expect(page.locator('#toast')).toContainText('Offline');
+  // todo en un solo paso: el arranque de Firebase puede volver a poner su estado entre dos pasos de la prueba
+  const r = await page.evaluate(() => {
+    const pill = document.getElementById('sync-pill');
+    setStatus('online', '● Sincronizado');
+    const online = [pill.classList.contains('online'), pill.getAttribute('aria-label')];
+    setStatus('offline', '⚠ Offline');
+    const offline = [pill.classList.contains('offline'), pill.getAttribute('aria-label')];
+    pill.click(); // tocar el punto dice el estado con palabras
+    return { online, offline, toast: document.getElementById('toast').textContent };
+  });
+  expect(r.online[0]).toBe(true);
+  expect(r.online[1]).toMatch(/Sincronizado/);
+  expect(r.offline[0]).toBe(true);
+  expect(r.offline[1]).toMatch(/Offline/);
+  expect(r.toast).toContain('Offline');
   noErrors(page);
 });
 
