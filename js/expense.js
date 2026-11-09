@@ -54,7 +54,7 @@ function removeSplitRow(i){
     document.getElementById('split-panel').classList.remove('on');
     document.getElementById('split-toggle-btn').classList.remove('active');
     document.getElementById('split-toggle-ico').textContent='＋';
-    document.getElementById('split-toggle-lbl').textContent='🤝 Dividir con alguien';
+    document.getElementById('split-toggle-lbl').textContent='Dividir con alguien';
   }
 }
 function recalcSplit(){
@@ -65,7 +65,7 @@ function recalcSplit(){
   document.getElementById('split-my-val').textContent=fmt(myPart);
   // Update toggle label
   const names=splitRows.map(r=>r.personName).join(', ');
-  document.getElementById('split-toggle-lbl').textContent=splitPanelOpen&&names?`🤝 Dividido con ${names}`:'🤝 Dividir con alguien';
+  document.getElementById('split-toggle-lbl').textContent=splitPanelOpen&&names?`Dividido con ${names}`:'Dividir con alguien';
 }
 function addSplitPerson(){
   const used=new Set(splitRows.map(r=>r.personId));
@@ -264,6 +264,7 @@ function setCardExpType(t){
 let _noAccConfirmed=false;
 function onAccountSelected(){
   _noAccConfirmed=false;
+  renderAccChips();
   const accId=document.getElementById('f-account').value;
   const acc=accId?accounts.find(a=>a.id===accId):null;
   const cardWrap=document.getElementById('f-card-type-wrap');
@@ -276,7 +277,7 @@ function onAccountSelected(){
   }
 }
 function openModal(data=null){
-  document.getElementById('m-title').textContent=data?'Editar Gasto':'Nuevo Gasto';
+  document.getElementById('m-title').textContent=data?'Editar movimiento':'Nuevo movimiento';
   document.getElementById('f-id').value=data?.id||'';
   document.getElementById('f-date').value=data?.date||todayStr();
   document.getElementById('f-desc').value=data?.description||'';
@@ -319,6 +320,8 @@ function openModal(data=null){
   // Restore split state
   splitRows=data?.splits?data.splits.map(s=>({...s})):[];
   splitPanelOpen=splitRows.length>0;
+  // "Más opciones" se abre solo si el movimiento ya usa algo de adentro
+  document.getElementById('f-more').open=!!(data?.notes||data?.recurring||splitPanelOpen);
   document.getElementById('split-panel').classList.toggle('on',splitPanelOpen);
   document.getElementById('split-toggle-btn').classList.toggle('active',splitPanelOpen);
   document.getElementById('split-toggle-ico').textContent=splitPanelOpen?'−':'＋';
@@ -348,6 +351,8 @@ function buildCatSelect(selectedCat){
     if(searchEl)searchEl.value='';
     if(hiddenEl)hiddenEl.value='';
   }
+  renderCatChips();
+  if(searchEl&&document.getElementById('f-cat-chips')?.querySelector('.chip.on'))searchEl.value='';
 }
 
 function openCatDropdown(){
@@ -408,6 +413,9 @@ function selectCat(cat){
   if(hiddenEl)hiddenEl.value=cat;
   const dd=document.getElementById('cat-dropdown');
   if(dd)dd.style.display='none';
+  renderCatChips();
+  // con la categoría en un botón, el buscador queda limpio para buscar otra
+  if(searchEl&&document.getElementById('f-cat-chips')?.querySelector('.chip.on'))searchEl.value='';
 }
 function addCatPrompt(){
   const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;

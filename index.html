@@ -265,57 +265,24 @@
 <div class="m-overlay" id="m-overlay" onclick="overlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title" id="m-title">Nuevo Gasto</div>
+    <div class="m-title" id="m-title">Nuevo movimiento</div>
     <input type="hidden" id="f-id">
-    <div class="f-grp">
-      <label class="f-lbl">Tipo</label>
-      <div class="type-tog">
-        <button class="type-btn ae" id="btn-eg" onclick="setType('Egreso')">📤 Egreso</button>
-        <button class="type-btn"    id="btn-in" onclick="setType('Ingreso')">📥 Ingreso</button>
-      </div>
-      <input type="hidden" id="f-type" value="Egreso">
+    <!-- Gasto / Ingreso -->
+    <div class="type-tog seg-tog">
+      <button class="type-btn ae" id="btn-eg" onclick="setType('Egreso')">Gasto</button>
+      <button class="type-btn"    id="btn-in" onclick="setType('Ingreso')">Ingreso</button>
     </div>
-    <div class="f-row">
-      <div class="f-grp" style="margin-bottom:0">
-        <label class="f-lbl">Fecha</label>
-        <input type="date" class="f-ctrl" id="f-date">
-      </div>
-      <div class="f-grp" style="margin-bottom:0">
-        <label class="f-lbl">Categoría</label>
-        <div class="cat-row" style="overflow:visible">
-          <div style="flex:1;position:relative;overflow:visible">
-            <input type="text" class="f-ctrl" id="f-cat-search"
-              placeholder="Buscar o elegir…"
-              oninput="filterCatDropdown()"
-              onfocus="openCatDropdown()"
-              autocomplete="off"
-              style="padding-right:32px">
-            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--txt3);pointer-events:none">▾</span>
-            <input type="hidden" id="f-cat">
-            <div id="cat-dropdown" style="display:none;position:fixed;background:var(--modal-bg);border:1px solid var(--bdr2);border-radius:12px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:200px"></div>
-          </div>
-          <button class="btn-plus" onclick="addCatPrompt()">＋</button>
-          <button class="btn-manage-cats" onclick="openCatManager()">⚙️</button>
-        </div>
-      </div>
-    </div>
-    <div class="f-grp">
-      <label class="f-lbl">Descripción</label>
-      <input type="text" class="f-ctrl" id="f-desc" placeholder="ej: Coto, Padel martes…">
-    </div>
-    <div class="f-grp">
-      <label class="f-lbl">Notas (opcional)</label>
-      <textarea class="f-ctrl" id="f-notes" placeholder="Detalles adicionales…" rows="2" style="resize:none;line-height:1.5"></textarea>
-    </div>
-    <div class="f-grp">
-      <label class="f-lbl" id="f-amt-lbl">Monto total ($)</label>
-      <div style="display:flex;gap:8px">
-        <input type="number" class="f-ctrl" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" oninput="recalcSplit();onAmtOrCurrencyChange()" style="flex:1">
-        <select class="f-ctrl" id="f-currency" onchange="onAmtOrCurrencyChange()" style="width:90px;flex-shrink:0">
-          <option value="ARS">ARS $</option>
-          <option value="USD">USD U$S</option>
+    <input type="hidden" id="f-type" value="Egreso">
+    <!-- El monto primero, grande -->
+    <div class="amt-block">
+      <div class="amt-row">
+        <input type="number" class="amt-input" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" aria-labelledby="f-amt-lbl" oninput="recalcSplit();onAmtOrCurrencyChange()">
+        <select class="amt-cur" id="f-currency" onchange="onAmtOrCurrencyChange()" aria-label="Moneda">
+          <option value="ARS">ARS</option>
+          <option value="USD">USD</option>
         </select>
       </div>
+      <div class="amt-lbl" id="f-amt-lbl">Monto total ($)</div>
     </div>
     <!-- USD TC row — only shown when currency=USD -->
     <div id="f-tc-wrap" style="display:none">
@@ -326,19 +293,50 @@
         </div>
         <div class="f-grp" style="margin-bottom:0">
           <label class="f-lbl">Equivalente ARS</label>
-          <input type="number" class="f-ctrl" id="f-ars-equiv" placeholder="calculado" inputmode="decimal" step="any" min="0" oninput="onEquivChange()" style="background:color-mix(in srgb,var(--tint) 5%,transparent);border-color:color-mix(in srgb,var(--tint) 20%,transparent)">
+          <input type="number" class="f-ctrl" id="f-ars-equiv" placeholder="calculado" inputmode="decimal" step="any" min="0" oninput="onEquivChange()">
         </div>
       </div>
       <div id="f-tc-preview" style="font-size:11px;color:var(--txt3);margin-bottom:8px;text-align:right"></div>
       <div id="f-tc-rates"></div>
     </div>
+    <!-- Categoría: las más usadas como botones; el resto con el buscador -->
+    <div class="f-grp">
+      <label class="f-lbl">Categoría</label>
+      <div class="chips" id="f-cat-chips"></div>
+      <div class="cat-row" style="overflow:visible">
+        <div style="flex:1;position:relative;overflow:visible">
+          <input type="text" class="f-ctrl" id="f-cat-search"
+            placeholder="Buscar otra categoría…"
+            oninput="filterCatDropdown()"
+            onfocus="openCatDropdown()"
+            autocomplete="off"
+            style="padding-right:32px">
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--txt3);pointer-events:none">▾</span>
+          <input type="hidden" id="f-cat">
+          <div id="cat-dropdown" style="display:none;position:fixed;background:var(--modal-bg);border:1px solid var(--bdr2);border-radius:12px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:200px"></div>
+        </div>
+        <button class="btn-plus" onclick="addCatPrompt()" aria-label="Nueva categoría">＋</button>
+        <button class="btn-manage-cats" onclick="openCatManager()" aria-label="Administrar categorías">⚙️</button>
+      </div>
+    </div>
+    <!-- Billetera o tarjeta como botones (el select queda para la lógica) -->
+    <div class="f-grp" id="f-account-wrap">
+      <label class="f-lbl" id="f-account-lbl">Pagado con</label>
+      <div class="chips" id="f-acc-chips"></div>
+      <select class="f-ctrl" id="f-account" onchange="onAccountSelected()" hidden aria-labelledby="f-account-lbl">
+        <option value="">— Sin asignar —</option>
+      </select>
+      <div id="f-account-hint" style="font-size:11px;color:var(--txt3);margin-top:5px;display:none">
+        Creá billeteras en Cuentas para asignarlas
+      </div>
+    </div>
     <!-- Card expense type — only shown when selected account is a credit card -->
     <div id="f-card-type-wrap" style="display:none">
       <label class="f-lbl">Tipo de cargo en tarjeta</label>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px">
-        <button class="type-btn" id="fct-one" onclick="setCardExpType('one')" style="font-size:12px;padding:10px 4px">🔹 Único</button>
-        <button class="type-btn" id="fct-rec" onclick="setCardExpType('recurring')" style="font-size:12px;padding:10px 4px">🔁 Fijo</button>
-        <button class="type-btn" id="fct-inst" onclick="setCardExpType('installment')" style="font-size:12px;padding:10px 4px">📅 Cuotas</button>
+        <button class="type-btn" id="fct-one" onclick="setCardExpType('one')" style="font-size:12px;padding:10px 4px">Único</button>
+        <button class="type-btn" id="fct-rec" onclick="setCardExpType('recurring')" style="font-size:12px;padding:10px 4px">Fijo mensual</button>
+        <button class="type-btn" id="fct-inst" onclick="setCardExpType('installment')" style="font-size:12px;padding:10px 4px">Cuotas</button>
       </div>
       <input type="hidden" id="f-card-exp-type" value="one">
       <div id="f-installment-wrap" style="display:none;margin-bottom:12px">
@@ -354,38 +352,43 @@
         </div>
       </div>
     </div>
-    <!-- Account selector — always visible -->
-    <div class="f-grp" id="f-account-wrap">
-      <label class="f-lbl">💼 Billetera / Tarjeta</label>
-      <select class="f-ctrl" id="f-account" onchange="onAccountSelected()">
-        <option value="">— Sin asignar —</option>
-      </select>
-      <div id="f-account-hint" style="font-size:11px;color:var(--txt3);margin-top:5px;display:none">
-        Creá billeteras en la tab 💼 Cuentas para asignarlas
+    <!-- Fecha y descripción -->
+    <div class="f-row f-row-fecha">
+      <div class="f-grp" style="margin-bottom:0">
+        <label class="f-lbl" for="f-date">Fecha</label>
+        <input type="date" class="f-ctrl" id="f-date">
+      </div>
+      <div class="f-grp" style="margin-bottom:0">
+        <label class="f-lbl" for="f-desc">Descripción</label>
+        <input type="text" class="f-ctrl" id="f-desc" placeholder="Opcional (ej: Coto)">
       </div>
     </div>
-
-    <!-- Recurring toggle -->
-    <div class="sh-row" style="margin-bottom:12px">
-      <label class="tog"><input type="checkbox" id="f-recur"><div class="tog-track"></div><div class="tog-knob"></div></label>
-      <span class="sh-lbl">🔁 Movimiento recurrente (se repite mensualmente)</span>
-    </div>
-
-    <!-- SPLIT SECTION -->
-    <button class="split-toggle-btn" id="split-toggle-btn" onclick="toggleSplitPanel()">
-      <span id="split-toggle-lbl">🤝 Dividir con alguien</span>
-      <span id="split-toggle-ico">＋</span>
-    </button>
-    <div class="split-panel" id="split-panel">
-      <div id="split-persons-list"></div>
-      <button class="split-add-person" onclick="addSplitPerson()">＋ Agregar persona</button>
-      <div class="split-my-part">
-        <span class="split-my-lbl">💰 Mi parte</span>
-        <span class="split-my-val" id="split-my-val">$0</span>
+    <!-- Lo menos usado, plegado -->
+    <details class="more-opts" id="f-more">
+      <summary>Más opciones <span>notas, recurrente, dividir</span></summary>
+      <div class="f-grp">
+        <label class="f-lbl" for="f-notes">Notas</label>
+        <textarea class="f-ctrl" id="f-notes" placeholder="Detalles adicionales…" rows="2" style="resize:none;line-height:1.5"></textarea>
       </div>
-    </div>
+      <div class="sh-row" style="margin-bottom:12px">
+        <label class="tog"><input type="checkbox" id="f-recur"><div class="tog-track"></div><div class="tog-knob"></div></label>
+        <span class="sh-lbl">Se repite todos los meses</span>
+      </div>
+      <button class="split-toggle-btn" id="split-toggle-btn" onclick="toggleSplitPanel()">
+        <span id="split-toggle-lbl">Dividir con alguien</span>
+        <span id="split-toggle-ico">＋</span>
+      </button>
+      <div class="split-panel" id="split-panel">
+        <div id="split-persons-list"></div>
+        <button class="split-add-person" onclick="addSplitPerson()">＋ Agregar persona</button>
+        <div class="split-my-part">
+          <span class="split-my-lbl">Mi parte</span>
+          <span class="split-my-val" id="split-my-val">$0</span>
+        </div>
+      </div>
+    </details>
 
-    <button class="btn-save" onclick="saveExpense()">💾 Guardar</button>
+    <button class="btn-save" onclick="saveExpense()">Guardar</button>
     <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
   </div>
 </div>
@@ -930,6 +933,7 @@
 <script src="js/cards.js"></script>
 <script src="js/periods.js"></script>
 <script src="js/dolar.js"></script>
+<script src="js/form-chips.js"></script>
 <script src="js/init.js"></script>
 </body>
 </html>

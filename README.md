@@ -59,6 +59,7 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `budgets.js` | presupuestos, metas, estadísticas, carga rápida, patrimonio |
 | `cards.js` | ciclo de cierre y vencimiento de tarjetas, próximos resúmenes, aviso de vencimiento |
 | `periods.js` | gráfico por meses, trimestres o años |
+| `form-chips.js` | categorías y billeteras como botones en el formulario de movimiento |
 | `dolar.js` | cotización del día (dolarapi.com) para gastos en USD y compra/venta |
 | `init.js` | arranque |
 

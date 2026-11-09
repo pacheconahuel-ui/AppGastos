@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.4**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.5**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -46,7 +46,7 @@ Estado a **noviembre 2026**: versión **3.4**. El código está en `index.html`,
 - [x] Paleta y tipografía (3.2).
 - [x] Navegación abajo con un único botón + (3.3).
 - [x] Resumen reordenado (3.4).
-- [ ] Formulario de gasto nuevo: monto primero, categorías y billeteras como botones.
+- [x] Formulario de gasto nuevo (3.5).
 - [ ] Íconos de línea en vez de emojis en botones y títulos (los de categoría quedan).
 
 ## Ideas para después

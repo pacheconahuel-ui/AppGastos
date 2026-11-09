@@ -3,6 +3,8 @@
 function loginGoogle(){
   if(!auth){toast('⚠️ Firebase no inicializado, recargá la página');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
+  // Siempre la lista de cuentas: si no, Google entra solo con la que ya está abierta en el navegador
+  provider.setCustomParameters({prompt:'select_account'});
   auth.signInWithPopup(provider).catch(e=>{
     // If popup blocked, fall back to redirect
     if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'){
