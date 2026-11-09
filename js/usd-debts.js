@@ -335,8 +335,23 @@ function editExp(id,ev){ev?.stopPropagation();const e=expenses.find(x=>x.id===id
 function delExp(id,ev){
   ev?.stopPropagation();pendingDel={type:'ars',id};
   const e=expenses.find(x=>x.id===id);
+  // Una cuota de varios meses: se puede borrar solo esa o también las que siguen
+  const sig=e&&e.serieId?expenses.filter(x=>x.serieId===e.serieId&&x.serieIdx>e.serieIdx):[];
+  if(sig.length){
+    showConf('trash','Borrar cuota',`"${e.description}" · cuota ${e.serieIdx} de ${e.serieTotal}.\nDespués hay ${sig.length} más. ¿Qué borrás?`,()=>{pendingDel={type:'ars',id};doDelete();},'Solo esta');
+    document.getElementById('conf-btns').insertAdjacentHTML('beforeend',`<button class="btn-yes" onclick="borrarSerie('${id}')">Esta y las siguientes (${sig.length+1})</button>`);
+    return;
+  }
   document.getElementById('conf-txt').textContent=e?`"${e.description}" · ${fmt(e.amount)}\nEsta acción no se puede deshacer.`:'Esta acción no se puede deshacer.';
   openDeleteConf();
+}
+async function borrarSerie(id){
+  closeConf();
+  const e=expenses.find(x=>x.id===id);if(!e)return;
+  const ids=expenses.filter(x=>x.serieId===e.serieId&&x.serieIdx>=e.serieIdx).map(x=>x.id);
+  expenses=expenses.filter(x=>!ids.includes(x.id));
+  renderAll();toast(`🗑️ ${ids.length} cuotas eliminadas`);
+  for(const x of ids){skipNextArs=fbOnline;await persistArs(null,x);}
 }
 function editUsdTx(id,ev){ev?.stopPropagation();const t=usdTx.find(x=>x.id===id);if(t)openUsdModal(t);}
 function delUsdTx(id,ev){

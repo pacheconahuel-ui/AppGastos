@@ -344,6 +344,7 @@ function expHTML(e,actions){
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
   const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?ic('card')+' Pago de tarjeta':ic('transfer')+' Cambio de moneda'} · no suma al mes</span>`:'';
   const progBadge=esFuturo(e)?`<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">${ic('calendar')} Programado</span>`:'';
+  const serieBadge=e.serieTotal>1?`<span class="badge" style="background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">${e.serieIdx}/${e.serieTotal}</span>`:'';
   const recurBadge=e.recurring?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">'+ic('repeat')+'</span>':'';
   const usdBadge=e.currency==='USD'?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 10%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--tint) 25%,transparent)">U$D ${e.amount}</span>`:'';
   const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
@@ -358,7 +359,7 @@ function expHTML(e,actions){
     <div class="exp-info">
       <div class="exp-desc">${esc(displayName(e.description||e.category))} ${pending}</div>
       ${notesLine}
-      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${progBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>
+      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${progBadge}${serieBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>
     </div>
     <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${e.currency==='USD'&&!usdRate(e)?fmtU(effAmt(e)):fmt(effArs(e))}</div>${btns}</div>
   </div>`;

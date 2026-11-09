@@ -286,6 +286,9 @@ function openModal(data=null){
   document.getElementById('f-notes').value=data?.notes||'';
   document.getElementById('f-amt').value=data?.amount||'';
   document.getElementById('f-recur').checked=data?.recurring||false;
+  document.getElementById('f-serie').value='';
+  document.getElementById('f-serie-wrap').style.display=data?.id?'none':'';
+  updateSerieHint();
   // Currency
   document.getElementById('f-currency').value=data?.currency||'ARS';
   document.getElementById('f-tc').value=data?.exchangeRate||'';
@@ -337,6 +340,15 @@ function updateFutureHint(){
   const el=document.getElementById('f-future-hint');if(!el)return;
   const d=document.getElementById('f-date').value;
   el.textContent=d&&d>todayStr()?`Programado para el ${fmtDate(d)}: no resta de tu saldo hasta ese día.`:'';
+  updateSerieHint();
+}
+// Repetir mes a mes: cuántos movimientos se cargan y hasta cuándo
+function fechaLarga(s){return s.split('-').reverse().join('/');}
+function serieCount(){return Math.max(1,Math.min(36,parseInt(document.getElementById('f-serie')?.value)||1));}
+function updateSerieHint(){
+  const el=document.getElementById('f-serie-hint');if(!el)return;
+  const n=serieCount(),d=document.getElementById('f-date').value,a=parseFloat(document.getElementById('f-amt').value)||0;
+  el.textContent=n>1&&d?`Se cargan ${n} movimientos, del ${fechaLarga(d)} al ${fechaLarga(dateAddMonths(d,n-1))}${a?` (${fmt(a*n)} en total)`:''}. Los de fecha futura quedan programados.`:'';
 }
 function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;backToUnassigned();}
 function overlayClick(ev){if(ev.target===document.getElementById('m-overlay'))closeModal();}
@@ -530,6 +542,9 @@ async function saveExpense(){
   const acc=accountId?accounts.find(a=>a.id===accountId):null;
   if(!date){toast('⚠️ Completá la fecha');return;}
   if(!amt||amt<=0||isNaN(amt)){toast('⚠️ Ingresá un monto válido');return;}
+  const serieN=id?1:serieCount();
+  if(serieN>1&&acc?.type==='credit'){toast('⚠️ Con tarjeta usá "Cuotas" arriba, no repetir meses');return;}
+  if(serieN>1&&splitPanelOpen&&splitRows.length){toast('⚠️ No se puede repetir un gasto dividido con otras personas');return;}
   if(!accountId&&walletAccounts().length&&!_noAccConfirmed){
     _noAccConfirmed=true;
     document.getElementById('f-account').focus();
@@ -549,7 +564,7 @@ async function saveExpense(){
     id:id||newId(),type,date,category:cat,
     description:desc||cat,notes:notes||null,amount:amt,myAmount,
     splits:splits.length>0?splits:null,
-    recurring:recurring||false,
+    recurring:serieN>1?false:(recurring||false),
     accountId:accountId||null,
     currency:currency||'ARS',
     exchangeRate,arsEquiv,
@@ -562,13 +577,20 @@ async function saveExpense(){
     updatedAt:Date.now()
   };
 
+  // Varios meses de una vez: el primero es este y los demás llevan la fecha de cada mes
+  const serie=[exp];
+  if(serieN>1){
+    const sid='serie_'+newId();
+    exp.serieId=sid;exp.serieIdx=1;exp.serieTotal=serieN;
+    for(let k=1;k<serieN;k++)serie.push({...exp,id:newId(),date:dateAddMonths(date,k),serieIdx:k+1,createdAt:Date.now(),updatedAt:Date.now()});
+  }
+
   if(id){const i=expenses.findIndex(e=>e.id===id);if(i>-1)expenses[i]=exp;else expenses.push(exp);}
-  else expenses.push(exp);
+  else expenses.push(...serie);
 
   haptic();closeModal();renderAll();
-  toast(id?'✅ Gasto actualizado':'✅ Gasto guardado');
-  skipNextArs=fbOnline;
-  await persistArs(exp,null);
+  toast(id?'✅ Gasto actualizado':serieN>1?`✅ ${serieN} movimientos cargados, hasta el ${fechaLarga(serie[serieN-1].date)}`:'✅ Gasto guardado');
+  for(const x of serie){skipNextArs=fbOnline;await persistArs(x,null);}
 
   // Deudas del split: al editar se actualizan las que ya existían (antes se creaban
   // de nuevo y la persona quedaba debiendo el doble). Las ya saldadas no se tocan.

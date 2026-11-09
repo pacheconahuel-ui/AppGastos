@@ -210,3 +210,15 @@ describe('movimientos programados (fecha futura)', () => {
     expect(app.run('accountBalance("acc_efectivo")')).toBe(0);
   });
 });
+
+describe('dateAddMonths (repetir mes a mes)', () => {
+  it.each([
+    ['2026-12-07', 0, '2026-12-07'],
+    ['2026-12-07', 1, '2027-01-07'],
+    ['2026-12-07', 12, '2027-12-07'],
+    ['2026-01-31', 1, '2026-02-28'],
+    ['2026-01-31', 2, '2026-03-31'], // sale de la fecha original, no de la del mes anterior
+    ['2028-01-31', 1, '2028-02-29'],
+    ['2026-11-30', 3, '2027-02-28'],
+  ])('%s + %i meses → %s', (d, k, r) => expect(app.run(`dateAddMonths('${d}',${k})`)).toBe(r));
+});
