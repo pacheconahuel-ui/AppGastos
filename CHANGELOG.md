@@ -1,5 +1,10 @@
 # Cambios
 
+## 3.6.1 — noviembre 2026
+
+- **El ícono de la app instalada ahora sí es el nuevo.** En la 3.6 se regeneraron los PNG con la paleta nueva, pero el `manifest.json` seguía apuntando a unos SVG con el violeta y el emoji viejos, así que el ícono del celular no cambiaba. Ahora el manifest usa los PNG (normales y maskable, 192 y 512) y el ícono de iOS también. Hay que sacar el acceso directo y volver a agregarlo para verlo.
+- Prueba nueva (`tests/manifest.test.js`): los íconos del manifest existen, miden lo que dicen y no usan el color viejo.
+
 ## 3.6 — noviembre 2026
 
 Última parte del rediseño: íconos.
