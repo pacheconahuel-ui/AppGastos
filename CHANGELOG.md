@@ -1,5 +1,19 @@
 # Cambios
 
+## 3.7 — noviembre 2026
+
+Arreglos a partir de capturas del celular.
+
+- **Saldos: las deudas de un contacto borrado ya cuentan.** Si borrabas un contacto con deudas pendientes, las deudas quedaban en la base pero Saldos las dejaba afuera: el resumen mostraba $0 mientras el aviso de "más de 30 días" mostraba el monto, y "Cobrar" solo mostraba un cartel sin hacer nada. Ahora esas personas tienen su tarjeta ("ya no está en tus contactos"), suman en los totales y se pueden cobrar o pagar. Un botón las vuelve a agregar a contactos o, si ya hay uno con el mismo nombre, une las deudas con ese contacto. Al borrar un contacto, el aviso aclara que las deudas siguen en Saldos.
+- Saldos: "Marcar pagado" ya no aparece apagado cuando no hay deudas.
+- **Aviso (toast):** los mensajes largos se cortaban por los costados; ahora se parten en renglones dentro de la pantalla.
+- **Encabezado:** muestra solo la versión. El mes se ve en el resumen; si estás mirando un mes que no es el actual, aparece "No es el mes actual · Ir a {mes}".
+- Quedaban emojis sueltos (⏰ ⏳ ⏭): ahora son íconos o texto, y la prueba de íconos los detecta.
+- Cuentas: el botón de borrar billetera es de 44 px y queda alineado a la derecha.
+- **Movimientos sin billetera:** se pueden asignar todos juntos a una billetera (con confirmación que muestra cuánto cambia el saldo). Los de dólares se siguen eligiendo uno por uno.
+- **Tema claro que se ve oscuro (informe de un celular Android):** la app ahora declara `color-scheme` para que Chrome y Samsung Internet no apliquen su "modo oscuro para sitios web" encima del tema claro, y el tema elegido se aplica al abrir, antes de iniciar sesión. Esto no se pudo comprobar en un Android real; si sigue pasando, hay que apagar esa opción del navegador (ver README).
+- Pruebas nuevas: `debtPeople`, contactos borrados, toast dentro de la pantalla a 320/360/390 px, encabezado y mes, asignación masiva.
+
 ## 3.6.1 — noviembre 2026
 
 - **El ícono de la app instalada ahora sí es el nuevo.** En la 3.6 se regeneraron los PNG con la paleta nueva, pero el `manifest.json` seguía apuntando a unos SVG con el violeta y el emoji viejos, así que el ícono del celular no cambiaba. Ahora el manifest usa los PNG (normales y maskable, 192 y 512) y el ícono de iOS también. Hay que sacar el acceso directo y volver a agregarlo para verlo.

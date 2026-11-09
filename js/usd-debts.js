@@ -203,18 +203,26 @@ function deleteDebt(id,ev){
   openDeleteConf();
 }
 
-// --- SETTLE MODAL ---
-function openSettleModal(personId){
-  const p=personById(personId);
-  if(!p){
-    // Person deleted but debts remain — show settle anyway using debt data
-    const activeDebts=debts.filter(d=>d.personId===personId&&!d.settled);
-    if(!activeDebts.length){toast('No hay deudas activas para saldar');return;}
-    const name=activeDebts[0]?.personName||'Desconocido';
-    const total=activeDebts.reduce((s,d)=>s+d.amount,0);
-    toast(`⚠️ Persona no encontrada (${esc(name)}). Eliminá las deudas manualmente desde cada tarjeta.`);
+// Contacto borrado con deudas pendientes: lo vuelve a crear con el mismo id (las deudas se reconectan solas),
+// o, si ya hay un contacto con ese nombre, pasa las deudas a ese contacto
+async function restoreOrphan(personId){
+  const o=personOf(personId);
+  const same=persons.find(x=>x.id!==personId&&x.name.trim().toLowerCase()===o.name.trim().toLowerCase());
+  if(!same){
+    persons.push({id:personId,name:o.name,emoji:o.emoji,isRecurrent:false});
+    saveLocal();pushSettings();renderAll();toast(`✅ ${o.name} vuelve a estar en tus contactos`);
     return;
   }
+  const mine=debts.filter(d=>d.personId===personId);
+  debts=debts.map(d=>d.personId===personId?{...d,personId:same.id,personName:same.name,updatedAt:Date.now()}:d);
+  renderAll();
+  for(const m of mine){const d=debts.find(x=>x.id===m.id);skipNextDebt=fbOnline;await persistDebt(d,null);}
+  toast(`✅ Deudas unidas con ${same.name}`);
+}
+
+// --- SETTLE MODAL ---
+function openSettleModal(personId){
+  const p=personOf(personId);
   const bal=personBalance(personId);
   const activeDebts=personDebtsActive(personId);
   // Allow settling even if net balance is 0, as long as there are active debts
@@ -256,7 +264,7 @@ async function doSettle(){
   const date=document.getElementById('settle-date').value;
   const accountId=document.getElementById('settle-acc')?.value||null;
   if(!amt||amt<=0||isNaN(amt)){toast('⚠️ Ingresá el monto');return;}
-  const p=personById(personId);
+  const p=personOf(personId);
   const bal=personBalance(personId);
 
   // Se salda contra el saldo neto: si el pago lo cubre (o el neto es 0) se cierran
