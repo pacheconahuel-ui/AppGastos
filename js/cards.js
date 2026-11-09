@@ -1,0 +1,111 @@
+// Tarjetas: ciclo de cierre y vencimiento, cuotas proyectadas y recordatorios de vencimiento
+
+const MES_CORTO=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+function ymd(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function parseYmd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+// Día "day" del mes (y, m 0-indexado); si no existe (31 en febrero), el último
+function dayInMonth(y,m,day){const last=new Date(y,m+1,0).getDate();return new Date(y,m,Math.min(day,last));}
+function daysBetween(a,b){return Math.round((parseYmd(b)-parseYmd(a))/86400000);}
+
+// Cierre anterior (≤ hoy), próximo cierre (> hoy) y vencimiento del resumen ya cerrado.
+// null si la tarjeta no tiene día de cierre.
+function cardCycle(a,today=todayStr()){
+  if(!a||!a.closingDay)return null;
+  const t=parseYmd(today);
+  let last=dayInMonth(t.getFullYear(),t.getMonth(),a.closingDay);
+  if(last>t)last=dayInMonth(t.getFullYear(),t.getMonth()-1,a.closingDay);
+  const next=dayInMonth(last.getFullYear(),last.getMonth()+1,a.closingDay);
+  const due=new Date(last);due.setDate(due.getDate()+(a.dueOffset||10));
+  return{lastClosing:ymd(last),nextClosing:ymd(next),due:ymd(due)};
+}
+
+// Lo que va a pagar la tarjeta en los próximos n resúmenes. El 0 es el próximo
+// (todo lo no pagado, como ccEstimated); después siguen las cuotas que quedan y los fijos.
+function ccProjection(accId,n=6,today=todayStr()){
+  const a=accounts.find(x=>x.id===accId);
+  const pending=expenses.filter(e=>e.accountId===accId&&e.type==='Egreso'&&e.ccPaid!==true);
+  const cyc=cardCycle(a,today);
+  // Mes del próximo resumen: el del próximo cierre; sin día de cierre, el mes siguiente
+  const base=cyc?parseYmd(cyc.nextClosing):(()=>{const t=parseYmd(today);return new Date(t.getFullYear(),t.getMonth()+1,1);})();
+  const out=[];
+  for(let k=0;k<n;k++){
+    const m=new Date(base.getFullYear(),base.getMonth()+k,1);
+    let ars=0,usd=0,count=0;
+    pending.forEach(e=>{
+      let charged=false;
+      if(k===0)charged=true;
+      else if(e.cardExpType==='recurring')charged=true;
+      else if(e.cardExpType==='installment'&&e.installmentTotal)charged=(e.installmentCurrent||1)+k<=e.installmentTotal;
+      if(!charged)return;
+      count++;
+      // Como en el resumen: lo cargado en dólares va aparte
+      if(e.currency==='USD')usd+=effAmt(e);else ars+=effAmt(e);
+    });
+    out.push({label:`${MES_CORTO[m.getMonth()]} ${String(m.getFullYear()).slice(2)}`,ars,usd,count});
+  }
+  return out;
+}
+
+// Último pago del resumen de esta tarjeta: el guardado en la cuenta (lastPaid, desde la 3.1)
+// o, para pagos viejos, el último "Pago resumen <nombre>"
+function lastCardPayment(a){
+  let last=a.lastPaid||'';
+  expenses.forEach(e=>{
+    if(isCCPayment(e)&&(e.ccCardId===a.id||(e.description||'').startsWith('Pago resumen '+a.name))&&(e.date||'')>last)last=e.date;
+  });
+  return last;
+}
+
+// Resúmenes cerrados sin pagar: desde el cierre hasta 10 días después del vencimiento
+function cardReminders(today=todayStr()){
+  const out=[];
+  ccAccounts().forEach(a=>{
+    const cyc=cardCycle(a,today);
+    if(!cyc)return;
+    if(lastCardPayment(a)>=cyc.lastClosing)return;
+    const{totalARS,totalUSD}=ccEstimated(a.id);
+    if(totalARS<=0&&totalUSD<=0)return;
+    const daysLeft=daysBetween(today,cyc.due);
+    if(daysLeft<-10)return;
+    out.push({acc:a,due:cyc.due,daysLeft,totalARS,totalUSD});
+  });
+  return out.sort((x,y)=>x.daysLeft-y.daysLeft);
+}
+
+function renderCardReminders(){
+  const el=document.getElementById('card-reminders');
+  if(!el)return;
+  const list=cardReminders();
+  el.innerHTML=list.map(r=>{
+    const when=r.daysLeft>1?`vence en ${r.daysLeft} días (${fmtDate(r.due)})`
+      :r.daysLeft===1?`vence mañana (${fmtDate(r.due)})`
+      :r.daysLeft===0?'vence hoy'
+      :`venció hace ${-r.daysLeft} día${r.daysLeft===-1?'':'s'} (${fmtDate(r.due)})`;
+    const urgent=r.daysLeft<=2;
+    const col=urgent?'var(--red)':'var(--yellow)';
+    const bg=urgent?'rgba(248,113,113,.08)':'rgba(251,191,36,.08)';
+    const bd=urgent?'rgba(248,113,113,.25)':'rgba(251,191,36,.25)';
+    const amt=fmt(r.totalARS)+(r.totalUSD?` + ${fmtU(r.totalUSD)}`:'');
+    return`<div class="card-reminder" style="background:${bg};border-color:${bd}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:${col}">${r.acc.emoji} Resumen ${esc(r.acc.name)} · ${when}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:2px">~${amt}</div>
+      </div>
+      <button class="card-reminder-btn" onclick="openCCPayModal('${r.acc.id}')">Pagar</button>
+    </div>`;
+  }).join('');
+}
+
+function cardProjectionHTML(a){
+  const rows=ccProjection(a.id,6);
+  if(!rows.some((r,k)=>k>0&&(r.ars||r.usd)))return'';
+  const max=Math.max(...rows.map(r=>r.ars),1);
+  return`<details class="cc-proj">
+    <summary>📅 Próximos resúmenes (cuotas y fijos)</summary>
+    ${rows.map((r,k)=>`<div class="cc-proj-row">
+      <span class="cc-proj-lbl">${r.label}${k===0?' · próximo':''}</span>
+      <span class="cc-proj-bar"><span style="width:${Math.round(r.ars/max*100)}%"></span></span>
+      <span class="cc-proj-amt">${fmt(r.ars)}${r.usd?` <span style="color:var(--gold)">+ ${fmtU(r.usd)}</span>`:''}</span>
+    </div>`).join('')}
+  </details>`;
+}

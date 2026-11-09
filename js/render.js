@@ -52,6 +52,8 @@ function renderDashboard(){
   try{renderPieChart(mk);}catch(e){console.warn('pie chart:',e);}
   try{renderMonthlyChart();}catch(e){console.warn('monthly chart:',e);}
   try{renderPatrimonioCard();}catch(e){console.warn('patrimonio:',e);}
+  // Los vencimientos dependen de hoy, no del mes que se está mirando
+  try{renderCardReminders();}catch(e){console.warn('card reminders:',e);}
   if(isCurrent){
     try{renderProjection();}catch(e){console.warn('projection:',e);}
     try{renderRecurringReminders();}catch(e){console.warn('reminders:',e);}

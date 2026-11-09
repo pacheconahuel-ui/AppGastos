@@ -534,3 +534,27 @@
     .fabs{width:240px}
     .sec{padding:28px 40px}
   }
+
+/* Vencimientos de tarjetas (resumen) y próximos resúmenes */
+.card-reminder{display:flex;align-items:center;gap:10px;border:1px solid;border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.card-reminder-btn{min-height:44px;min-width:72px;padding:0 14px;border-radius:10px;border:1px solid var(--bdr2);background:var(--surf);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif}
+.cc-proj{margin-top:10px;border-top:0.5px solid var(--bdr);padding-top:8px}
+.cc-proj summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--txt2);min-height:32px;display:flex;align-items:center}
+.cc-proj-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:12px;padding:4px 0}
+.cc-proj-lbl{color:var(--txt3);white-space:nowrap;min-width:52px}
+.cc-proj-bar{height:6px;background:var(--bdr2);border-radius:3px;overflow:hidden}
+.cc-proj-bar span{display:block;height:100%;background:var(--gold)}
+.cc-proj-amt{font-family:'JetBrains Mono',monospace;text-align:right}
+
+/* Gráfico por período */
+.period-tabs{display:flex;gap:6px;margin:4px 0 10px}
+.period-tabs button{flex:1;min-height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif}
+.period-tabs button.on{background:rgba(102,126,234,.15);border-color:rgba(102,126,234,.4);color:var(--txt)}
+.period-compare{margin-top:10px;padding-top:8px;border-top:0.5px solid var(--bdr);font-size:12px;display:grid;gap:3px;color:var(--txt2)}
+.period-compare-ttl{font-weight:700;color:var(--txt)}
+
+/* Cotización del dólar */
+.rate-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.rate-chip{min-height:36px;padding:0 10px;border-radius:10px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.08);color:var(--txt2);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif}
+.rate-chip b{color:var(--gold);font-family:'JetBrains Mono',monospace;font-weight:600}
+.rate-src{font-size:10px;color:var(--txt3);margin-bottom:8px}

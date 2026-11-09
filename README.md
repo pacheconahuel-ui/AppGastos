@@ -10,8 +10,10 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 - **Billeteras y tarjetas:** saldo de cada billetera (ARS y USD), transferencias entre billeteras, tarjetas de crédito con fijos, cuotas y pago del resumen.
 - **Dólares:** ingresos en USD, compra y venta con su contrapartida en pesos.
 - **Deudas y saldos** con contactos, con botón para saldar.
-- **Resumen del mes:** gráficos, presupuestos por categoría, metas, recurrentes pendientes.
+- **Resumen del mes:** gráficos (por mes, trimestre o año), presupuestos por categoría, metas, recurrentes pendientes.
 - **Lista** con búsqueda, filtros (billetera, ingreso o egreso, categoría) y exportación a CSV.
+- **Tarjetas:** aviso de vencimiento del resumen y próximos 6 resúmenes (cuotas y fijos).
+- **Dólar del día** al cargar movimientos en USD.
 - Modo claro u oscuro, botón atrás de Android, aviso de versión nueva.
 
 ### Cómo se calcula el saldo de una billetera
@@ -55,6 +57,9 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `sw-register.js` | registro del service worker y aviso de versión nueva |
 | `accounts.js` | billeteras, tarjetas, saldos, transferencias, pago del resumen |
 | `budgets.js` | presupuestos, metas, estadísticas, carga rápida, patrimonio |
+| `cards.js` | ciclo de cierre y vencimiento de tarjetas, próximos resúmenes, aviso de vencimiento |
+| `periods.js` | gráfico por meses, trimestres o años |
+| `dolar.js` | cotización del día (dolarapi.com) para gastos en USD y compra/venta |
 | `init.js` | arranque |
 
 - **Datos:** Firebase Realtime Database, en `usuarios/{uid}/...`. Cada usuario solo lee y escribe lo suyo. También hay una copia local en `localStorage` para abrir rápido y funcionar sin conexión.

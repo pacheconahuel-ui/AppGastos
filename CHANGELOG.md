@@ -1,5 +1,13 @@
 # Cambios
 
+## 3.1 — noviembre 2026
+
+- **Vencimiento de la tarjeta:** en el resumen aparece un aviso cuando el resumen ya cerró y no está pago ("Resumen Visa · vence en 3 días"), con el botón **Pagar**. Se pone rojo a dos días del vencimiento y desaparece al pagarlo. Necesita el día de cierre de la tarjeta (Cuentas → editar tarjeta).
+- **Próximos resúmenes:** en cada tarjeta, "📅 Próximos resúmenes" muestra cuánto vas a pagar en los próximos 6 meses por las cuotas que quedan y los fijos.
+- **Gráfico por período:** el gráfico de "Últimos 6 meses" ahora tiene **Meses / Trimestres / Años** y compara el período en curso con el anterior (▲▼ %).
+- **Dólar del día:** al cargar un gasto en USD aparecen botones con la cotización (Tarjeta, Oficial, Blue, MEP, de dolarapi.com) y en un gasto nuevo se completa sola: dólar tarjeta si es con tarjeta, oficial si no. En compra y venta de USD, los botones calculan los pesos.
+- En cuotas, el monto dice "Monto de cada cuota" (es lo que entra en cada resumen).
+
 ## 3.0 — noviembre 2026
 
 Por dentro; la app se ve y funciona igual que la 2.9.

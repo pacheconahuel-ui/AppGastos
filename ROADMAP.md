@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.0**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.1**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -34,9 +34,13 @@ Estado a **noviembre 2026**: versión **3.0**. El código está en `index.html`,
 - [x] Pruebas: lógica (vitest), navegador (Playwright) y emuladores de Firebase, con CI.
 - [ ] Sacar los estilos en línea a clases: quedan muchos `style="..."` en `index.html` y en los templates de `js/`. Conviene hacerlo de a una pantalla, comparando capturas antes y después.
 
-## Fase 4 — Funciones nuevas (a elegir)
+## Fase 4 — Funciones nuevas ✅ (3.1)
 
-- [ ] Gráficos por período (trimestre, año) y comparación con meses anteriores.
-- [ ] Cotización del dólar automática.
-- [ ] Cuotas de tarjeta proyectadas a meses futuros.
-- [ ] Recordatorios de vencimientos.
+- [x] Gráficos por período (meses, trimestres, años) con comparación contra el anterior.
+- [x] Cotización del dólar del día (dolarapi.com) en gastos en USD y compra/venta.
+- [x] Cuotas y fijos de tarjeta proyectados a los próximos 6 resúmenes.
+- [x] Aviso de vencimiento del resumen de la tarjeta.
+
+## Ideas para después
+
+- [ ] Notificaciones del celular para los vencimientos (hoy el aviso se ve al abrir la app).
