@@ -1,5 +1,16 @@
 # Cambios
 
+## 3.9 — noviembre 2026
+
+**Vincular contactos con otras personas que usan la app**, solo para avisarse deudas y pagos.
+
+- **Mi código de contacto** (Perfil): se lo pasás a otra persona; ella lo pega en su contacto tuyo y vos aceptás en **Avisos**. Se hace una sola vez. Desvincular está en el contacto.
+- **Avisos de deuda:** si cargás, cambiás o borrás una deuda (o un gasto compartido) con un contacto vinculado, a esa persona le llega un aviso. Tiene bandeja en Perfil → Avisos, con un puntito rojo en el botón de perfil y un cartel en Saldos cuando hay nuevos.
+- **Pagar y confirmar:** la persona que debe toca **Ya pagué**, elige la billetera y la plata sale de ahí (queda como egreso, en negativo). A quien cobra le llega el aviso y **confirma** (entra a la billetera que elija y la deuda queda saldada) o dice que **no la recibió**. Si vos debés y saldás desde Saldos, la otra persona confirma igual. La deuda muestra su estado: esperando, saldada, no la recibió o cancelada.
+- **Seguridad:** el código lleva un secreto; sin vincularse nadie puede mandar avisos, y cada uno sigue sin ver nada de los datos del otro. Reglas nuevas en `database.rules.json` (`vinculos` y `avisos`): **hay que publicarlas en la consola de Firebase** para que esto funcione.
+- No hay aviso en el celular con la app cerrada (haría falta un servidor y el plan de pago de Firebase): se ve al abrir la app.
+- Pruebas nuevas: lógica de los avisos, pantallas a 320/360/390 px y, con los emuladores de Firebase, dos personas vinculándose, cargando y pagando una deuda, rechazando un pago y las reglas que cierran todo lo demás.
+
 ## 3.8 — noviembre 2026
 
 Encabezado, menú y resumen más claros, y una auditoría con datos de prueba parecidos a los de uso real (varios meses, 56 movimientos sin billetera, un contacto borrado con deudas, USD, tarjeta, presupuestos y metas).

@@ -192,6 +192,7 @@ async function saveDebt(){
   haptic();closeDebtModal();renderSaldosTab();
   toast('✅ Deuda guardada');
   skipNextDebt=fbOnline;await persistDebt(debt,null);
+  avisarDeuda(debt,id?'cambio':'deuda');
 }
 function deleteDebt(id,ev){
   ev?.stopPropagation();
@@ -322,6 +323,7 @@ async function doSettle(){
   }
   if(partial){skipNextDebt=fbOnline;await persistDebt(partial,null);}
 
+  if(settledIds.length)avisarSaldado(p,activeDebts.filter(d=>settledIds.includes(d.id)),date);
   haptic();closeSettleModal();renderAll();
   const accLabel=accountId?' a '+(accounts.find(a=>a.id===accountId)?.name||''):'';
   const mov=type!=='transfer'?'':bal>0?` · Ingreso${accLabel} creado`:bal<0?` · Egreso${accLabel} creado`:'';
@@ -376,6 +378,8 @@ async function doDelete(){
   }
   haptic([30,30,60]);
   if(type==='debt'){
+    const borrada=debts.find(d=>d.id===id);
+    if(borrada&&!borrada.settled)avisarDeuda(borrada,'baja');
     debts=debts.filter(d=>d.id!==id);renderSaldosTab();toast('🗑️ Deuda eliminada');
     skipNextDebt=fbOnline;await persistDebt(null,id);
   }else if(type==='ars'){
@@ -385,7 +389,7 @@ async function doDelete(){
     debts=debts.filter(d=>!linked.includes(d));
     renderAll();toast(linked.length?`🗑️ Gasto eliminado (y ${linked.length} deuda${linked.length>1?'s':''} del split)`:'🗑️ Gasto eliminado');
     skipNextArs=fbOnline;await persistArs(null,id);
-    for(const d of linked){skipNextDebt=fbOnline;await persistDebt(null,d.id);}
+    for(const d of linked){skipNextDebt=fbOnline;await persistDebt(null,d.id);avisarDeuda(d,'baja');}
   }else{
     const t=usdTx.find(x=>x.id===id);
     if(t?.linkedArsId){expenses=expenses.filter(e=>e.id!==t.linkedArsId);skipNextArs=fbOnline;await persistArs(null,t.linkedArsId);}

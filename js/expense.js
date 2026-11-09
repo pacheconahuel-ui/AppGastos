@@ -121,9 +121,10 @@ function renderContactsList(){
 function contactItemHTML(p){
   return`<div class="cat-manager-item">
     <div style="font-size:24px;width:36px;text-align:center">${p.emoji}</div>
-    <div class="cat-manager-name custom">${esc(p.name)}</div>
+    <div class="cat-manager-name custom">${esc(p.name)}${p.linkedUid?` <span class="lk-chip" title="Vinculado con otra persona">${ic('link')} ${vinculosIn[p.linkedUid]?'vinculado':'esperando'}</span>`:''}</div>
     <div style="font-size:10px;padding:2px 7px;border-radius:10px;background:${p.isRecurrent?'color-mix(in srgb,var(--acc) 10%,transparent)':'color-mix(in srgb,var(--tint) 5%,transparent)'};color:${p.isRecurrent?'var(--teal)':'var(--txt3)'};border:1px solid ${p.isRecurrent?'color-mix(in srgb,var(--acc) 20%,transparent)':'var(--bdr)'};font-weight:600;flex-shrink:0">${p.isRecurrent?ic('star')+' Fav':'Ocasional'}</div>
     <div class="cat-manager-actions">
+      <button class="cat-mgr-btn rename" onclick="openVincular('${p.id}')" title="Vincular con otra persona">${ic('link')}</button>
       <button class="cat-mgr-btn rename" onclick="openAddContactModal('${p.id}')" title="Editar">${ic('edit')}</button>
       <button class="cat-mgr-btn delete" onclick="confirmDeleteContact('${p.id}')" title="Eliminar">${ic('trash')}</button>
     </div>
@@ -580,11 +581,13 @@ async function saveExpense(){
       if(i>-1)debts[i]=debt;else debts.push(debt);
       skipNextDebt=fbOnline;
       await persistDebt(debt,null);
+      if(!old||old.amount!==debt.amount||old.description!==debt.description)avisarDeuda(debt,old?'cambio':'deuda');
     }
     for(const d of linked.filter(d=>!wanted.some(s=>s.personId===d.personId))){
       debts=debts.filter(x=>x.id!==d.id);
       skipNextDebt=fbOnline;
       await persistDebt(null,d.id);
+      avisarDeuda(d,'baja');
     }
     renderSaldosTab();
   }
