@@ -11,6 +11,7 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 - **Dólares:** ingresos en USD, compra y venta con su contrapartida en pesos.
 - **Deudas y saldos** con contactos, con botón para saldar.
 - **Resumen del mes:** gráficos (por mes, trimestre o año), presupuestos por categoría, metas, recurrentes pendientes.
+- **Movimientos programados:** con fecha futura no tocan el saldo hasta ese día. Los gastos fijos se marcan como "Se repite todos los meses" y la app los recuerda cada mes.
 - **Lista** con búsqueda, filtros (billetera, ingreso o egreso, categoría) y exportación a CSV.
 - **Tarjetas:** aviso de vencimiento del resumen y próximos 6 resúmenes (cuotas y fijos).
 - **Dólar del día** al cargar movimientos en USD.

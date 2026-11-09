@@ -11,6 +11,8 @@ function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
 function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}`;}
 function monthKey(d){return d?d.slice(0,7):'';}
 // Fecha de hoy (YYYY-MM-DD) en la hora del celular; toISOString() da la de UTC y después de las 21 h en Argentina ya es mañana
+// Movimiento programado: con fecha de hoy en adelante todavía no pasó; no resta ni suma en las billeteras hasta ese día
+function esFuturo(x){return!!x&&!!x.date&&x.date>todayStr();}
 function todayStr(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
 function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}

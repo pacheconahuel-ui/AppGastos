@@ -363,7 +363,8 @@
     <div class="f-row f-row-fecha">
       <div class="f-grp" style="margin-bottom:0">
         <label class="f-lbl" for="f-date">Fecha</label>
-        <input type="date" class="f-ctrl" id="f-date">
+        <input type="date" class="f-ctrl" id="f-date" oninput="updateFutureHint()">
+        <div class="f-hint" id="f-future-hint"></div>
       </div>
       <div class="f-grp" style="margin-bottom:0">
         <label class="f-lbl" for="f-desc">Descripción</label>
