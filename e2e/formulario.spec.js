@@ -79,9 +79,9 @@ for (const ancho of [320, 360, 390]) {
     expect(await modal.evaluate(m => m.scrollWidth <= m.clientWidth + 1)).toBe(true);
     for (const b of await page.locator('#m-overlay .chip, #m-overlay .seg-tog .type-btn, #f-currency, #f-more summary').all()) {
       const r = await b.boundingBox();
-      expect(r.height, await b.innerText()).toBeGreaterThanOrEqual(44);
+      // redondeado: con otras fuentes de emoji el navegador da 43,99997 por subpíxeles
+      expect(Math.round(r.height), await b.innerText()).toBeGreaterThanOrEqual(44);
     }
-    for (const b of await page.locator('#m-overlay .chip').all()) expect((await b.boundingBox()).height).toBeGreaterThanOrEqual(44);
     noErrors(page);
   });
 }
