@@ -1,6 +1,6 @@
 {
   "name": "appgastos",
-  "version": "3.9.1",
+  "version": "3.10.0",
   "private": true,
   "description": "Mis Gastos: app de gastos personales (PWA)",
   "type": "module",

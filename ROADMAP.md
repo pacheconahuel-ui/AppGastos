@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.9**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.10**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -67,6 +67,11 @@ Estado a **noviembre 2026**: versión **3.9**. El código está en `index.html`,
 - [x] Avisos de deudas y bandeja.
 - [x] Pagar (egreso en negativo) y confirmar el cobro.
 - [ ] Publicar las reglas nuevas en Firebase (sin eso el vínculo no anda).
+
+## 3.9.1 y 3.10 ✅
+
+- [x] Movimientos programados (fecha futura) que no tocan el saldo hasta su día.
+- [x] Cargar varios meses de una vez, con borrado de una o de las siguientes.
 
 ## Ideas para después
 

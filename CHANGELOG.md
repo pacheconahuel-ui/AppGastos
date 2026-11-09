@@ -1,5 +1,12 @@
 # Cambios
 
+## 3.10 — noviembre 2026
+
+- **Cargar varios meses de una vez** (para cuotas fijas: la heladera en 12 pagos, el curso, un sueldo): en el formulario, "Más opciones → Cargar varios meses de una vez" con la cantidad de meses (hasta 36). Se crea un movimiento por mes, con la misma fecha de cada mes (si el mes no tiene ese día queda el último), y el formulario avisa cuántos son, hasta cuándo y el total. Los de fecha futura quedan **programados**: no restan hasta su día. En la lista se ven con su número (3/12).
+- **Borrar:** si borrás una cuota que tiene otras después, pregunta si borrás **solo esa** o **esa y las siguientes**. Editar una cuota cambia solo esa.
+- No se puede usar con tarjeta (ahí están las cuotas de la tarjeta) ni con gastos divididos con otras personas; el formulario lo avisa.
+- Pruebas nuevas: fechas mes a mes (31 de enero, año bisiesto), carga de 12 cuotas con el reloj en distintos días, borrado de una o de las siguientes, y los casos que no se permiten.
+
 ## 3.9.1 — noviembre 2026
 
 - **Movimientos programados:** un gasto o ingreso con **fecha futura** (por ejemplo la cuota del curso con fecha 7 de diciembre) ya no resta ni suma en tu billetera hasta ese día. Antes se descontaba en el momento. En la lista aparece con la etiqueta **Programado**, y el formulario avisa "Programado para el …: no resta de tu saldo hasta ese día". También vale para transferencias con fecha futura, y la proyección de fin de mes no cuenta lo programado.

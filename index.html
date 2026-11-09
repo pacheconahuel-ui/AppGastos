@@ -373,7 +373,7 @@
     </div>
     <!-- Lo menos usado, plegado -->
     <details class="more-opts" id="f-more">
-      <summary>Más opciones <span>notas, recurrente, dividir</span></summary>
+      <summary>Más opciones <span>notas, repetir, dividir</span></summary>
       <div class="f-grp">
         <label class="f-lbl" for="f-notes">Notas</label>
         <textarea class="f-ctrl" id="f-notes" placeholder="Detalles adicionales…" rows="2" style="resize:none;line-height:1.5"></textarea>
@@ -381,6 +381,11 @@
       <div class="sh-row" style="margin-bottom:12px">
         <label class="tog"><input type="checkbox" id="f-recur"><div class="tog-track"></div><div class="tog-knob"></div></label>
         <span class="sh-lbl">Se repite todos los meses</span>
+      </div>
+      <div class="f-grp" id="f-serie-wrap">
+        <label class="f-lbl" for="f-serie">Cargar varios meses de una vez (cuotas)</label>
+        <div class="serie-row"><input type="number" class="f-ctrl" id="f-serie" min="1" max="36" placeholder="Cantidad de meses" inputmode="numeric" oninput="updateSerieHint()"><span>meses</span></div>
+        <div class="f-hint" id="f-serie-hint"></div>
       </div>
       <button class="split-toggle-btn" id="split-toggle-btn" onclick="toggleSplitPanel()">
         <span id="split-toggle-lbl">Dividir con alguien</span>

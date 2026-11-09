@@ -11,6 +11,12 @@ function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
 function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}`;}
 function monthKey(d){return d?d.slice(0,7):'';}
 // Fecha de hoy (YYYY-MM-DD) en la hora del celular; toISOString() da la de UTC y después de las 21 h en Argentina ya es mañana
+// Misma fecha k meses después; si el mes no tiene ese día (31 en febrero) queda el último
+function dateAddMonths(s,k){
+  const[y,m,d]=s.split('-').map(Number);
+  const t=new Date(y,m-1+k,1),last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();
+  return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(Math.min(d,last)).padStart(2,'0')}`;
+}
 // Movimiento programado: con fecha de hoy en adelante todavía no pasó; no resta ni suma en las billeteras hasta ese día
 function esFuturo(x){return!!x&&!!x.date&&x.date>todayStr();}
 function todayStr(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
