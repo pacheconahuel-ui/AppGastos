@@ -41,10 +41,12 @@ function renderDashboard(){
   const{ing,pag,real,bal,usdNoRate}=calcSummary(mk);
   const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
   // Los gastos en USD sin cotización no se pueden pasar a pesos: se muestran aparte
-  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag)+(usdNoRate?' + '+fmtU(usdNoRate):'');
-  const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real);
+  const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real)+(usdNoRate?' + '+fmtU(usdNoRate):'');
+  // "Pagaste" solo aparece si es distinto de tus gastos (gastos compartidos)
+  const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag);
+  const pagLine=document.getElementById('c-pag-line'); if(pagLine)pagLine.style.display=Math.round(pag)!==Math.round(real)?'':'none';
   const balEl=document.getElementById('c-bal');
-  if(balEl){balEl.textContent=(bal<0?'-':'')+fmt(bal);balEl.className='card-val '+(bal>=0?'g':'r');}
+  if(balEl){balEl.textContent=(bal<0?'−':'+')+fmt(bal);balEl.className='sum-v '+(bal>=0?'pos':'neg');}
 
   const chartTitle=document.getElementById('chart-box-title');
   if(chartTitle)chartTitle.textContent=`Distribución — ${monthLabel(mk)}`;
@@ -65,10 +67,10 @@ function renderDashboard(){
   try{renderGoalsSection();}catch(e){console.warn('goals:',e);}
   try{renderStats(mk);}catch(e){console.warn('stats:',e);}
 
-  // Últimos 10 movimientos — todos los meses
+  // Últimos 5 movimientos — todos los meses (el resto en Lista)
   const recent=[...expenses]
     .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt)
-    .slice(0,10);
+    .slice(0,5);
   const recentEl=document.getElementById('recent-list');
   if(recentEl)recentEl.innerHTML=recent.length
     ?recent.map(e=>expHTML(e,false)).join('')

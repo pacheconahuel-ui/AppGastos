@@ -1,0 +1,73 @@
+import { test, expect } from '@playwright/test';
+import { openApp, noErrors } from './helpers.js';
+
+test.use({ timezoneId: 'America/Argentina/Buenos_Aires' });
+
+async function cargar(page, extra = {}) {
+  await page.clock.install({ time: new Date('2026-11-10T10:00:00-03:00') });
+  await openApp(page);
+  await page.evaluate(x => {
+    accounts.push({ id: 'cc', name: 'Visa', emoji: '💳', type: 'credit', closingDay: 25, dueOffset: 20 }); saveAccounts();
+    const E = (id, type, amount, date, o = {}) => ({ id, type, amount, myAmount: amount, date, category: o.category || 'Luz', description: id, accountId: 'acc_mp', ...o });
+    expenses = [
+      E('sueldo', 'Ingreso', 1000000, '2026-11-01', { category: 'Sueldo' }),
+      E('cena', 'Egreso', 40000, '2026-11-02', { category: 'Restaurante', myAmount: x.compartido ? 20000 : 40000 }),
+      E('luz', 'Egreso', 30000, '2026-11-03'),
+      E('z', 'Egreso', 50000, '2026-10-20', { accountId: 'cc', ccPaid: false, category: 'Compras' }),
+      ...Array.from({ length: 8 }, (_, i) => E('v' + i, 'Egreso', 1000, '2026-10-0' + (i + 1))),
+    ];
+    renderAll();
+  }, extra);
+}
+
+test('orden: avisos, disponible, el mes, presupuestos, últimos movimientos', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await cargar(page);
+  const y = sel => page.locator(sel).first().evaluate(el => el.getBoundingClientRect().top + window.scrollY);
+  const orden = [await y('#card-reminders .card-reminder'), await y('#patrimonio-card'), await y('.sum-card'), await y('#budgets-section'), await y('#recent-list')];
+  expect([...orden].sort((a, b) => a - b)).toEqual(orden);
+  await expect(page.locator('#c-ing')).toHaveText('$1.000.000');
+  await expect(page.locator('#c-real')).toHaveText('$70.000');
+  await expect(page.locator('#c-bal')).toHaveText('+$930.000');
+  await expect(page.locator('#c-bal')).toHaveClass(/pos/);
+  await expect(page.locator('#c-pag-line')).toBeHidden();
+  await expect(page.locator('#sum-stats')).toContainText('Ahorrás el 93%');
+  // últimos 5, con acceso a la lista completa
+  await expect(page.locator('#recent-list .exp-item')).toHaveCount(5);
+  await page.getByRole('button', { name: 'Ver todos ›' }).click();
+  await expect(page.locator('#tab-lista')).toBeVisible();
+  noErrors(page);
+});
+
+test('con gastos compartidos aparece lo pagado en total', async ({ page }) => {
+  await cargar(page, { compartido: true });
+  await expect(page.locator('#c-real')).toHaveText('$50.000');
+  await expect(page.locator('#c-pag-line')).toBeVisible();
+  await expect(page.locator('#c-pag')).toHaveText('$70.000');
+  noErrors(page);
+});
+
+test('sin presupuestos ni metas: botones para agregarlos', async ({ page }) => {
+  await cargar(page);
+  await page.getByRole('button', { name: '＋ Presupuesto por categoría' }).click();
+  await expect(page.locator('#budget-overlay')).toHaveClass(/\bon\b/);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: '＋ Meta de ahorro' }).click();
+  await expect(page.locator('#goal-overlay')).toHaveClass(/\bon\b/);
+  noErrors(page);
+});
+
+for (const ancho of [320, 360, 390]) {
+  test(`el resumen entra en ${ancho} px y sus botones miden 44`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: 760 });
+    await cargar(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    for (const sel of ['.sum-nav', '.sec-link', '.add-row']) {
+      for (const b of await page.locator('#tab-dashboard ' + sel).all()) {
+        const r = await b.boundingBox();
+        expect(Math.min(r.width, r.height), sel).toBeGreaterThanOrEqual(44);
+      }
+    }
+    noErrors(page);
+  });
+}

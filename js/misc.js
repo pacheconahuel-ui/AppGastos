@@ -325,7 +325,7 @@ function renderProjection(){
   const projHint=document.getElementById('c-proj-hint');
   projCard.style.display='';
   projVal.textContent=fmt(projected);
-  projVal.className='card-val '+(projected>ing&&ing>0?'r':'y');
+  projVal.className=projected>ing&&ing>0?'neg':'';
   const remaining=Math.round(dailyRate*(daysInMonth-dayOfMonth));
   projHint.textContent=`~${fmt(remaining)} más hasta fin de mes`;
 }

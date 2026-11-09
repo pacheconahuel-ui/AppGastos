@@ -91,43 +91,37 @@
 
   <!-- DASHBOARD -->
   <div class="sec on" id="tab-dashboard">
-    <!-- Patrimonio card — always on top -->
-    <div id="patrimonio-card"></div>
-    <!-- Month navigator -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:10px 14px">
-      <button onclick="dashNavMonth(-1)" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .18s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">‹</button>
-      <div style="text-align:center">
-        <div style="font-size:15px;font-weight:700" id="dash-month-label">—</div>
-        <div style="font-size:10px;color:var(--txt3)" id="dash-month-hint"></div>
-      </div>
-      <button onclick="dashNavMonth(1)" id="dash-next-btn" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .18s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">›</button>
-    </div>
-    <div class="cards">
-      <div class="card"><div class="card-lbl">Ingresos</div><div class="card-val p" id="c-ing">$0</div></div>
-      <div class="card"><div class="card-lbl">Pagaste</div><div class="card-val p" id="c-pag">$0</div><div class="card-hint">total abonado</div></div>
-      <div class="card"><div class="card-lbl">Gastaste Real</div><div class="card-val p" id="c-real">$0</div><div class="card-hint">tu porción</div></div>
-      <div class="card"><div class="card-lbl">Balance</div><div class="card-val p" id="c-bal">$0</div></div>
-      <div class="card" id="proj-card" style="display:none"><div class="card-lbl">Proyección fin de mes</div><div class="card-val" id="c-proj">$0</div><div class="card-hint" id="c-proj-hint">—</div></div>
-    </div>
-    <!-- Quick action row -->
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button onclick="openBudgetModal()" style="flex:1;padding:10px;background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);border-radius:11px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">🎯 ＋ Presupuesto</button>
-      <button onclick="openGoalModal()" style="flex:1;padding:10px;background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);border-radius:11px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">⭐ ＋ Meta</button>
-    </div>
-    <!-- Stats row -->
-    <div class="stats-grid" id="stats-grid" style="display:none">
-      <div class="stat-card"><div class="stat-val" id="st-rate" style="color:var(--green)">—</div><div class="stat-lbl">Tasa de ahorro</div></div>
-      <div class="stat-card"><div class="stat-val" id="st-daily" style="color:var(--yellow)">—</div><div class="stat-lbl">Gasto diario prom.</div></div>
-      <div class="stat-card"><div class="stat-val" id="st-topcat" style="color:var(--p1)">—</div><div class="stat-lbl">Mayor categoría</div></div>
-    </div>
-    <!-- Vencimientos de tarjetas -->
+    <!-- Avisos primero: vencimientos de tarjeta y recurrentes pendientes -->
     <div id="card-reminders"></div>
-    <!-- Recurring reminders -->
     <div id="recurring-reminders"></div>
+    <!-- Disponible (billeteras) -->
+    <div id="patrimonio-card"></div>
+    <!-- El mes en una sola tarjeta -->
+    <div class="sum-card">
+      <div class="sum-head">
+        <button class="sum-nav" onclick="dashNavMonth(-1)" aria-label="Mes anterior">‹</button>
+        <div style="text-align:center">
+          <div class="sum-month" id="dash-month-label">—</div>
+          <div class="sum-hint" id="dash-month-hint"></div>
+        </div>
+        <button class="sum-nav" onclick="dashNavMonth(1)" id="dash-next-btn" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="sum-row">
+        <div><span class="sum-lbl">Ingresos</span><span class="sum-v" id="c-ing">$0</span></div>
+        <div><span class="sum-lbl">Gastos</span><span class="sum-v" id="c-real">$0</span></div>
+        <div><span class="sum-lbl">Balance</span><span class="sum-v" id="c-bal">$0</span></div>
+      </div>
+      <div class="sum-foot">
+        <div id="c-pag-line" style="display:none">Pagaste <b id="c-pag">$0</b> en total; el resto es de otros</div>
+        <div id="proj-card" style="display:none">Al ritmo de hoy: <b id="c-proj">$0</b> a fin de mes · <span id="c-proj-hint"></span></div>
+        <div id="sum-stats"></div>
+      </div>
+    </div>
     <!-- Presupuestos -->
     <div id="budgets-section"></div>
-    <!-- Metas -->
-    <div id="goals-section"></div>
+    <!-- Últimos movimientos -->
+    <div class="sec-head"><span>Últimos movimientos</span><button class="sec-link" onclick="switchTab('lista')">Ver todos ›</button></div>
+    <div id="recent-list"></div>
     <div class="chart-box hidden" id="chart-box">
       <div class="box-title" id="chart-box-title">Distribución por categoría</div>
       <div class="chart-wrap tall"><canvas id="pie"></canvas></div>
@@ -143,8 +137,8 @@
       <div class="chart-wrap"><canvas id="monthly-chart"></canvas></div>
       <div id="period-compare"></div>
     </div>
-    <div class="div-lbl">Últimos 10 movimientos</div>
-    <div id="recent-list"></div>
+    <!-- Metas -->
+    <div id="goals-section"></div>
   </div>
 
   <!-- LISTA -->
