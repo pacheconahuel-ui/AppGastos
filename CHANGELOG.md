@@ -1,5 +1,15 @@
 # Cambios
 
+## 3.5 — noviembre 2026
+
+Cuarta parte del rediseño: el formulario para cargar un movimiento.
+
+- **El monto primero y grande**, con la moneda al lado. Gasto / Ingreso como interruptor arriba.
+- **Categorías como botones:** las 6 que más usás (de gasto o de ingreso, según lo que estés cargando); el buscador sigue para las demás.
+- **"Pagado con" como botones:** tus billeteras y tarjetas, más "Sin billetera" (que sigue pidiendo confirmación al guardar).
+- Fecha y descripción en una fila; notas, "se repite todos los meses" y "dividir con alguien" quedan en **Más opciones** (se abre solo si el movimiento ya usa algo de eso).
+- **Iniciar sesión con Google deja elegir la cuenta:** antes, si el navegador ya tenía una cuenta abierta, entraba directo con esa.
+
 ## 3.4 — noviembre 2026
 
 Tercera parte del rediseño: el resumen.
