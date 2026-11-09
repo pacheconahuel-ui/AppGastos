@@ -7,7 +7,7 @@ function saveBudgets(){try{localStorage.setItem(lsKey(BDG_SK),JSON.stringify(bud
 function renderBudgetsSection(){
   const mk=getDashMk(),catData=calcByCat(mk),budgetCats=Object.keys(budgets);
   const el=document.getElementById('budgets-section');
-  if(!budgetCats.length){el.innerHTML='<button class="add-row" onclick="openBudgetModal()">＋ Presupuesto por categoría</button>';return;}
+  if(!budgetCats.length){el.innerHTML='<button class="add-row" onclick="openBudgetModal()">＋ Presupuesto por categoría</button>';renderBgCard();return;}
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Presupuestos</div><button onclick="openBudgetModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Agregar</button></div>`;
   budgetCats.forEach(cat=>{
     const limit=budgets[cat],spent=catData[cat]||0,pct=Math.min(100,Math.round((spent/limit)*100));
@@ -15,7 +15,34 @@ function renderBudgetsSection(){
     html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget(${jsArg(cat)})" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">${ic('x')}</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' · Excedido':pct>=80?' · Cerca del límite':''}</div></div>`;
   });
   el.innerHTML=html;
+  renderBgCard();
 }
+// Tarjeta chica del resumen: las 3 categorías más cerca del tope y hasta 2 metas
+let bgDetailOpen=false;
+function renderBgCard(){
+  const el=document.getElementById('bg-card');
+  if(!el)return;
+  const det=document.getElementById('bg-detail');
+  const cd=calcByCat(getDashMk());
+  const rows=Object.keys(budgets).map(c=>({c,pct:Math.round(((cd[c]||0)/budgets[c])*100)})).sort((a,b)=>b.pct-a.pct);
+  if(!rows.length&&!goals.length){
+    el.innerHTML='<div class="bg-empty"><button class="add-row" onclick="openBudgetModal()">＋ Presupuesto</button><button class="add-row" onclick="openGoalModal()">＋ Meta de ahorro</button></div>';
+    if(det)det.classList.add('hidden');
+    return;
+  }
+  const cls=p=>p>=100?'over':p>=80?'warn':'ok';
+  const row=(name,pct,w)=>`<div class="bg-row"><span class="bg-name">${name}</span><span class="bg-bar"><i class="${cls(pct)}" style="width:${Math.min(100,w)}%"></i></span><span class="bg-pct ${cls(pct)}">${pct}%</span></div>`;
+  const bShown=rows.slice(0,3),gShown=goals.slice(0,2);
+  const more=(rows.length-bShown.length)+(goals.length-gShown.length);
+  el.innerHTML=`<div class="bg-card">
+    <div class="bg-head"><span>Presupuestos y metas</span><button class="sec-link" onclick="toggleBgDetail()">${bgDetailOpen?'Listo':'Editar ›'}</button></div>
+    ${bShown.map(r=>row(icon(r.c)+' '+esc(r.c),r.pct,r.pct)).join('')}
+    ${gShown.map(g=>{const p=Math.round((g.current/g.target)*100);return row(g.emoji+' '+esc(g.name),p,p).replace(/bg-pct (over|warn)/,'bg-pct ok').replace(/<i class="(over|warn)"/,'<i class="ok"');}).join('')}
+    ${more>0&&!bgDetailOpen?`<div class="bg-more">y ${more} más · tocá Editar</div>`:''}
+  </div>`;
+  if(det)det.classList.toggle('hidden',!bgDetailOpen);
+}
+function toggleBgDetail(){bgDetailOpen=!bgDetailOpen;renderBgCard();}
 function deleteBudget(cat){delete budgets[cat];saveBudgets();pushSettings();renderBudgetsSection();}
 function openBudgetModal(){
   document.getElementById('bdg-cat').innerHTML=cats.filter(c=>catTypeFor(c)!=='ingreso').map(c=>`<option value="${esc(c)}">${icon(c)} ${esc(c)}${budgets[c]?' · '+fmt(budgets[c]):''}</option>`).join('');
@@ -39,13 +66,14 @@ function loadGoals(){try{goals=JSON.parse(localStorage.getItem(lsKey(GOAL_SK)))|
 function saveGoals(){try{localStorage.setItem(lsKey(GOAL_SK),JSON.stringify(goals));}catch(e){}}
 function renderGoalsSection(){
   const el=document.getElementById('goals-section');
-  if(!goals.length){el.innerHTML='<button class="add-row" onclick="openGoalModal()">＋ Meta de ahorro</button>';return;}
+  if(!goals.length){el.innerHTML='<button class="add-row" onclick="openGoalModal()">＋ Meta de ahorro</button>';renderBgCard();return;}
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Metas de ahorro</div><button onclick="openGoalModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Nueva</button></div>`;
   goals.forEach(g=>{
     const pct=Math.min(100,Math.round((g.current/g.target)*100)),done=pct>=100,remaining=Math.max(0,g.target-g.current);
     html+=`<div class="goal-card"><div class="goal-header"><div class="goal-ava">${g.emoji}</div><div><div class="goal-name">${esc(g.name)} ${done?ic('check'):''}</div><div class="goal-target">Meta: ${fmt(g.target)}</div></div><div style="margin-left:auto;display:flex;gap:5px"><button class="btn-ico edit" onclick="openGoalModal('${g.id}')">${ic('edit')}</button><button class="btn-ico del" onclick="deleteGoal('${g.id}')">${ic('trash')}</button></div></div><div class="goal-progress"><div class="goal-bar"><div class="goal-fill ${done?'done':''}" style="width:${pct}%"></div></div><div class="goal-stats"><span>Acumulado: ${fmt(g.current)}</span><span>${done?'¡Completado!':'Faltan '+fmt(remaining)}</span><span>${pct}%</span></div></div><div class="goal-actions"><button class="btn-goal-add" onclick="addToGoal('${g.id}')">＋ Agregar ahorro</button></div></div>`;
   });
   el.innerHTML=html;
+  renderBgCard();
 }
 let _editGoalId=null;
 function openGoalModal(id=null){
@@ -93,13 +121,10 @@ function renderStats(mk){
   const{ing,real}=calcSummary(mk);
   const rate=ing>0?Math.round((1-real/ing)*100):0;
   const today=new Date().getDate(),dailyAvg=today>0?Math.round(real/today):0;
-  const catMap={};rows.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+effArs(e);});
-  const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
-  // Una línea: ahorro, gasto por día y la categoría más grande
+  // Una línea: ahorro y gasto por día
   const parts=[];
   if(ing>0)parts.push(rate>=0?`Ahorrás el ${rate}%`:`Gastaste ${-rate}% más de lo que entró`);
-  if(dailyAvg>0&&mk===nowKey())parts.push(`${fmt(dailyAvg)} por día`);
-  if(topCat)parts.push(`más en ${displayName(topCat[0])}`);
+  if(dailyAvg>0&&mk===nowKey())parts.push(`${fmt(dailyAvg)}/día`);
   el.textContent=parts.join(' · ');
 }
 
@@ -159,14 +184,14 @@ function renderPatrimonioCard(){
   const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
   const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');
   const unassigned=expenses.filter(e=>!e.accountId&&e.type==='Egreso').length+expenses.filter(e=>!e.accountId&&e.type==='Ingreso').length;
-  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:32px;display:flex;align-items:center;cursor:pointer;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:8px;border:1px solid color-mix(in srgb,var(--warn) 20%,transparent)">${ic('warn')} ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · no cuentan en los saldos · tocá para asignar ›</div>`:'';
+  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:44px;display:flex;align-items:center;cursor:pointer;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:8px;border:1px solid color-mix(in srgb,var(--warn) 20%,transparent)">${ic('warn')} ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · asignar ›</div>`:'';
   el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
-    <div class="pat-header"><span class="pat-label">${ic('wallet')} Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">▾</span></div>
+    <div class="pat-header"><span class="pat-label">${ic('wallet')} Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">${ic('chevron')}</span></div>
     <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px">
       <div class="pat-total">${fmt(totalARS)}</div>
       ${totalUSD>0?`<div style="font-family:var(--num);font-size:22px;font-weight:700;color:var(--gold)">${fmtU(totalUSD)}</div>`:''}
     </div>
-    <div class="pat-hint">${arsAccs.length+usdAccs.length} billetera${arsAccs.length+usdAccs.length!==1?'s':''} · tocá para ver detalle</div>
+    <div class="pat-hint">${arsAccs.length+usdAccs.length} billetera${arsAccs.length+usdAccs.length!==1?'s':''}</div>
     ${warn}
     <div class="pat-detail ${patrimonioExpanded?'open':''}" id="pat-detail">
       <div class="pat-divider"></div>

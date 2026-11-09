@@ -110,12 +110,13 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="document.getElementById('backup-file').click()">
       <span class="par-ico">${ic('restore')}</span>Restaurar un respaldo<span class="par-chevron">›</span>
     </button>
-    <div class="profile-sec-lbl">Cuenta</div>
+    <div class="profile-sec-lbl">Sesión</div>
+    <button class="profile-action-row profile-logout" onclick="confirmLogout()">
+      <span class="par-ico">${ic('logout')}</span>Cerrar sesión
+    </button>
+    <div class="profile-sec-lbl profile-danger-lbl">Zona de peligro</div>
     <button class="profile-action-row" onclick="confirmResetAll()" style="color:var(--red)">
       <span class="par-ico">${ic('trash')}</span>Borrar todos mis datos<span class="par-chevron">›</span>
-    </button>
-    <button class="profile-action-row" onclick="doLogout()" style="color:var(--txt3)">
-      <span class="par-ico">⏏</span>Cerrar sesión<span class="par-chevron">›</span>
     </button>
   `;
   document.getElementById('profile-overlay').classList.add('on');history.pushState({modal:true},'');

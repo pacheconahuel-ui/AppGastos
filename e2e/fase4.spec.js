@@ -70,6 +70,7 @@ test('gráfico por período: meses, trimestres y años con comparación', async 
       { id: 'c', type: 'Ingreso', amount: 9000, myAmount: 9000, date: '2026-11-02', category: 'Sueldo', description: 'x', accountId: 'acc_mp' });
     renderAll();
   });
+  await page.getByRole('button', { name: 'Evolución' }).click(); // los gráficos se ven de a uno
   await expect(page.locator('#monthly-chart-title')).toHaveText('Últimos 6 meses');
   await page.locator('#period-tabs button', { hasText: 'Trimestres' }).click();
   await expect(page.locator('#monthly-chart-title')).toHaveText('Últimos 4 trimestres');

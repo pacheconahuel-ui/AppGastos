@@ -32,7 +32,7 @@ function renderDashboard(){
   const monthLabel_el=document.getElementById('dash-month-label');
   if(monthLabel_el)monthLabel_el.textContent=monthLabel(mk);
   const monthHint_el=document.getElementById('dash-month-hint');
-  if(monthHint_el)monthHint_el.innerHTML=isCurrent?'mes actual':`No es el mes actual · <button class="sum-go" onclick="dashGoCurrent()">Ir a ${monthLabel(cur)}</button>`;
+  if(monthHint_el)monthHint_el.innerHTML=isCurrent?'':`No es el mes actual · <button class="sum-go" onclick="dashGoCurrent()">Ir a ${monthLabel(cur)}</button>`;
   const nextBtn=document.getElementById('dash-next-btn');
   if(nextBtn)nextBtn.style.opacity=idx<=0?'.3':'1';
 

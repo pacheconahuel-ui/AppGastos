@@ -49,23 +49,19 @@
 <!-- APP -->
 <div id="app" class="hidden">
   <div class="hdr">
-    <div>
+    <div class="hdr-brand">
       <div class="hdr-title">Mis Gastos</div>
-      <div class="hdr-sub" id="hdr-month">—</div>
+      <div class="hdr-sub"><span id="hdr-month">—</span>
+        <button class="sync-pill connecting" id="sync-pill" onclick="showSyncStatus()" aria-label="Estado de sincronización"><span class="dot"></span><span id="sync-label" class="sr-only">Conectando…</span></button>
+      </div>
     </div>
     <div class="hdr-right">
-      <div class="hdr-user">
-        <button class="btn-profile" id="btn-profile" onclick="openProfilePanel()" title="Perfil y configuración">
-          <span class="profile-avatar-ico" id="profile-avatar-ico">U</span>
-          <span class="profile-name" id="hdr-badge">—</span>
-        </button>
-        <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema"><i data-ico="moon"></i></button>
-        <button class="btn-theme" onclick="openGlobalSearch()" title="Búsqueda global"><i data-ico="search"></i></button>
-        <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">⏏</button>
-      </div>
-      <div class="sync-pill connecting" id="sync-pill">
-        <div class="dot"></div><span id="sync-label">Conectando…</span>
-      </div>
+      <button class="hdr-btn" onclick="openGlobalSearch()" title="Búsqueda global" aria-label="Búsqueda global"><i data-ico="search"></i></button>
+      <button class="btn-profile" id="btn-profile" onclick="openProfilePanel()" title="Perfil y configuración" aria-label="Perfil y configuración">
+        <span class="profile-avatar-ico" id="profile-avatar-ico">U</span>
+        <span class="profile-name" id="hdr-badge">—</span>
+        <span class="profile-chev"><i data-ico="chevron"></i></span>
+      </button>
     </div>
   </div>
 
@@ -114,33 +110,41 @@
         <div><span class="sum-lbl">Balance</span><span class="sum-v" id="c-bal">$0</span></div>
       </div>
       <div class="sum-foot">
-        <div id="c-pag-line" style="display:none">Pagaste <b id="c-pag">$0</b> en total; el resto es de otros</div>
-        <div id="proj-card" style="display:none">Al ritmo de hoy: <b id="c-proj">$0</b> a fin de mes · <span id="c-proj-hint"></span></div>
+        <div id="c-pag-line" style="display:none">Pagaste <b id="c-pag">$0</b> en total · el resto es de otros</div>
+        <div id="proj-card" style="display:none">Proyección a fin de mes: <b id="c-proj">$0</b></div>
         <div id="sum-stats"></div>
       </div>
     </div>
-    <!-- Presupuestos -->
-    <div id="budgets-section"></div>
     <!-- Últimos movimientos -->
     <div class="sec-head"><span>Últimos movimientos</span><button class="sec-link" onclick="switchTab('lista')">Ver todos ›</button></div>
     <div id="recent-list"></div>
-    <div class="chart-box hidden" id="chart-box">
-      <div class="box-title" id="chart-box-title">Distribución por categoría</div>
-      <div class="chart-wrap tall"><canvas id="pie"></canvas></div>
+    <!-- Presupuestos y metas, en una tarjeta chica (el detalle y la edición se abren con "Editar") -->
+    <div id="bg-card"></div>
+    <div id="bg-detail" class="hidden">
+      <div id="budgets-section"></div>
+      <div id="goals-section"></div>
     </div>
-    <!-- Month comparison chart -->
-    <div class="chart-box hidden" id="monthly-chart-box">
-      <div class="box-title"><span id="monthly-chart-title">Últimos 6 meses</span> <span class="box-title-sub" id="monthly-chart-sub"></span></div>
-      <div class="period-tabs" id="period-tabs">
-        <button data-mode="mes" onclick="setPeriodMode('mes')">Meses</button>
-        <button data-mode="trim" onclick="setPeriodMode('trim')">Trimestres</button>
-        <button data-mode="anio" onclick="setPeriodMode('anio')">Años</button>
+    <!-- Gráficos: uno por vez -->
+    <div class="seg" id="chart-seg" role="tablist">
+      <button class="on" data-view="pie" onclick="setDashChart('pie')">Por categoría</button>
+      <button data-view="mes" onclick="setDashChart('mes')">Evolución</button>
+    </div>
+    <div id="dash-charts" data-view="pie">
+      <div class="chart-box hidden" id="chart-box">
+        <div class="box-title" id="chart-box-title">Distribución por categoría</div>
+        <div class="chart-wrap tall"><canvas id="pie"></canvas></div>
       </div>
-      <div class="chart-wrap"><canvas id="monthly-chart"></canvas></div>
-      <div id="period-compare"></div>
+      <div class="chart-box hidden" id="monthly-chart-box">
+        <div class="box-title"><span id="monthly-chart-title">Últimos 6 meses</span> <span class="box-title-sub" id="monthly-chart-sub"></span></div>
+        <div class="period-tabs" id="period-tabs">
+          <button data-mode="mes" onclick="setPeriodMode('mes')">Meses</button>
+          <button data-mode="trim" onclick="setPeriodMode('trim')">Trimestres</button>
+          <button data-mode="anio" onclick="setPeriodMode('anio')">Años</button>
+        </div>
+        <div class="chart-wrap"><canvas id="monthly-chart"></canvas></div>
+        <div id="period-compare"></div>
+      </div>
     </div>
-    <!-- Metas -->
-    <div id="goals-section"></div>
   </div>
 
   <!-- LISTA -->

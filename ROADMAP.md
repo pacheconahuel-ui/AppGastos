@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.7**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.8**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -53,6 +53,13 @@ Estado a **noviembre 2026**: versión **3.7**. El código está en `index.html`,
 
 - [x] Deudas de contactos borrados, aviso largo, encabezado, emojis sueltos, billeteras y asignación masiva.
 - [ ] Verificar en un Android real que el tema claro ya no se ve oscuro (ver README).
+
+## 3.8 — encabezado, menú y resumen ✅
+
+- [x] Perfil como botón; cerrar sesión y tema dentro del perfil; sincronización como punto de color.
+- [x] Resumen más corto: presupuestos y metas en una tarjeta, gráficos de a uno.
+- [x] Sin billetera: asignar con un toque y volver a la lista al editar.
+- [x] Auditoría con datos de prueba: todos los controles a 44 px.
 
 ## Ideas para después
 

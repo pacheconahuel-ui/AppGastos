@@ -58,7 +58,6 @@ document.addEventListener('keydown',e=>{
 // --- THEME TOGGLE ---
 function toggleTheme(){
   const light=document.body.classList.toggle('light');
-  document.getElementById('btn-theme').innerHTML=ic(light?'sun':'moon');
   localStorage.setItem('gp_theme',light?'light':'dark');
   syncThemeColor();
   // los gráficos toman los colores del tema al dibujarse
@@ -66,7 +65,7 @@ function toggleTheme(){
 }
 function loadTheme(){
   const t=localStorage.getItem('gp_theme');
-  if(t==='light'){document.body.classList.add('light');document.getElementById('btn-theme').innerHTML=ic('sun');}
+  if(t==='light')document.body.classList.add('light');
   syncThemeColor();
 }
 // Barra del sistema del color del fondo
@@ -309,6 +308,14 @@ function renderMonthlyChart(){
   });
 }
 
+// --- GRÁFICOS DEL RESUMEN: uno por vez ---
+function setDashChart(view){
+  document.getElementById('dash-charts').dataset.view=view;
+  document.querySelectorAll('#chart-seg button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));
+  // Chart.js mide el lienzo al dibujar: con el gráfico recién mostrado hay que dibujarlo de nuevo
+  try{view==='pie'?renderPieChart(getDashMk()):renderMonthlyChart();}catch(e){console.warn('chart:',e);}
+}
+
 // --- PROJECTION CARD ---
 function renderProjection(){
   const mk=getDashMk();
@@ -324,12 +331,9 @@ function renderProjection(){
   const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
   const projCard=document.getElementById('proj-card');
   const projVal=document.getElementById('c-proj');
-  const projHint=document.getElementById('c-proj-hint');
   projCard.style.display='';
   projVal.textContent=fmt(projected);
   projVal.className=projected>ing&&ing>0?'neg':'';
-  const remaining=Math.round(dailyRate*(daysInMonth-dayOfMonth));
-  projHint.textContent=`~${fmt(remaining)} más hasta fin de mes`;
 }
 
 // --- OLD DEBT NOTIFICATIONS ---
@@ -354,7 +358,7 @@ function bulkAssignHTML(rows){
   const ars=rows.filter(e=>(e.currency||'ARS')!=='USD');
   if(!ars.length||!arsWallets().length)return'';
   return`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-    <select id="bulk-acc" style="flex:1;min-height:44px">${arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')}</select>
+    <select id="bulk-acc" class="f-ctrl" style="flex:1;min-height:44px">${arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')}</select>
     <button class="btn-settle" style="flex:0 0 auto;min-height:44px;padding:0 14px" onclick="confirmBulkAssign()">Asignar ${ars.length}</button>
   </div>`;
 }
@@ -371,19 +375,47 @@ function confirmBulkAssign(){
     },'Asignar');
 }
 // Movimientos sin billetera (de todos los meses): tocar uno abre la edición para elegirla
+// Movimientos sin billetera (de todos los meses). Cada fila trae botones para asignarle una billetera
+// con un toque; tocar la fila abre la edición y, al guardar o cancelar, se vuelve a esta lista.
+let _backToUnassigned=false;
 function openUnassigned(ev){
   ev?.stopPropagation();
-  const rows=expenses.filter(e=>!e.accountId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   document.getElementById('gsearch-overlay').classList.add('on');history.pushState({modal:true},'');
   document.getElementById('gsearch-inp').value='';
-  document.getElementById('gsearch-results').innerHTML=rows.length
+  renderUnassigned();
+}
+function renderUnassigned(){
+  const box=document.getElementById('gsearch-results');
+  const keep=box.scrollTop;
+  const rows=expenses.filter(e=>!e.accountId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const wallets=arsWallets();
+  box.innerHTML=rows.length
     ?`<div class="div-lbl" style="margin-top:0">Sin billetera (${rows.length})</div>
-      <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">No suman ni restan en ningún saldo. Tocá uno y elegí la billetera, o asignalos todos juntos.</div>
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">No suman ni restan en ningún saldo. Elegí la billetera de cada uno, o asignalos todos juntos.</div>
       ${bulkAssignHTML(rows)}
-      <div id="unassigned-list">${rows.map(e=>expHTML(e,false)).join('')}</div>`
+      <div id="unassigned-list">${rows.map(e=>`<div class="unas-item">${expHTML(e,false)}${(e.currency||'ARS')!=='USD'&&wallets.length?`<div class="unas-chips">${wallets.map(a=>`<button class="unas-chip" onclick="assignOne('${e.id}','${a.id}')">${a.emoji} ${esc(a.name)}</button>`).join('')}</div>`:''}</div>`).join('')}</div>`
     :'<div class="empty" style="padding:24px 0"><div class="empty-ico">'+ic('check')+'</div><p>Todos los movimientos tienen billetera</p></div>';
+  box.scrollTop=keep;
   // En captura: editExp frena la propagación y la lista taparía el formulario
-  document.getElementById('unassigned-list')?.addEventListener('click',closeGlobalSearch,{capture:true});
+  document.getElementById('unassigned-list')?.addEventListener('click',ev=>{
+    if(ev.target.closest('.unas-chips'))return;
+    _backToUnassigned=true;closeGlobalSearch();
+  },{capture:true});
+}
+async function assignOne(id,accId){
+  const e=expenses.find(x=>x.id===id),a=accounts.find(x=>x.id===accId);
+  if(!e||!a)return;
+  e.accountId=accId;e.updatedAt=Date.now();
+  haptic();renderAll();renderUnassigned();
+  toast(`✅ ${e.description} → ${a.name}`,1500);
+  skipNextArs=fbOnline;await persistArs(e,null);
+}
+// Al cerrar el formulario de un movimiento que se abrió desde la lista de "sin billetera", se vuelve a la lista
+function backToUnassigned(){
+  if(!_backToUnassigned)return;
+  _backToUnassigned=false;
+  if(expenses.some(e=>!e.accountId))setTimeout(openUnassigned,0);
+  else toast('✅ Todos los movimientos tienen billetera');
 }
 function closeGlobalSearch(){document.getElementById('gsearch-overlay').classList.remove('on');}
 function gsearchOverlayClick(ev){if(ev.target===document.getElementById('gsearch-overlay'))closeGlobalSearch();}

@@ -14,7 +14,7 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 - **Lista** con búsqueda, filtros (billetera, ingreso o egreso, categoría) y exportación a CSV.
 - **Tarjetas:** aviso de vencimiento del resumen y próximos 6 resúmenes (cuotas y fijos).
 - **Dólar del día** al cargar movimientos en USD.
-- Modo claro u oscuro (el oscuro es el de siempre; el botón de arriba cambia entre los dos), botón atrás de Android, aviso de versión nueva.
+- Modo claro u oscuro (se cambia desde el perfil), botón atrás de Android, aviso de versión nueva.
 
 ### Cómo se calcula el saldo de una billetera
 
