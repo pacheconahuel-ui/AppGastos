@@ -6,7 +6,7 @@ function helpOverlayClick(ev){if(ev.target===document.getElementById('help-overl
 
 // --- HELPERS ---
 function fmt(n){return'$'+Math.round(Math.abs(n)).toLocaleString('es-AR');}
-function fmtU(n){return'U$S '+(Math.round(n*100)/100).toLocaleString('es-AR');}
+function fmtU(n){return'U$D '+(Math.round(n*100)/100).toLocaleString('es-AR');}
 function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
 function fmtDate(d){if(!d)return'';const[,m,day]=d.split('-');return`${day}/${m}`;}
 function monthKey(d){return d?d.slice(0,7):'';}
@@ -15,7 +15,7 @@ function todayStr(){const n=new Date();return`${n.getFullYear()}-${String(n.getM
 function nowKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
 function monthLabel(mk){if(!mk)return'';const[y,m]=mk.split('-');const N=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return`${N[parseInt(m)-1]} ${y}`;}
 function effAmt(e){return e.myAmount!=null?e.myAmount:(e.shared?e.amount*(e.sharedPercent/100):e.amount);}
-// Movimientos en USD: pesos según la cotización cargada (0 si no tiene). Antes se sumaban U$S como si fueran $.
+// Movimientos en USD: pesos según la cotización cargada (0 si no tiene). Antes se sumaban U$D como si fueran $.
 function usdRate(e){if(e.currency!=='USD')return 1;if(e.arsEquiv&&e.amount)return e.arsEquiv/e.amount;return e.exchangeRate||0;}
 function effArs(e){return effAmt(e)*usdRate(e);}
 // Movimientos que mueven plata entre cuentas pero no son gasto ni ingreso del mes:

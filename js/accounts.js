@@ -126,7 +126,7 @@ function renderCuentasTab(){
       const badges=[
         isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':'',
         isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
-        isUSD?`<span class="cc-line-badge cc-badge-usd">U$S ${e.amount}</span>`:'',
+        isUSD?`<span class="cc-line-badge cc-badge-usd">U$D ${e.amount}</span>`:'',
       ].join('');
       const displayAmt=isUSD?`~${fmt(e.arsAmt)}`:`${fmt(e.arsAmt)}`;
       return`<div class="cc-line">
@@ -135,7 +135,7 @@ function renderCuentasTab(){
       </div>`;
     }).join('');
     const moreCount=lines.length-5;
-    const usdLine=totalUSD>0?`<div style="font-size:11px;color:var(--gold);margin-top:4px">+ U$S ${totalUSD} en dólares</div>`:'';
+    const usdLine=totalUSD>0?`<div style="font-size:11px;color:var(--gold);margin-top:4px">+ U$D ${totalUSD} en dólares</div>`:'';
     ccHtml+=`<div class="cc-summary-box">
       <div class="cc-summary-header">
         <div style="display:flex;align-items:center;gap:8px">
@@ -230,7 +230,7 @@ function setAccCurrency(c){
   document.getElementById('acc-btn-ars').className='type-btn'+(c==='ARS'?' ai':'');
   document.getElementById('acc-btn-usd').className='type-btn'+(c==='USD'?' au':'');
   const lbl=document.getElementById('acc-initial-lbl');
-  if(lbl)lbl.textContent=c==='USD'?'Saldo inicial (U$S)':'Saldo inicial ($)';
+  if(lbl)lbl.textContent=c==='USD'?'Saldo inicial (U$D)':'Saldo inicial ($)';
 }
 function pickAccountEmoji(){
   const ex=document.getElementById('acc-emoji-picker');if(ex){ex.remove();return;}
@@ -304,7 +304,7 @@ function openCCPayModal(accId){
     const isUSD=e.currency==='USD';
     const badge=isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':
                  isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
-    const amt=isUSD?`<span style="color:var(--gold)">U$S ${e.amount}</span>`:fmt(e.arsAmt);
+    const amt=isUSD?`<span style="color:var(--gold)">U$D ${e.amount}</span>`:fmt(e.arsAmt);
     return`<div class="cc-line"><span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badge}</span><span class="cc-line-amt">${amt}</span></div>`;
   }).join(''):'<div style="color:var(--txt3);font-size:12px;text-align:center;padding:8px">Sin consumos pendientes</div>';
   document.getElementById('ccp-items').innerHTML=itemsHtml;
@@ -410,7 +410,7 @@ async function saveCCPayment(){
   const arsWallet=walletArsId?walletAccounts().find(w=>w.id===walletArsId)?.name:'';
   const summary=[
     payARS>0?`${fmt(payARS)}${arsWallet?' desde '+arsWallet:''}`:null,
-    mode==='mix'&&payUSD>0?`U$S ${payUSD}`:null
+    mode==='mix'&&payUSD>0?`U$D ${payUSD}`:null
   ].filter(Boolean).join(' + ');
   toast(`✅ Pago registrado · ${summary}`);
 }

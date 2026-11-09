@@ -71,3 +71,30 @@ for (const ancho of [320, 360, 390]) {
     noErrors(page);
   });
 }
+
+// Un número no se corta nunca: "$10.199 + U$D 5" tenía el 5 en la línea de abajo
+for (const ancho of [320, 360, 390]) {
+  test(`montos grandes y dólares sin cotización no se cortan ni se pisan (${ancho} px)`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: 760 });
+    await openApp(page);
+    await page.evaluate(() => {
+      const d = nowKey() + '-05';
+      expenses = [
+        { id: 'i', type: 'Ingreso', amount: 12345678, myAmount: 12345678, date: d, category: 'Sueldo', description: 's', accountId: 'acc_mp' },
+        { id: 'g', type: 'Egreso', amount: 10199, myAmount: 10199, date: d, category: 'Luz', description: 'g', accountId: 'acc_mp' },
+        { id: 'u', type: 'Egreso', amount: 5, myAmount: 5, date: d, category: 'Streaming', description: 'u', accountId: 'acc_mp', currency: 'USD' },
+      ];
+      renderAll();
+    });
+    await expect(page.locator('#c-real')).toHaveText('$10.199');
+    await expect(page.locator('#c-real-usd')).toHaveText('+ U$D 5');
+    // cada número en una sola línea (alto de una línea de texto) y sin pisar a su vecino
+    const cajas = await page.evaluate(() => ['c-ing', 'c-real', 'c-bal'].map(id => { const r = document.getElementById(id).getBoundingClientRect(); return { id, l: r.left, r: r.right, h: r.height }; }));
+    for (const c of cajas) expect(c.h, c.id).toBeLessThan(30);
+    expect(cajas[0].r).toBeLessThanOrEqual(cajas[1].l);
+    expect(cajas[1].r).toBeLessThanOrEqual(cajas[2].l);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    expect(await page.evaluate(() => { const c = document.querySelector('.sum-card'); return c.scrollWidth <= c.clientWidth + 1; })).toBe(true);
+    noErrors(page);
+  });
+}
