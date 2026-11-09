@@ -11,11 +11,11 @@ test('USD: se pasan a pesos con su cotización; sin cotización van aparte', asy
       { id: 'b', type: 'Egreso', amount: 10, myAmount: 10, date: d, category: 'Streaming', description: 'Netflix', accountId: 'acc_mp', currency: 'USD', exchangeRate: 1200, arsEquiv: 12000 },
       { id: 'c', type: 'Egreso', amount: 20, myAmount: 20, date: d, category: 'Compras', description: 'Amazon', accountId: 'cc', currency: 'USD' });
     renderAll();
-    return { res: calcSummary(mk), mp: accountBalance('acc_mp'), pag: document.getElementById('c-pag').textContent };
+    return { res: calcSummary(mk), mp: accountBalance('acc_mp'), gastos: document.getElementById('c-real').textContent };
   });
   expect(r.res).toMatchObject({ ing: 1000000, pag: 12000, real: 12000, usdNoRate: 20 });
   expect(r.mp).toBe(988000);
-  expect(r.pag).toBe('$12.000 + U$S 20');
+  expect(r.gastos).toBe('$12.000 + U$S 20');
   noErrors(page);
 });
 

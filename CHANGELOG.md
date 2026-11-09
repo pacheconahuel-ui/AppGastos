@@ -1,5 +1,14 @@
 # Cambios
 
+## 3.4 — noviembre 2026
+
+Tercera parte del rediseño: el resumen.
+
+- **Avisos arriba de todo** (vencimiento de la tarjeta y recurrentes pendientes).
+- **El mes en una sola tarjeta:** ‹ mes › con Ingresos · Gastos · Balance. Debajo, en chico: lo que pagaste en total (solo si hay gastos compartidos), la proyección a fin de mes y una línea con el ahorro, el gasto por día y la categoría más grande. Reemplaza las cuatro tarjetas, la proyección y los tres cuadritos de estadísticas.
+- **Últimos 5 movimientos** con **Ver todos ›** (antes 10).
+- Gráficos y metas más abajo. Los botones "+ Presupuesto" y "+ Meta" ahora están dentro de cada sección cuando todavía no hay ninguno.
+
 ## 3.3 — noviembre 2026
 
 Segunda parte del rediseño: navegación.

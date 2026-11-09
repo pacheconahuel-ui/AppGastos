@@ -7,7 +7,7 @@ function saveBudgets(){try{localStorage.setItem(lsKey(BDG_SK),JSON.stringify(bud
 function renderBudgetsSection(){
   const mk=getDashMk(),catData=calcByCat(mk),budgetCats=Object.keys(budgets);
   const el=document.getElementById('budgets-section');
-  if(!budgetCats.length){el.innerHTML='';return;}
+  if(!budgetCats.length){el.innerHTML='<button class="add-row" onclick="openBudgetModal()">＋ Presupuesto por categoría</button>';return;}
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Presupuestos</div><button onclick="openBudgetModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Agregar</button></div>`;
   budgetCats.forEach(cat=>{
     const limit=budgets[cat],spent=catData[cat]||0,pct=Math.min(100,Math.round((spent/limit)*100));
@@ -39,7 +39,7 @@ function loadGoals(){try{goals=JSON.parse(localStorage.getItem(lsKey(GOAL_SK)))|
 function saveGoals(){try{localStorage.setItem(lsKey(GOAL_SK),JSON.stringify(goals));}catch(e){}}
 function renderGoalsSection(){
   const el=document.getElementById('goals-section');
-  if(!goals.length){el.innerHTML='';return;}
+  if(!goals.length){el.innerHTML='<button class="add-row" onclick="openGoalModal()">＋ Meta de ahorro</button>';return;}
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Metas de ahorro</div><button onclick="openGoalModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Nueva</button></div>`;
   goals.forEach(g=>{
     const pct=Math.min(100,Math.round((g.current/g.target)*100)),done=pct>=100,remaining=Math.max(0,g.target-g.current);
@@ -88,17 +88,19 @@ function deleteGoal(id){
 // --- STATS ---
 function renderStats(mk){
   const rows=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e));
-  if(!rows.length){document.getElementById('stats-grid').style.display='none';return;}
+  const el=document.getElementById('sum-stats');
+  if(!rows.length){el.textContent='';return;}
   const{ing,real}=calcSummary(mk);
   const rate=ing>0?Math.round((1-real/ing)*100):0;
   const today=new Date().getDate(),dailyAvg=today>0?Math.round(real/today):0;
   const catMap={};rows.forEach(e=>{catMap[e.category]=(catMap[e.category]||0)+effArs(e);});
   const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('stats-grid').style.display='grid';
-  document.getElementById('st-rate').textContent=ing>0?rate+'%':'—';
-  document.getElementById('st-rate').style.color=rate>20?'var(--green)':rate>0?'var(--yellow)':'var(--red)';
-  document.getElementById('st-daily').textContent=dailyAvg>0?'$'+Math.round(dailyAvg/1000)+'k':'—';
-  document.getElementById('st-topcat').textContent=topCat?icon(topCat[0]):'—';
+  // Una línea: ahorro, gasto por día y la categoría más grande
+  const parts=[];
+  if(ing>0)parts.push(rate>=0?`Ahorrás el ${rate}%`:`Gastaste ${-rate}% más de lo que entró`);
+  if(dailyAvg>0&&mk===nowKey())parts.push(`${fmt(dailyAvg)} por día`);
+  if(topCat)parts.push(`más en ${displayName(topCat[0])}`);
+  el.textContent=parts.join(' · ');
 }
 
 // --- QUICK ADD ---

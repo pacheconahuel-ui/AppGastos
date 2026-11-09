@@ -583,3 +583,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   .tabs-new{display:block;min-height:44px;margin-bottom:10px;border-radius:12px;border:0;background:var(--acc-btn);color:var(--on-acc);font:700 14px 'Outfit',sans-serif;cursor:pointer}
   .usd-link,.back-link{display:none}
 }
+
+/* Resumen: el mes en una sola tarjeta */
+.sum-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:12px 14px 14px;margin-bottom:14px}
+.sum-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sum-nav{width:44px;height:44px;border-radius:12px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);font-size:20px;cursor:pointer}
+.sum-month{font-size:16px;font-weight:600}
+.sum-hint{font-size:11px;color:var(--txt3)}
+.sum-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:10px;border-top:1px solid var(--bdr)}
+.sum-row>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sum-lbl{font-size:12px;color:var(--txt3)}
+.sum-v{font-size:17px;font-weight:600;overflow-wrap:anywhere}
+.sum-v.pos{color:var(--pos)} .sum-v.neg,#c-proj.neg{color:var(--neg)}
+.sum-foot{margin-top:10px;font-size:12px;color:var(--txt2);display:grid;gap:4px}
+.sum-foot:empty,.sum-foot>div:empty{display:none}
+.sum-foot b{color:var(--txt);font-weight:600}
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px;font-size:13px;font-weight:600;color:var(--txt2)}
+.sec-link{min-height:44px;padding:0 4px;background:none;border:0;color:var(--acc);font:600 13px 'Outfit',sans-serif;cursor:pointer}
+.add-row{width:100%;min-height:44px;margin-bottom:12px;border-radius:12px;border:1px dashed var(--bdr2);background:transparent;color:var(--txt2);font:600 13px 'Outfit',sans-serif;cursor:pointer}
