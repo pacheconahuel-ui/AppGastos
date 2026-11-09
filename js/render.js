@@ -41,7 +41,8 @@ function renderDashboard(){
   const{ing,pag,real,bal,usdNoRate}=calcSummary(mk);
   const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
   // Los gastos en USD sin cotización no se pueden pasar a pesos: se muestran aparte
-  const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real)+(usdNoRate?' + '+fmtU(usdNoRate):'');
+  const real_el=document.getElementById('c-real'); if(real_el)real_el.textContent=fmt(real);
+  const realUsd=document.getElementById('c-real-usd'); if(realUsd)realUsd.textContent=usdNoRate?'+ '+fmtU(usdNoRate):'';
   // "Pagaste" solo aparece si es distinto de tus gastos (gastos compartidos)
   const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag);
   const pagLine=document.getElementById('c-pag-line'); if(pagLine)pagLine.style.display=Math.round(pag)!==Math.round(real)?'':'none';
@@ -167,10 +168,10 @@ function renderTcChart(){
   const labels=ventas.map(v=>{const[,m,d]=v.date.split('-');return`${d}/${m}`;});
   const tcs=ventas.map(v=>Math.round(v.arsAmount/v.usdAmount));
   const avg=Math.round(tcs.reduce((a,b)=>a+b,0)/tcs.length);
-  document.getElementById('usd-chart-sub').textContent=`promedio: ${fmtTC(avg)}/U$S`;
+  document.getElementById('usd-chart-sub').textContent=`promedio: ${fmtTC(avg)}/U$D`;
   const ctx=document.getElementById('tc-chart').getContext('2d');
   if(tcChart){tcChart.destroy();tcChart=null;}
-  tcChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'TC',data:tcs,borderColor:tok('acc'),backgroundColor:tokA('acc',.1),borderWidth:2.5,pointBackgroundColor:tok('acc'),pointRadius:5,pointHoverRadius:7,fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmtTC(c.raw)}/U$S`,afterLabel:c=>{const v=ventas[c.dataIndex];return`  ${fmtU(v.usdAmount)} → ${fmt(v.arsAmount)}`;}},bodyFont:{family:'Outfit',size:12},backgroundColor:chartBgColor(),borderColor:tok('bdr2'),borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11},callback:v=>'$'+Math.round(v/1000)+'k'}}}}});
+  tcChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'TC',data:tcs,borderColor:tok('acc'),backgroundColor:tokA('acc',.1),borderWidth:2.5,pointBackgroundColor:tok('acc'),pointRadius:5,pointHoverRadius:7,fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmtTC(c.raw)}/U$D`,afterLabel:c=>{const v=ventas[c.dataIndex];return`  ${fmtU(v.usdAmount)} → ${fmt(v.arsAmount)}`;}},bodyFont:{family:'Outfit',size:12},backgroundColor:chartBgColor(),borderColor:tok('bdr2'),borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11},callback:v=>'$'+Math.round(v/1000)+'k'}}}}});
 }
 
 // --- RENDER SALDOS TAB ---
@@ -339,7 +340,7 @@ function expHTML(e,actions){
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
   const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?ic('card')+' Pago de tarjeta':ic('transfer')+' Cambio de moneda'} · no suma al mes</span>`:'';
   const recurBadge=e.recurring?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">'+ic('repeat')+'</span>':'';
-  const usdBadge=e.currency==='USD'?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 10%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--tint) 25%,transparent)">U$S ${e.amount}</span>`:'';
+  const usdBadge=e.currency==='USD'?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 10%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--tint) 25%,transparent)">U$D ${e.amount}</span>`:'';
   const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
   const acc=e.accountId?accounts?.find(a=>a.id===e.accountId):null;
   const accBadge=acc?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`

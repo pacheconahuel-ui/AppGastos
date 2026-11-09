@@ -11,11 +11,11 @@ test('USD: se pasan a pesos con su cotización; sin cotización van aparte', asy
       { id: 'b', type: 'Egreso', amount: 10, myAmount: 10, date: d, category: 'Streaming', description: 'Netflix', accountId: 'acc_mp', currency: 'USD', exchangeRate: 1200, arsEquiv: 12000 },
       { id: 'c', type: 'Egreso', amount: 20, myAmount: 20, date: d, category: 'Compras', description: 'Amazon', accountId: 'cc', currency: 'USD' });
     renderAll();
-    return { res: calcSummary(mk), mp: accountBalance('acc_mp'), gastos: document.getElementById('c-real').textContent };
+    return { res: calcSummary(mk), mp: accountBalance('acc_mp'), gastos: document.getElementById('c-real').textContent, usd: document.getElementById('c-real-usd').textContent };
   });
   expect(r.res).toMatchObject({ ing: 1000000, pag: 12000, real: 12000, usdNoRate: 20 });
   expect(r.mp).toBe(988000);
-  expect(r.gastos).toBe('$12.000 + U$S 20');
+  expect([r.gastos, r.usd]).toEqual(['$12.000', '+ U$D 20']);
   noErrors(page);
 });
 
@@ -28,7 +28,7 @@ test('el mes no cuenta el pago de la tarjeta ni la compra de dólares; los saldo
       { id: 's', type: 'Ingreso', amount: 1000000, myAmount: 1000000, date: d, category: 'Sueldo', description: 'Sueldo', accountId: 'acc_mp' },
       { id: 'c1', type: 'Egreso', amount: 50000, myAmount: 50000, date: d, category: 'Compras', description: 'Zapatillas', accountId: 'cc', ccPaid: true },
       { id: 'pg', type: 'Egreso', amount: 50000, myAmount: 50000, date: d, category: 'Servicios', description: 'Pago resumen Visa', accountId: 'acc_mp' },
-      { id: 'fx1', type: 'Egreso', amount: 120000, myAmount: 120000, date: d, category: 'Otro', description: 'Compra U$S 100', accountId: 'acc_mp' },
+      { id: 'fx1', type: 'Egreso', amount: 120000, myAmount: 120000, date: d, category: 'Otro', description: 'Compra U$D 100', accountId: 'acc_mp' },
       { id: 'luz', type: 'Egreso', amount: 30000, myAmount: 30000, date: d, category: 'Luz', description: 'Luz', accountId: 'acc_mp' }];
     usdTx = [{ id: 'u1', type: 'compra', usdAmount: 100, arsAmount: 120000, date: d, linkedArsId: 'fx1' }];
     renderAll();

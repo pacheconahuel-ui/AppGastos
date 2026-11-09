@@ -231,7 +231,7 @@ function onAmtOrCurrencyChange(){
     const tc=parseFloat(document.getElementById('f-tc').value)||0;
     if(tc>0&&amt>0){
       document.getElementById('f-ars-equiv').value=Math.round(amt*tc);
-      document.getElementById('f-tc-preview').textContent=`U$S ${amt} × $${tc} = ${fmt(amt*tc)}`;
+      document.getElementById('f-tc-preview').textContent=`U$D ${amt} × $${tc} = ${fmt(amt*tc)}`;
     }
   }
   recalcSplit();
@@ -242,7 +242,7 @@ function onEquivChange(){
   if(amt>0&&equiv>0){
     const tc=equiv/amt;
     document.getElementById('f-tc').value=Math.round(tc);
-    document.getElementById('f-tc-preview').textContent=`TC implícito: $${Math.round(tc)} / U$S`;
+    document.getElementById('f-tc-preview').textContent=`TC implícito: $${Math.round(tc)} / U$D`;
   }
 }
 function setCardExpType(t){

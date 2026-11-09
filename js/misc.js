@@ -195,7 +195,7 @@ function renderRecurringReminders(){
 
 function recurringItemHTML(e){
   const acc=e.accountId?accounts.find(a=>a.id===e.accountId):null;
-  const amtDisplay=e.currency==='USD'?`U$S ${e.amount}`:`${fmt(e.amount)}`;
+  const amtDisplay=e.currency==='USD'?`U$D ${e.amount}`:`${fmt(e.amount)}`;
   return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catIcon(e.category)} ${esc(e.description||e.category)}</div>

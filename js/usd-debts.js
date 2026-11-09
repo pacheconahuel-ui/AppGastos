@@ -63,7 +63,7 @@ function calcTC(){
   const usd=parseFloat(document.getElementById('uf-usd').value);
   const ars=parseFloat(document.getElementById('uf-ars').value);
   const preview=document.getElementById('tc-preview');
-  if(usd>0&&ars>0){document.getElementById('tc-val').textContent=fmtTC(ars/usd)+' / U$S';document.getElementById('tc-sub').textContent=`${fmtU(usd)} × ${fmtTC(ars/usd)} = ${fmt(ars)}`;preview.classList.add('on');}
+  if(usd>0&&ars>0){document.getElementById('tc-val').textContent=fmtTC(ars/usd)+' / U$D';document.getElementById('tc-sub').textContent=`${fmtU(usd)} × ${fmtTC(ars/usd)} = ${fmt(ars)}`;preview.classList.add('on');}
   else preview.classList.remove('on');
 }
 async function saveUsdTx(){
@@ -137,7 +137,7 @@ async function saveUsdTx(){
   if(id&&type==='ingreso'){const prev=usdTx.find(t=>t.id===id);if(prev?.linkedArsId){expenses=expenses.filter(e=>e.id!==prev.linkedArsId);skipNextArs=fbOnline;await persistArs(null,prev.linkedArsId);tx.linkedArsId=null;}}
   if(id){const i=usdTx.findIndex(t=>t.id===id);if(i>-1)usdTx[i]=tx;else usdTx.push(tx);}else usdTx.push(tx);
   haptic();closeUsdModal();renderAll();
-  const tcStr=ars&&usd?` · TC ${fmtTC(ars/usd)}/U$S`:'';
+  const tcStr=ars&&usd?` · TC ${fmtTC(ars/usd)}/U$D`:'';
   toast(type==='compra'?`✅ Compra ${fmtU(usd)}${tcStr}`:type==='venta'?`✅ Venta ${fmtU(usd)}${tcStr}`:'✅ Ingreso USD guardado');
   skipNextUsd=fbOnline;await persistUsd(tx,null);
 }
