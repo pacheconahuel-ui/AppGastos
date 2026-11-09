@@ -122,7 +122,7 @@ function contactItemHTML(p){
   return`<div class="cat-manager-item">
     <div style="font-size:24px;width:36px;text-align:center">${p.emoji}</div>
     <div class="cat-manager-name custom">${esc(p.name)}</div>
-    <div style="font-size:10px;padding:2px 7px;border-radius:10px;background:${p.isRecurrent?'rgba(45,212,191,.1)':'rgba(255,255,255,.05)'};color:${p.isRecurrent?'var(--teal)':'var(--txt3)'};border:1px solid ${p.isRecurrent?'rgba(45,212,191,.2)':'var(--bdr)'};font-weight:600;flex-shrink:0">${p.isRecurrent?'⭐ Fav':'Ocasional'}</div>
+    <div style="font-size:10px;padding:2px 7px;border-radius:10px;background:${p.isRecurrent?'color-mix(in srgb,var(--acc) 10%,transparent)':'color-mix(in srgb,var(--tint) 5%,transparent)'};color:${p.isRecurrent?'var(--teal)':'var(--txt3)'};border:1px solid ${p.isRecurrent?'color-mix(in srgb,var(--acc) 20%,transparent)':'var(--bdr)'};font-weight:600;flex-shrink:0">${p.isRecurrent?'⭐ Fav':'Ocasional'}</div>
     <div class="cat-manager-actions">
       <button class="cat-mgr-btn rename" onclick="openAddContactModal('${p.id}')" title="Editar">✏️</button>
       <button class="cat-mgr-btn delete" onclick="confirmDeleteContact('${p.id}')" title="Eliminar">🗑️</button>
@@ -171,12 +171,12 @@ function setContactType(t){
 const CONTACT_EMOJIS=['👤','👨','👩','🧑','🧔','👦','👧','👴','👵','🧒','💁','🙋','🤷','🧑‍💼','🧑‍🔧','🧑‍🍳','🧑‍⚕️','👮','🧑‍🎓','🧑‍🎨'];
 let _emojiPickerOpen=false;
 function pickContactEmoji(){
-  const grid=CONTACT_EMOJIS.map((e,i)=>`<span onclick="selectContactEmoji('${e}')" style="font-size:28px;cursor:pointer;padding:6px;border-radius:8px;display:inline-block" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background=''">${e}</span>`).join('');
+  const grid=CONTACT_EMOJIS.map((e,i)=>`<span onclick="selectContactEmoji('${e}')" style="font-size:28px;cursor:pointer;padding:6px;border-radius:8px;display:inline-block" onmouseover="this.style.background='color-mix(in srgb,var(--tint) 10%,transparent)'" onmouseout="this.style.background=''">${e}</span>`).join('');
   const existing=document.getElementById('emoji-picker-inline');
   if(existing){existing.remove();return;}
   const div=document.createElement('div');
   div.id='emoji-picker-inline';
-  div.style.cssText='background:var(--modal-bg);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;margin-top:8px;text-align:center;line-height:1';
+  div.style.cssText='background:var(--modal-bg);border:1px solid color-mix(in srgb,var(--tint) 10%,transparent);border-radius:14px;padding:10px;margin-top:8px;text-align:center;line-height:1';
   div.innerHTML=grid;
   document.getElementById('ac-emoji-preview').parentNode.insertBefore(div,document.getElementById('ac-emoji-preview').nextSibling.nextSibling);
 }
@@ -448,7 +448,7 @@ function renderCatManager(){
   html+=`</div><button class="btn-save" onclick="addCatTyped('egreso')" style="margin:0 0 10px;padding:11px;font-size:13px">＋ Agregar egreso</button>`;
   html+=`<div class="cat-section-lbl">📥 Categorías de ingreso (${ingresoCats.length})</div><div class="cat-manager-list">`;
   html+=ingresoCats.length?ingresoCats.map(row).join(''):`<div class="empty" style="padding:14px 0"><p>Sin categorías de ingreso</p></div>`;
-  html+=`</div><button class="btn-save" onclick="addCatTyped('ingreso')" style="margin:0;padding:11px;font-size:13px;background:linear-gradient(135deg,#4ade80,#22c55e)">＋ Agregar ingreso</button>`;
+  html+=`</div><button class="btn-save" onclick="addCatTyped('ingreso')" style="margin:0;padding:11px;font-size:13px;background:var(--pos)">＋ Agregar ingreso</button>`;
   document.getElementById('cat-manager-body').innerHTML=html;
 }
 function addCatTyped(type='egreso'){

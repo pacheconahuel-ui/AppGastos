@@ -89,7 +89,7 @@ function renderCuentasTab(){
 
   const makeWalletCard=(a,isUsd)=>{
     const bal=accountBalance(a.id)||0;
-    const bc=bal>=0?'g':'r';
+    const bc=bal>=0?'p':'r';
     const balStr=isUsd
       ?`<div class="account-bal-val card-val" style="color:var(--gold)">${fmtU(bal)}</div>`
       :`<div class="account-bal-val card-val ${bc}">${bal<0?'-':''}${fmt(bal)}</div>`;
@@ -98,7 +98,7 @@ function renderCuentasTab(){
       ?usdTx.filter(t=>t.usdAccountId===a.id&&monthKey(t.date)===mk).length
       :expenses.filter(e=>e.accountId===a.id&&monthKey(e.date)===mk).length;
     return`<div class="account-card" onclick="openAccountModal('${a.id}')">
-      <div class="account-ava" style="background:${isUsd?'rgba(245,158,11,.1)':'rgba(96,165,250,.1)'};border-color:${isUsd?'rgba(245,158,11,.2)':'rgba(96,165,250,.2)'}">${a.emoji}</div>
+      <div class="account-ava" style="background:${isUsd?'color-mix(in srgb,var(--tint) 10%,transparent)':'color-mix(in srgb,var(--acc) 10%,transparent)'};border-color:${isUsd?'color-mix(in srgb,var(--tint) 20%,transparent)':'color-mix(in srgb,var(--acc) 20%,transparent)'}">${a.emoji}</div>
       <div class="account-info">
         <div class="account-name">${esc(a.name)}${isUsd?' <span style="font-size:10px;color:var(--gold);font-weight:700">USD</span>':''}</div>
         <div class="account-type">${movCount} mov. este mes ${negAlert}</div>

@@ -48,10 +48,13 @@ function catVisibleForCurrentType(cat){
 }
 
 // Chart color helpers — adapt to light/dark mode
-function chartTextColor(){return document.body.classList.contains('light')?'rgba(26,16,64,.55)':'rgba(237,232,255,.55)';}
-function chartGridColor(){return document.body.classList.contains('light')?'rgba(0,0,0,.07)':'rgba(255,255,255,.05)';}
-function chartBgColor(){return document.body.classList.contains('light')?'#fff':'#1f1040';}
-function chartBorderSep(){return document.body.classList.contains('light')?'#f0eeff':'#0d0818';}
+// Los gráficos (canvas) no entienden var(--x): leen el color del token y, si hace falta, le ponen transparencia
+function tok(name){return getComputedStyle(document.body).getPropertyValue('--'+name).trim();}
+function tokA(name,a){const h=tok(name).replace('#','');if(h.length!==6)return tok(name);return`rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;}
+function chartTextColor(){return tok('txt3');}
+function chartGridColor(){return tokA('txt',.06);}
+function chartBgColor(){return tok('modal-bg');}
+function chartBorderSep(){return tok('surf');}
 function loadIconOverrides(){try{return JSON.parse(localStorage.getItem(lsKey('gp_icons_v1')))||{};}catch{return{};}}
 function saveIconOverrides(map){try{localStorage.setItem(lsKey('gp_icons_v1'),JSON.stringify(map));}catch{}}
 function catIcon(cat){const ov=loadIconOverrides();return ov[cat]||ICONS[cat]||'📌';}

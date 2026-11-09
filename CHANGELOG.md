@@ -1,5 +1,17 @@
 # Cambios
 
+## 3.2 — noviembre 2026
+
+Primera parte del rediseño: colores y tipografía. La estructura de las pantallas no cambia.
+
+- **Paleta neutra con un solo acento:** fondos y tarjetas grises, un índigo suave para botones y selección. Verde solo para plata que entra y saldos a favor, rojo para saldos negativos y deudas, amarillo para avisos. Los gastos y los dólares van en el color normal del texto.
+- **Sin degradés ni brillos de fondo.** Todas las pestañas activas y los botones flotantes usan el mismo estilo.
+- **Números con la tipografía de la app** (Outfit, cifras de ancho fijo) en lugar de la letra de máquina de escribir.
+- **Tema claro blanco y gris** (antes lavanda); la barra del sistema toma el color del fondo.
+- **Gráficos** con colores apagados y que cambian con el tema.
+- Contraste de textos y botones de al menos 4,5:1 en los dos temas.
+- En "Nuevo gasto", fecha y categoría van una debajo de la otra: el buscador de categoría ya no queda aplastado. Sin flechitas en los campos numéricos.
+
 ## 3.1 — noviembre 2026
 
 - **Vencimiento de la tarjeta:** en el resumen aparece un aviso cuando el resumen ya cerró y no está pago ("Resumen Visa · vence en 3 días"), con el botón **Pagar**. Se pone rojo a dos días del vencimiento y desaparece al pagarlo. Necesita el día de cierre de la tarjeta (Cuentas → editar tarjeta).

@@ -60,11 +60,17 @@ function toggleTheme(){
   const light=document.body.classList.toggle('light');
   document.getElementById('btn-theme').textContent=light?'☀️':'🌙';
   localStorage.setItem('gp_theme',light?'light':'dark');
+  syncThemeColor();
+  // los gráficos toman los colores del tema al dibujarse
+  if(currentUID)renderAll();
 }
 function loadTheme(){
   const t=localStorage.getItem('gp_theme');
   if(t==='light'){document.body.classList.add('light');document.getElementById('btn-theme').textContent='☀️';}
+  syncThemeColor();
 }
+// Barra del sistema del color del fondo
+function syncThemeColor(){const m=document.getElementById('theme-color-meta');if(m)m.setAttribute('content',tok('bg'));}
 
 // --- MAGIC LINK ---
 async function sendMagicLink(){
@@ -158,7 +164,7 @@ function renderRecurringReminders(){
 
   // --- Wallet recurring ---
   if(walletMissing.length){
-    html+=`<div style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:14px 16px;margin-bottom:10px">
+    html+=`<div style="background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);border-radius:14px;padding:14px 16px;margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🔁 Movimientos recurrentes pendientes</div>
       ${walletMissing.map(e=>recurringItemHTML(e)).join('')}
     </div>`;
@@ -174,7 +180,7 @@ function renderRecurringReminders(){
       if(!byCard[cardId])byCard[cardId]=[];
       byCard[cardId].push(e);
     });
-    html+=`<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:14px 16px;margin-bottom:10px">
+    html+=`<div style="background:color-mix(in srgb,var(--tint) 8%,transparent);border:1px solid color-mix(in srgb,var(--tint) 20%,transparent);border-radius:14px;padding:14px 16px;margin-bottom:10px">
       <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">💳 Fijos de tarjeta pendientes de agregar</div>`;
     Object.entries(byCard).forEach(([cardId,items])=>{
       const card=accounts.find(a=>a.id===cardId);
@@ -197,11 +203,11 @@ function recurringItemHTML(e){
     </div>
     <div style="display:flex;gap:5px;flex-shrink:0">
       <button onclick="confirmRecurring('${e.id}')"
-        style="padding:6px 12px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
+        style="padding:6px 12px;background:color-mix(in srgb,var(--pos) 15%,transparent);border:1px solid color-mix(in srgb,var(--pos) 30%,transparent);border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
         ✅ Confirmar
       </button>
       <button onclick="editRecurringAmt('${e.id}')"
-        style="padding:6px 10px;background:rgba(102,126,234,.12);border:1px solid rgba(102,126,234,.3);border-radius:8px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
+        style="padding:6px 10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);border-radius:8px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
         ✏️
       </button>
       <button onclick="skipRecurring('${e.id}')"
@@ -290,14 +296,14 @@ function renderMonthlyChart(){
   monthlyChart=new Chart(ctx,{
     type:'bar',
     data:{labels,datasets:[
-      {label:'Ingresos',data:ingresos,backgroundColor:'rgba(74,222,128,.3)',borderColor:'rgba(74,222,128,.8)',borderWidth:1.5,borderRadius:6},
-      {label:'Gastos',data:gastos,backgroundColor:'rgba(248,113,113,.3)',borderColor:'rgba(248,113,113,.8)',borderWidth:1.5,borderRadius:6}
+      {label:'Ingresos',data:ingresos,backgroundColor:tokA('pos',.35),borderColor:tokA('pos',.9),borderWidth:1.5,borderRadius:6},
+      {label:'Gastos',data:gastos,backgroundColor:tokA('txt3',.35),borderColor:tokA('txt3',.8),borderWidth:1.5,borderRadius:6}
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),font:{family:'Outfit',size:11},boxWidth:11,boxHeight:11}},
-        tooltip:{bodyFont:{family:'JetBrains Mono',size:12},backgroundColor:chartBgColor(),borderColor:'rgba(102,126,234,.35)',borderWidth:1,padding:10,cornerRadius:10,callbacks:{label:c=>`  ${fmt(c.raw)}`}}},
+        tooltip:{bodyFont:{family:'Outfit',size:12},backgroundColor:chartBgColor(),borderColor:tok('bdr2'),borderWidth:1,padding:10,cornerRadius:10,callbacks:{label:c=>`  ${fmt(c.raw)}`}}},
       scales:{x:{grid:{display:false},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},
-        y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'JetBrains Mono',size:11},callback:v=>v>=1e6?'$'+(Math.round(v/1e5)/10)+'M':v>=1000?'$'+Math.round(v/1000)+'k':fmt(v)}}}}
+        y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11},callback:v=>v>=1e6?'$'+(Math.round(v/1e5)/10)+'M':v>=1000?'$'+Math.round(v/1000)+'k':fmt(v)}}}}
   });
 }
 

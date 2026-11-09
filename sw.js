@@ -5,7 +5,7 @@ const CACHE = 'gastos-v' + VERSION;
 // Librerías externas (versión fija en la URL, no cambian): caché primero.
 // Archivos de la app (index.html, js/, css/): red primero, caché solo sin conexión.
 const CDN_ASSETS = [
-  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap',
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
   'https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js',
