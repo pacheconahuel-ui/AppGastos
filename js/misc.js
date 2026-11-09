@@ -36,7 +36,7 @@ async function checkMigration(){
 }
 async function runMigration(){
   const banner=document.getElementById('mig-banner');
-  banner.querySelector('.mig-title').textContent='⏳ Migrando datos…';
+  banner.querySelector('.mig-title').textContent='Migrando datos…';
   banner.querySelector('.mig-btns').style.display='none';
   try{
     let ma=0,mu=0;
@@ -70,7 +70,9 @@ function loadTheme(){
   syncThemeColor();
 }
 // Barra del sistema del color del fondo
-function syncThemeColor(){const m=document.getElementById('theme-color-meta');if(m)m.setAttribute('content',tok('bg'));}
+function syncThemeColor(){
+  const m=document.getElementById('theme-color-meta');if(m)m.setAttribute('content',tok('bg'));
+}
 
 // --- MAGIC LINK ---
 async function sendMagicLink(){
@@ -212,7 +214,7 @@ function recurringItemHTML(e){
       </button>
       <button onclick="skipRecurring('${e.id}')"
         style="padding:6px 10px;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;color:var(--txt3);font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif">
-        ⏭
+        Omitir
       </button>
     </div>
   </div>`;
@@ -347,6 +349,27 @@ function openGlobalSearch(){
   document.getElementById('gsearch-results').innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">'+ic('search')+'</div><p>Escribí para buscar en todo</p></div>';
   setTimeout(()=>document.getElementById('gsearch-inp').focus(),200);
 }
+// Asignar de una vez todos los movimientos en pesos sin billetera (los de dólares se eligen uno por uno)
+function bulkAssignHTML(rows){
+  const ars=rows.filter(e=>(e.currency||'ARS')!=='USD');
+  if(!ars.length||!arsWallets().length)return'';
+  return`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+    <select id="bulk-acc" style="flex:1;min-height:44px">${arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')}</select>
+    <button class="btn-settle" style="flex:0 0 auto;min-height:44px;padding:0 14px" onclick="confirmBulkAssign()">Asignar ${ars.length}</button>
+  </div>`;
+}
+function confirmBulkAssign(){
+  const acc=accounts.find(a=>a.id===document.getElementById('bulk-acc')?.value);
+  const rows=expenses.filter(e=>!e.accountId&&(e.currency||'ARS')!=='USD');
+  if(!acc||!rows.length)return;
+  const delta=rows.reduce((s,e)=>s+(e.type==='Ingreso'?1:-1)*effAmt(e),0);
+  showConf('wallet','Asignar a '+acc.name,
+    `Se asignan ${rows.length} movimientos a ${acc.name}.\nEl saldo de la billetera va a ${delta<0?'bajar':'subir'} ${fmt(Math.abs(delta))}.`,
+    async()=>{
+      for(const e of rows){e.accountId=acc.id;e.updatedAt=Date.now();skipNextArs=fbOnline;await persistArs(e,null);}
+      closeGlobalSearch();renderAll();toast(`✅ ${rows.length} movimientos asignados a ${acc.name}`);
+    },'Asignar');
+}
 // Movimientos sin billetera (de todos los meses): tocar uno abre la edición para elegirla
 function openUnassigned(ev){
   ev?.stopPropagation();
@@ -355,7 +378,8 @@ function openUnassigned(ev){
   document.getElementById('gsearch-inp').value='';
   document.getElementById('gsearch-results').innerHTML=rows.length
     ?`<div class="div-lbl" style="margin-top:0">Sin billetera (${rows.length})</div>
-      <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">No suman ni restan en ningún saldo. Tocá uno y elegí la billetera.</div>
+      <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">No suman ni restan en ningún saldo. Tocá uno y elegí la billetera, o asignalos todos juntos.</div>
+      ${bulkAssignHTML(rows)}
       <div id="unassigned-list">${rows.map(e=>expHTML(e,false)).join('')}</div>`
     :'<div class="empty" style="padding:24px 0"><div class="empty-ico">'+ic('check')+'</div><p>Todos los movimientos tienen billetera</p></div>';
   // En captura: editExp frena la propagación y la lista taparía el formulario

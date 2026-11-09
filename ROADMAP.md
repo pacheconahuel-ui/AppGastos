@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.6**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.7**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -48,6 +48,11 @@ Estado a **noviembre 2026**: versión **3.6**. El código está en `index.html`,
 - [x] Resumen reordenado (3.4).
 - [x] Formulario de gasto nuevo (3.5).
 - [x] Íconos de línea en vez de emojis en botones y títulos (3.6). Los de categoría, billetera, contacto y meta quedan: son datos de cada persona.
+
+## 3.7 — arreglos de uso real ✅
+
+- [x] Deudas de contactos borrados, aviso largo, encabezado, emojis sueltos, billeteras y asignación masiva.
+- [ ] Verificar en un Android real que el tema claro ya no se ve oscuro (ver README).
 
 ## Ideas para después
 

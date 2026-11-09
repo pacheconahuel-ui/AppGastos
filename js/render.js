@@ -11,6 +11,8 @@ function getDashMk(){
   return months.length?months[0]:cur;
 }
 
+function dashGoCurrent(){dashMk=nowKey();renderDashboard();}
+
 function dashNavMonth(dir){
   const months=allMonths();
   const cur=getDashMk();
@@ -30,13 +32,13 @@ function renderDashboard(){
   const monthLabel_el=document.getElementById('dash-month-label');
   if(monthLabel_el)monthLabel_el.textContent=monthLabel(mk);
   const monthHint_el=document.getElementById('dash-month-hint');
-  if(monthHint_el)monthHint_el.textContent=isCurrent?'mes actual':(mk===months[0]&&!isCurrent?'mes más reciente':'');
+  if(monthHint_el)monthHint_el.innerHTML=isCurrent?'mes actual':`No es el mes actual · <button class="sum-go" onclick="dashGoCurrent()">Ir a ${monthLabel(cur)}</button>`;
   const nextBtn=document.getElementById('dash-next-btn');
   if(nextBtn)nextBtn.style.opacity=idx<=0?'.3':'1';
 
   // Header subtitle
   const hdrSub=document.getElementById('hdr-month');
-  if(hdrSub)hdrSub.innerHTML=`${monthLabel(mk)} <span style="opacity:.5">v${APP_VERSION}</span>`;
+  if(hdrSub)hdrSub.textContent=`v${APP_VERSION}`;
 
   const{ing,pag,real,bal,usdNoRate}=calcSummary(mk);
   const ing_el=document.getElementById('c-ing'); if(ing_el)ing_el.textContent=fmt(ing);
@@ -178,7 +180,7 @@ function renderTcChart(){
 function renderSaldosTab(){
   // Summary
   let meDeben=0,yoDebo=0;
-  persons.forEach(p=>{const bal=personBalance(p.id);if(bal>0)meDeben+=bal;else yoDebo+=Math.abs(bal);});
+  debtPeople().forEach(p=>{const bal=personBalance(p.id);if(bal>0)meDeben+=bal;else yoDebo+=Math.abs(bal);});
   const neto=meDeben-yoDebo;
   document.getElementById('sum-me-deben').textContent=fmt(meDeben);
   document.getElementById('sum-yo-debo').textContent=fmt(yoDebo);
@@ -188,7 +190,7 @@ function renderSaldosTab(){
 
   // Build person cards
   // Show: recurrent always, eventuales only if balance != 0
-  const visiblePersons=persons.filter(p=>{
+  const visiblePersons=debtPeople().filter(p=>{
     if(p.isRecurrent)return true;
     return personBalance(p.id)!==0;
   });
@@ -216,7 +218,7 @@ function renderSaldosTab(){
           <div class="person-ava">${p.emoji}</div>
           <div class="person-info">
             <div class="person-name">${esc(p.name)}</div>
-            <div class="person-sub">${activeDebts.length} movimiento${activeDebts.length!==1?'s':''} activo${activeDebts.length!==1?'s':''}</div>
+            <div class="person-sub">${activeDebts.length} movimiento${activeDebts.length!==1?'s':''} activo${activeDebts.length!==1?'s':''}${p.orphan?' · ya no está en tus contactos':''}</div>
           </div>
           <div class="person-balance">
             <div class="person-bal-val ${balClass}">${bal===0?'$0':((bal>0?'':'-')+fmt(bal))}</div>
@@ -243,10 +245,12 @@ function renderSaldosTab(){
       }
 
       // Actions
-      html+=`<div class="person-actions">
-        <button class="btn-settle" onclick="openSettleModal('${p.id}')" ${bal===0?'disabled':''}>
-          ${bal>0?ic('download')+' Marcar cobrado':ic('check')+' Marcar pagado'}
+      html+=`<div class="person-actions">`;
+      // Sin deudas activas no hay nada que saldar: el botón no se muestra
+      if(activeDebts.length>0)html+=`<button class="btn-settle" onclick="openSettleModal('${p.id}')">
+          ${bal>0?ic('download')+' Marcar cobrado':bal<0?ic('check')+' Marcar pagado':ic('check')+' Cerrar deudas'}
         </button>`;
+      if(p.orphan)html+=`<button class="btn-hist" onclick="restoreOrphan('${p.id}')">${ic('users')} ${persons.some(x=>x.name.trim().toLowerCase()===p.name.trim().toLowerCase())?'Unir con '+esc(p.name):'Agregar a contactos'}</button>`;
       if(hasHistory){
         html+=`<button class="btn-hist" onclick="toggleHistory('${p.id}')">${ic('clock')} Historial</button>`;
       }
@@ -276,7 +280,7 @@ function renderSaldosTab(){
   }
 
   // Eventuales with zero balance — show "ver historial" section
-  const hiddenPersons=persons.filter(p=>!p.isRecurrent&&personBalance(p.id)===0&&debts.some(d=>d.personId===p.id));
+  const hiddenPersons=debtPeople().filter(p=>!p.isRecurrent&&personBalance(p.id)===0&&debts.some(d=>d.personId===p.id));
   if(hiddenPersons.length>0){
     html+=`<div style="text-align:center;margin-top:8px"><button class="btn-hist" onclick="toggleZeroPersons()" id="btn-zero-toggle">+ ${hiddenPersons.length} persona${hiddenPersons.length>1?'s':''} saldada${hiddenPersons.length>1?'s':''}</button></div>`;
     html+=`<div id="zero-persons" style="display:none;margin-top:8px">`;
@@ -300,11 +304,11 @@ function renderSaldosTab(){
     // Group by person
     const byPerson={};
     old.forEach(d=>{
-      if(!byPerson[d.personId])byPerson[d.personId]={name:d.personName,debts:[]};
+      if(!byPerson[d.personId])byPerson[d.personId]={name:personOf(d.personId).name,debts:[]};
       byPerson[d.personId].debts.push(d);
     });
     const alertHtml=`<div style="background:color-mix(in srgb,var(--warn) 8%,transparent);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);border-radius:14px;padding:13px 15px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px">⏰ Deudas sin saldar hace más de 30 días</div>
+      <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px;display:flex;align-items:center;gap:6px">${ic('clock')} Deudas sin saldar hace más de 30 días</div>
       ${Object.entries(byPerson).map(([pid,{name,debts}])=>{
         const total=debts.reduce((s,d)=>s+d.amount,0);
         return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:6px 8px;background:rgba(0,0,0,.1);border-radius:8px">
@@ -345,7 +349,7 @@ function expHTML(e,actions){
   const acc=e.accountId?accounts?.find(a=>a.id===e.accountId):null;
   const accBadge=acc?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`
     :(accounts?.length?'<span class="badge" style="background:color-mix(in srgb,var(--warn) 8%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">Sin billetera</span>':'');
-  const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">⏳</span>':'';
+  const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">'+ic('clock')+'</span>':'';
   const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ic('note')} ${esc(e.notes)}</div>`:'';
   const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">${ic('edit')}</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">${ic('trash')}</button></div>`:'';
   return`<div class="exp-item swipeable" data-id="${e.id}" onclick="editExp('${e.id}',event)">

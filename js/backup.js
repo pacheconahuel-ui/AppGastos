@@ -132,7 +132,7 @@ function openDeleteConf(){
 async function runDiagnostics(){
   const el=document.getElementById('diag-result');
   if(!el)return;
-  el.innerHTML='<div style="color:var(--txt3);font-size:12px;padding:8px 0">⏳ Consultando Firebase…</div>';
+  el.innerHTML=`<div style="color:var(--txt3);font-size:12px;padding:8px 0">${ic('clock')} Consultando Firebase…</div>`;
   try{
     const uid=firebase.auth().currentUser?.uid||'sin sesión';
     const email=firebase.auth().currentUser?.email||'';

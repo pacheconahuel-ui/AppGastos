@@ -136,7 +136,7 @@ function confirmDeleteContact(personId){
   const hasDebts=debts.some(d=>d.personId===personId&&!d.settled);
   pendingDel={type:'contact',id:personId};
   document.getElementById('conf-txt').textContent=
-    (hasDebts?`"${p.name}" tiene saldos pendientes.\n`:``) +
+    (hasDebts?`"${p.name}" tiene saldos pendientes. Las deudas siguen apareciendo en Saldos.\n`:``) +
     `¿Eliminar el contacto "${p.name}"?\nEsta acción no se puede deshacer.`;
   openDeleteConf();
 }

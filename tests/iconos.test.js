@@ -36,7 +36,7 @@ describe('íconos', () => {
   });
 
   it('no quedan emojis de la interfaz en botones y títulos (solo datos: categorías, contactos, billeteras)', () => {
-    const emoji = /[\u{1F300}-\u{1FAFF}⭐☀-➿]/u;
+    const emoji = /[\u{1F300}-\u{1FAFF}⭐☀-➿\u23E0-\u23FF]/u;
     // líneas que son datos de la persona o mensajes, no botones ni títulos
     const permitido = /toast\(|console\.|^const (ICONS|ING_ICONS|DEF_|ACC_EMOJIS|GOAL|COLORS|CONTACT_EMOJIS)|emoji:|emoji-preview|\|\|'|settle-ava|favicon|setStatus\(|statusEl\.textContent|span\.textContent|<link rel=/;
     const sobran = [];

@@ -132,3 +132,20 @@ describe('escapes', () => {
     expect(JSON.parse(decoded)).toBe("x');alert(1);('");
   });
 });
+
+describe('debtPeople (contactos borrados con deudas)', () => {
+  const deuda = (id, personId, amount, settled = false) => ({ id, personId, personName: 'Vicky', amount, settled, date: '2026-01-01', createdAt: 1 });
+  it('suma los contactos y también a quien ya no está pero dejó deudas', () => {
+    app.set('persons', [{ id: 'a', name: 'Ana', emoji: '👩', isRecurrent: true }]);
+    app.set('debts', [deuda('1', 'a', 100), deuda('2', 'gone', 300), deuda('3', 'gone', 200)]);
+    expect(app.run('debtPeople().map(p=>p.id)')).toEqual(['a', 'gone']);
+    expect(app.run('personOf("gone").name')).toBe('Vicky');
+    expect(app.run('personOf("gone").orphan')).toBe(true);
+    expect(app.run('debtPeople().reduce((s,p)=>s+personBalance(p.id),0)')).toBe(600);
+  });
+  it('un contacto existente no se marca como borrado', () => {
+    app.set('persons', [{ id: 'a', name: 'Ana', emoji: '👩', isRecurrent: true }]);
+    app.set('debts', []);
+    expect(app.run('personOf("a").orphan')).toBeUndefined();
+  });
+});

@@ -105,7 +105,7 @@ function renderCuentasTab(){
       </div>
       <div class="account-bal">
         ${balStr}
-        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin-top:6px;width:26px;height:26px;font-size:11px">${ic('trash')}</button>
+        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin:2px 0 0 auto;width:44px;height:44px;font-size:14px">${ic('trash')}</button>
       </div>
     </div>`;
   };

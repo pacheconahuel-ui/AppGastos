@@ -1,3 +1,5 @@
+  /* Dice que la app soporta los dos temas: así el navegador no la "oscurece" por su cuenta. Los colores los pone la app. */
+  :root { color-scheme:light dark; }
   :root {
     /* Paleta: grises neutros + un solo acento (--acc para textos y bordes,
        --acc-btn para el fondo de botones con texto blanco; ambos ≥ 4,5:1). Verde y rojo solo para plata que
@@ -321,7 +323,7 @@
   .btn-mig.yes{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
   .btn-mig.no{background:transparent;color:var(--txt3);border-color:var(--bdr)}
 
-  .toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);background:var(--modal-bg);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);color:var(--txt);padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:all .28s;white-space:nowrap;pointer-events:none}
+  .toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);background:var(--modal-bg);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);color:var(--txt);padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:all .28s;width:max-content;max-width:calc(100vw - 32px);text-align:center;overflow-wrap:anywhere;pointer-events:none}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .div-lbl{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px;display:flex;align-items:center;gap:10px}
   .div-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
@@ -588,6 +590,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .sum-nav{width:44px;height:44px;border-radius:12px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);font-size:20px;cursor:pointer}
 .sum-month{font-size:16px;font-weight:600}
 .sum-hint{font-size:11px;color:var(--txt3)}
+.sum-go{min-height:44px;padding:0 10px;background:none;border:0;color:var(--teal);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
 .sum-row{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid var(--bdr)}
 .sum-row>div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .sum-lbl{font-size:12px;color:var(--txt3)}

@@ -83,6 +83,20 @@ function confirmDeleteCat(name){
   openDeleteConf();
 }
 function personById(id){return persons.find(p=>p.id===id);}
+// Persona de una deuda: el contacto, o (si lo borraron y las deudas quedaron) una ficha armada con el nombre guardado en la deuda
+function personOf(personId){
+  const p=personById(personId);
+  if(p)return p;
+  const d=debts.find(x=>x.personId===personId);
+  return{id:personId,name:d?.personName||'Sin nombre',emoji:'👤',isRecurrent:false,orphan:true};
+}
+// Contactos más los que se borraron pero siguen con deudas (cuentan igual en los saldos)
+function debtPeople(){
+  const known=new Set(persons.map(p=>p.id));
+  const out=[...persons];
+  debts.forEach(d=>{if(d.personId&&!known.has(d.personId)){known.add(d.personId);out.push(personOf(d.personId));}});
+  return out;
+}
 
 // --- CALC ARS ---
 function calcSummary(mk){
