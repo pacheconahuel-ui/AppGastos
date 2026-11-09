@@ -149,3 +149,45 @@ describe('debtPeople (contactos borrados con deudas)', () => {
     expect(app.run('personOf("a").orphan')).toBeUndefined();
   });
 });
+
+describe('avisos entre personas vinculadas', () => {
+  const av = (o) => ({ id: 'a' + Math.random(), de: 'U1', ref: 'd1', creado: 100, tipo: 'deuda', monto: 15000, ...o });
+  const estado = (a, lista) => { app.set('__a', a); app.set('__l', lista); return app.run('estadoDeuda(__a,__l)'); };
+  it('el código se arma con uid y secreto', () => {
+    expect(app.run('parseCodigo("abcDEF123456.abcdefghijkl1234")')).toEqual({ uid: 'abcDEF123456', secreto: 'abcdefghijkl1234' });
+    for (const mal of ['', 'sin-punto', 'a.b', 'uid12345.MAYUSCULAS1234567', null]) expect(app.run(`parseCodigo(${JSON.stringify(mal)})`)).toBeNull();
+  });
+  it('una deuda pasa de abierta a esperando, saldada o rechazada', () => {
+    const d = av({});
+    expect(estado(d, [d])).toBe('abierta');
+    const pagada = av({ ...d, id: d.id, pagadoEn: 200 });
+    expect(estado(pagada, [pagada])).toBe('esperando');
+    expect(estado(pagada, [pagada, av({ tipo: 'confirmado', creado: 300 })])).toBe('saldada');
+    expect(estado(pagada, [pagada, av({ tipo: 'rechazado', creado: 300 })])).toBe('rechazada');
+    // pagó de nuevo después del rechazo: vuelve a esperar
+    const denuevo = { ...pagada, pagadoEn: 400 };
+    expect(estado(denuevo, [denuevo, av({ tipo: 'rechazado', creado: 300 })])).toBe('esperando');
+  });
+  it('si la borran queda cancelada, y un aviso de otra deuda o de otra persona no cuenta', () => {
+    const d = av({});
+    expect(estado(d, [d, av({ tipo: 'baja', creado: 150 })])).toBe('cancelada');
+    expect(estado(d, [d, av({ tipo: 'baja', creado: 150, ref: 'otra' })])).toBe('abierta');
+    expect(estado(d, [d, av({ tipo: 'baja', creado: 150, de: 'U2' })])).toBe('abierta');
+    expect(estado(d, [d, av({ tipo: 'baja', creado: 50 })])).toBe('abierta'); // anterior a la deuda
+  });
+  it('solo el último aviso de cada deuda ofrece acciones', () => {
+    const v1 = av({ id: 'v1', creado: 100 }), v2 = av({ id: 'v2', tipo: 'cambio', creado: 200 });
+    app.set('__l', [v1, v2]);
+    expect(app.run('avisoVigente(__l[0],__l)')).toBe(false);
+    expect(app.run('avisoVigente(__l[1],__l)')).toBe(true);
+  });
+  it('el texto se lee desde quien recibe', () => {
+    app.set('persons', []);
+    app.set('__a', av({ deNombre: 'Nahuel', desc: 'Cena' }));
+    expect(app.run('avisoTexto(__a)')).toBe('Nahuel registró una deuda tuya: $15.000 · Cena');
+    app.set('__a', av({ deNombre: 'Nahuel', monto: -5000, desc: 'Nafta' }));
+    expect(app.run('avisoTexto(__a)')).toBe('Nahuel registró que te debe $5.000 · Nafta');
+    app.set('persons', [{ id: 'p', name: 'Nahu', linkedUid: 'U1' }]);
+    expect(app.run('avisoTexto(__a)')).toContain('Nahu registró');
+  });
+});

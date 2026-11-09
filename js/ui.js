@@ -27,7 +27,7 @@ window.addEventListener('popstate', e => {
     'cat-overlay','contacts-overlay','add-contact-overlay',
     'gsearch-overlay','qa-overlay','transfer-overlay','account-overlay',
     'goal-overlay','budget-overlay','cc-pay-overlay','profile-overlay',
-    'help-overlay','adjust-overlay','conf-overlay','new-overlay'
+    'help-overlay','adjust-overlay','conf-overlay','new-overlay','lk-overlay'
   ].some(id => document.getElementById(id)?.classList.contains('on'));
 
   if(anyOpen){
@@ -35,7 +35,7 @@ window.addEventListener('popstate', e => {
     closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
     closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
     closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
-    closeHelpModal();closeAdjustModal();closeNewSheet();
+    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();
     history.pushState({modal:true}, '');
     return;
   }
@@ -81,6 +81,12 @@ function openProfilePanel(){
     </button>
     <button class="profile-action-row" onclick="closeProfilePanel();openContactsModal()">
       <span class="par-ico">${ic('users')}</span>Contactos<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();openAvisos()">
+      <span class="par-ico">${ic('bell')}</span>Avisos${lkNoVistos()?` <span class="par-badge">${lkNoVistos()}</span>`:''}<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();openMiCodigo()">
+      <span class="par-ico">${ic('link')}</span>Mi código de contacto<span class="par-chevron">›</span>
     </button>
     <button class="profile-action-row" onclick="closeProfilePanel();switchTab('cuentas')">
       <span class="par-ico">${ic('card')}</span>Cuentas y tarjetas<span class="par-chevron">›</span>

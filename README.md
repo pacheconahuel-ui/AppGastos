@@ -62,6 +62,8 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `periods.js` | gráfico por meses, trimestres o años |
 | `form-chips.js` | categorías y billeteras como botones en el formulario de movimiento |
 | `dolar.js` | cotización del día (dolarapi.com) para gastos en USD y compra/venta |
+| `linked.js` | vínculo con otras personas, avisos de deudas y pagos (lógica y Firebase) |
+| `linked-ui.js` | bandeja de avisos, pagar y confirmar, mi código, vincular un contacto |
 | `init.js` | arranque |
 
 - **Datos:** Firebase Realtime Database, en `usuarios/{uid}/...`. Cada usuario solo lee y escribe lo suyo. También hay una copia local en `localStorage` para abrir rápido y funcionar sin conexión.
@@ -75,6 +77,16 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 ## Si el tema claro se ve oscuro
 
 Chrome y Samsung Internet en Android tienen un «modo oscuro para sitios web» que oscurece páginas claras. La app declara `color-scheme` para que no lo aplique, pero si en tu celular sigue pasando: Chrome → `chrome://flags` → «Auto Dark Mode for Web Contents» → Disabled; o Samsung Internet → Ajustes → Pantalla → Tema oscuro/«Usar modo oscuro en sitios web».
+
+## Vincular con otras personas
+
+Un contacto se puede **vincular** con otra persona que use la app, solo para avisarse deudas y pagos (no se comparten gastos ni saldos):
+
+1. La otra persona abre **Perfil → Mi código de contacto** y te lo manda.
+2. En **Contactos** tocás el ícono de vincular de ese contacto y pegás el código. Ella lo ve en **Perfil → Avisos** y acepta.
+3. Desde ahí, cuando le cargás una deuda (o un gasto compartido) le llega un aviso. Si ella te debe, toca **Ya pagué**: la plata sale de su billetera y a vos te llega un aviso para **confirmar** que la recibiste (entra a tu billetera y la deuda queda saldada) o decir que no la recibiste. Si vos le debés y la saldás desde Saldos, ella confirma de la misma forma.
+
+El código lleva un secreto: sin haberlo recibido nadie puede mandarte avisos. **Cambiar mi código** frena vínculos nuevos; para sacar a alguien ya vinculado, **Desvincular** en el contacto. Las reglas están en `database.rules.json` (`vinculos` y `avisos`): hay que **publicarlas** para que esto ande.
 
 ## Respaldo
 

@@ -30,6 +30,7 @@ function confirmLogout(){
   showConf('logout','¿Cerrar sesión?','Tus datos quedan guardados en tu cuenta. Para volver a entrar vas a necesitar iniciar sesión de nuevo.',()=>{closeProfilePanel();doLogout();},'Cerrar sesión');
 }
 function doLogout(){
+  lkDetach();
   if(arsListener)db?.ref(arsBase()).off('value',arsListener);
   if(usdListener)db?.ref(usdBase()).off('value',usdListener);
   if(debtListener)db?.ref(debtBase()).off('value',debtListener);
@@ -126,6 +127,7 @@ function initFirebase(){
           await flushQueueFor('ars');
           await flushQueueFor('usd');
           await flushQueueFor('debt');
+          flushAvisos();
           // Flush pending settings if any
           if(localStorage.getItem('gp_settings_pending')){
             localStorage.removeItem('gp_settings_pending');
@@ -143,6 +145,7 @@ function initFirebase(){
         loadLocal();
         try{renderAll();}catch(e){console.error('[render] Error on auth load:',e);}
         attachListeners();
+        lkAttach();
         showApp(user);
         // Push a state now that we're inside the app — back button stays here
         history.replaceState({app:true}, '');

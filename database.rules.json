@@ -7,29 +7,126 @@
         "gastos": {
           "$id": {
             ".validate": "newData.hasChildren(['id', 'type', 'amount', 'date']) && newData.child('id').val() === $id",
-            "type": { ".validate": "newData.val() === 'Egreso' || newData.val() === 'Ingreso'" },
-            "amount": { ".validate": "newData.isNumber() && newData.val() >= 0" },
-            "date": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" }
+            "type": {
+              ".validate": "newData.val() === 'Egreso' || newData.val() === 'Ingreso'"
+            },
+            "amount": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "date": {
+              ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+            }
           }
         },
         "usd": {
           "$id": {
             ".validate": "newData.hasChildren(['id', 'type', 'usdAmount']) && newData.child('id').val() === $id",
-            "type": { ".validate": "newData.val() === 'ingreso' || newData.val() === 'compra' || newData.val() === 'venta'" },
-            "usdAmount": { ".validate": "newData.isNumber() && newData.val() >= 0" }
+            "type": {
+              ".validate": "newData.val() === 'ingreso' || newData.val() === 'compra' || newData.val() === 'venta'"
+            },
+            "usdAmount": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            }
           }
         },
         "debts": {
           "$id": {
             ".validate": "newData.hasChildren(['id', 'amount']) && newData.child('id').val() === $id",
-            "amount": { ".validate": "newData.isNumber()" }
+            "amount": {
+              ".validate": "newData.isNumber()"
+            }
           }
         },
         "settings": {
           ".validate": "newData.hasChildren(['updatedAt'])",
-          "updatedAt": { ".validate": "newData.isNumber()" }
+          "updatedAt": {
+            ".validate": "newData.isNumber()"
+          }
         },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "vinculos": {
+      "$owner": {
+        ".read": "auth !== null && auth.uid === $owner",
+        ".write": "auth !== null && auth.uid === $owner",
+        "secreto": {
+          ".validate": "newData.isString() && newData.val().length >= 12 && newData.val().length <= 40"
+        },
+        "aceptados": {
+          "$uid": {
+            ".write": "auth !== null && auth.uid === $uid && newData.exists() && newData.child('secreto').val() === root.child('vinculos/' + $owner + '/secreto').val()",
+            ".validate": "newData.hasChildren(['nombre', 'secreto', 'miCodigo'])",
+            "nombre": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+            },
+            "secreto": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+            },
+            "miCodigo": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
+        },
+        "$otro": {
+          ".validate": false
+        }
+      }
+    },
+    "avisos": {
+      "$to": {
+        ".read": "auth !== null && auth.uid === $to",
+        "$id": {
+          ".write": "auth !== null && (auth.uid === $to || (!data.exists() && newData.child('de').val() === auth.uid && root.child('vinculos/' + $to + '/aceptados/' + auth.uid).exists()))",
+          ".validate": "newData.hasChildren(['tipo', 'de', 'ref', 'creado'])",
+          "tipo": {
+            ".validate": "newData.val() === 'deuda' || newData.val() === 'cambio' || newData.val() === 'baja' || newData.val() === 'pago' || newData.val() === 'confirmado' || newData.val() === 'rechazado'"
+          },
+          "de": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "deNombre": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "ref": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80"
+          },
+          "dueno": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "monto": {
+            ".validate": "newData.isNumber()"
+          },
+          "desc": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "fecha": {
+            ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)"
+          },
+          "creado": {
+            ".validate": "newData.isNumber()"
+          },
+          "visto": {
+            ".validate": "newData.isBoolean()"
+          },
+          "estado": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20"
+          },
+          "$o": {
+            ".validate": false
+          },
+          "pagadoEn": {
+            ".validate": "newData.isNumber()"
+          },
+          "id": {
+            ".validate": "newData.isString() && newData.val() === $id"
+          }
+        }
       }
     }
   }

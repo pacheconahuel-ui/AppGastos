@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const JS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../js');
-const FILES = ['config', 'icons', 'storage', 'settings', 'calc', 'accounts', 'budgets', 'cards', 'periods'];
+const FILES = ['config', 'icons', 'storage', 'settings', 'calc', 'accounts', 'budgets', 'cards', 'periods', 'linked'];
 
 export function loadApp() {
   const store = new Map();

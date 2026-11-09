@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.8**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.9**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -61,9 +61,16 @@ Estado a **noviembre 2026**: versión **3.8**. El código está en `index.html`,
 - [x] Sin billetera: asignar con un toque y volver a la lista al editar.
 - [x] Auditoría con datos de prueba: todos los controles a 44 px.
 
+## 3.9 — vincular contactos ✅
+
+- [x] Código de contacto, vincular y aceptar.
+- [x] Avisos de deudas y bandeja.
+- [x] Pagar (egreso en negativo) y confirmar el cobro.
+- [ ] Publicar las reglas nuevas en Firebase (sin eso el vínculo no anda).
+
 ## Ideas para después
 
-- [ ] Notificaciones del celular para los vencimientos (hoy el aviso se ve al abrir la app). Necesita un servidor que las mande a una hora (Firebase Cloud Messaging más una función programada) y permiso del celular: hoy la app es solo archivos en GitHub Pages, así que implica sumar un backend. No se hace salvo que lo pidas.
+- [ ] Avisos al celular con la app cerrada (vencimientos y avisos de deudas) (hoy el aviso se ve al abrir la app). Necesita un servidor que las mande a una hora (Firebase Cloud Messaging más una función programada) y permiso del celular: hoy la app es solo archivos en GitHub Pages, así que implica sumar un backend. No se hace salvo que lo pidas.
 
 ## Pasos manuales (no los hace el código)
 
