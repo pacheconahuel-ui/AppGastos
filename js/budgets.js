@@ -157,12 +157,12 @@ function renderPatrimonioCard(){
   const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
   const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');
   const unassigned=expenses.filter(e=>!e.accountId&&e.type==='Egreso').length+expenses.filter(e=>!e.accountId&&e.type==='Ingreso').length;
-  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:32px;display:flex;align-items:center;cursor:pointer;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · no cuentan en los saldos · tocá para asignar ›</div>`:'';
+  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:32px;display:flex;align-items:center;cursor:pointer;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:8px;border:1px solid color-mix(in srgb,var(--warn) 20%,transparent)">⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · no cuentan en los saldos · tocá para asignar ›</div>`:'';
   el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
     <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">▾</span></div>
     <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px">
       <div class="pat-total">${fmt(totalARS)}</div>
-      ${totalUSD>0?`<div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--gold)">${fmtU(totalUSD)}</div>`:''}
+      ${totalUSD>0?`<div style="font-family:var(--num);font-size:22px;font-weight:700;color:var(--gold)">${fmtU(totalUSD)}</div>`:''}
     </div>
     <div class="pat-hint">${arsAccs.length+usdAccs.length} billetera${arsAccs.length+usdAccs.length!==1?'s':''} · tocá para ver detalle</div>
     ${warn}

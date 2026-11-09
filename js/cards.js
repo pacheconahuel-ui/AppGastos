@@ -83,8 +83,8 @@ function renderCardReminders(){
       :`venció hace ${-r.daysLeft} día${r.daysLeft===-1?'':'s'} (${fmtDate(r.due)})`;
     const urgent=r.daysLeft<=2;
     const col=urgent?'var(--red)':'var(--yellow)';
-    const bg=urgent?'rgba(248,113,113,.08)':'rgba(251,191,36,.08)';
-    const bd=urgent?'rgba(248,113,113,.25)':'rgba(251,191,36,.25)';
+    const bg=urgent?'color-mix(in srgb,var(--neg) 8%,transparent)':'color-mix(in srgb,var(--warn) 8%,transparent)';
+    const bd=urgent?'color-mix(in srgb,var(--neg) 25%,transparent)':'color-mix(in srgb,var(--warn) 25%,transparent)';
     const amt=fmt(r.totalARS)+(r.totalUSD?` + ${fmtU(r.totalUSD)}`:'');
     return`<div class="card-reminder" style="background:${bg};border-color:${bd}">
       <div style="flex:1;min-width:0">

@@ -1,6 +1,6 @@
 // Versión, configuración de Firebase, constantes y estado global
 // --- VERSION (única fuente: la usan el encabezado y el service worker) ---
-const APP_VERSION='3.1';
+const APP_VERSION='3.2';
 
 // --- FIREBASE CONFIG ---
 const FB_CONFIG={apiKey:"AIzaSyAMUb7e_ngGiTc9lRTazNf290bKKRGvZN0",authDomain:"gastos-pache.firebaseapp.com",databaseURL:"https://gastos-pache-default-rtdb.firebaseio.com",projectId:"gastos-pache",storageBucket:"gastos-pache.firebasestorage.app",messagingSenderId:"151998147367",appId:"1:151998147367:web:6918969bcadef03048d702"};
@@ -19,7 +19,8 @@ const ICONS={'Supermercado':'🛒','Restaurante':'🍽️','Padel':'🎾','Masco
 const DEF_ING_CATS=['Sueldo','SAC','Transferencia','Regalo','Sueldo 2','Freelance / Honorarios','Comisión','Aguinaldo / Bono','Alquiler cobrado','Otros ingresos'];
 const ING_ICONS={'Sueldo':'💼','SAC':'🎁','Transferencia':'↘️','Regalo':'🎀','Sueldo 2':'💼','Freelance / Honorarios':'💻','Comisión':'🤝','Aguinaldo / Bono':'🎁','Alquiler cobrado':'🏠','Otros ingresos':'💚'};
 Object.assign(ICONS,ING_ICONS);
-const COLORS=['#667eea','#a78bfa','#f093fb','#f87171','#4ade80','#fbbf24','#60a5fa','#34d399','#fb923c','#e879f9','#22d3ee','#a3e635','#f472b6','#818cf8','#2dd4bf','#facc15','#94a3b8','#c084fc','#f97316','#38bdf8'];
+// Torta por categoría: tonos apagados que se distinguen entre sí en los dos temas
+const COLORS=['#7c86f0','#5fa8a0','#c9a25a','#c07a8f','#6f9fd8','#8fb07a','#a98bc9','#cf8a6c','#7d8a99','#a8a06a','#5c7fb8','#b5838d','#6aa38a','#b39a7a','#8c8fb8','#9aa5b1'];
 
 // No default persons — each user creates their own contacts
 const DEF_PERSONS=[];

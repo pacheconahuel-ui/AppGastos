@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Gastos</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#667eea" id="theme-color-meta">
+  <meta name="theme-color" content="#111214" id="theme-color-meta">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mis Gastos">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='12'>💸</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text y='.9em' font-size='72' x='12'>💸</text></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
@@ -102,16 +102,16 @@
       <button onclick="dashNavMonth(1)" id="dash-next-btn" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .18s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='transparent'">›</button>
     </div>
     <div class="cards">
-      <div class="card"><div class="card-lbl">Ingresos</div><div class="card-val g" id="c-ing">$0</div></div>
-      <div class="card"><div class="card-lbl">Pagaste</div><div class="card-val r" id="c-pag">$0</div><div class="card-hint">total abonado</div></div>
-      <div class="card"><div class="card-lbl">Gastaste Real</div><div class="card-val y" id="c-real">$0</div><div class="card-hint">tu porción</div></div>
+      <div class="card"><div class="card-lbl">Ingresos</div><div class="card-val p" id="c-ing">$0</div></div>
+      <div class="card"><div class="card-lbl">Pagaste</div><div class="card-val p" id="c-pag">$0</div><div class="card-hint">total abonado</div></div>
+      <div class="card"><div class="card-lbl">Gastaste Real</div><div class="card-val p" id="c-real">$0</div><div class="card-hint">tu porción</div></div>
       <div class="card"><div class="card-lbl">Balance</div><div class="card-val p" id="c-bal">$0</div></div>
       <div class="card" id="proj-card" style="display:none"><div class="card-lbl">Proyección fin de mes</div><div class="card-val" id="c-proj">$0</div><div class="card-hint" id="c-proj-hint">—</div></div>
     </div>
     <!-- Quick action row -->
     <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button onclick="openBudgetModal()" style="flex:1;padding:10px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:11px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">🎯 ＋ Presupuesto</button>
-      <button onclick="openGoalModal()" style="flex:1;padding:10px;background:rgba(102,126,234,.08);border:1px solid rgba(102,126,234,.2);border-radius:11px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">⭐ ＋ Meta</button>
+      <button onclick="openBudgetModal()" style="flex:1;padding:10px;background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);border-radius:11px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">🎯 ＋ Presupuesto</button>
+      <button onclick="openGoalModal()" style="flex:1;padding:10px;background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);border-radius:11px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">⭐ ＋ Meta</button>
     </div>
     <!-- Stats row -->
     <div class="stats-grid" id="stats-grid" style="display:none">
@@ -151,7 +151,7 @@
     <div class="list-filters">
       <div class="list-filters-row1">
         <select class="f-ctrl" id="fil-month" onchange="renderListSec()" style="flex:1"></select>
-        <button onclick="exportCSV()" style="padding:10px 14px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:11px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0">📥 CSV</button>
+        <button onclick="exportCSV()" style="padding:10px 14px;background:color-mix(in srgb,var(--pos) 10%,transparent);border:1px solid color-mix(in srgb,var(--pos) 25%,transparent);border-radius:11px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0">📥 CSV</button>
         <span class="list-count" id="list-count"></span>
       </div>
       <div class="list-filters-row2">
@@ -201,7 +201,7 @@
   <div class="sec" id="tab-saldos">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:14px;font-weight:700;color:var(--txt2)">Saldos</div>
-      <button onclick="openContactsModal()" style="padding:7px 14px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.25);border-radius:10px;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s" onmouseover="this.style.background='rgba(45,212,191,.2)'" onmouseout="this.style.background='rgba(45,212,191,.1)'">👥 Contactos</button>
+      <button onclick="openContactsModal()" style="padding:7px 14px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);border-radius:10px;color:var(--teal);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s" onmouseover="this.style.background='color-mix(in srgb,var(--acc) 20%,transparent)'" onmouseout="this.style.background='color-mix(in srgb,var(--acc) 10%,transparent)'">👥 Contactos</button>
     </div>
     <div class="saldos-summary" id="saldos-summary">
       <div class="saldos-sum-item">
@@ -226,10 +226,10 @@
   <div class="sec" id="tab-cuentas">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:14px;font-weight:700;color:var(--txt2)">Mis billeteras</div>
-      <button onclick="openAccountModal()" style="padding:7px 14px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);border-radius:10px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">＋ Nueva</button>
+      <button onclick="openAccountModal()" style="padding:7px 14px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);border-radius:10px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">＋ Nueva</button>
     </div>
     <div class="cuentas-total">
-      <div><div class="cuentas-total-lbl">Total ARS</div><div class="cuentas-total-val" id="cuentas-total-ars" style="color:var(--p1)">$0</div></div>
+      <div><div class="cuentas-total-lbl">Total ARS</div><div class="cuentas-total-val" id="cuentas-total-ars">$0</div></div>
       <div style="text-align:right"><div class="cuentas-total-lbl">Transferencias este mes</div><div style="font-size:13px;color:var(--txt3)" id="cuentas-transfers-count">0</div></div>
     </div>
     <div id="cuentas-list"></div>
@@ -242,10 +242,10 @@
 <!-- FABs -->
 <div class="fabs">
   <button class="fab" id="fab-ars" onclick="openModal()">＋ Agregar</button>
-  <button class="fab" id="fab-quick" onclick="openQuickAdd()" style="background:linear-gradient(135deg,#a78bfa,#667eea);box-shadow:0 8px 32px rgba(167,139,250,.35);padding:15px 18px">⚡</button>
+  <button class="fab" id="fab-quick" onclick="openQuickAdd()" style="background:var(--acc-btn);box-shadow:0 6px 20px rgba(0,0,0,.25);padding:15px 18px">⚡</button>
   <button class="fab gold-fab hidden" id="fab-usd" onclick="openUsdModal()">＋ USD</button>
   <button class="fab teal-fab hidden" id="fab-debt" onclick="openDebtModal()">＋ Deuda</button>
-  <button class="fab hidden" id="fab-account" onclick="openTransferModal()" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 8px 32px rgba(96,165,250,.35)">⇄ Transferir</button>
+  <button class="fab hidden" id="fab-account" onclick="openTransferModal()" style="background:var(--acc-btn);box-shadow:0 6px 20px rgba(0,0,0,.25)">⇄ Transferir</button>
 </div>
 
 <!-- MODAL GASTOS ARS -->
@@ -313,7 +313,7 @@
         </div>
         <div class="f-grp" style="margin-bottom:0">
           <label class="f-lbl">Equivalente ARS</label>
-          <input type="number" class="f-ctrl" id="f-ars-equiv" placeholder="calculado" inputmode="decimal" step="any" min="0" oninput="onEquivChange()" style="background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2)">
+          <input type="number" class="f-ctrl" id="f-ars-equiv" placeholder="calculado" inputmode="decimal" step="any" min="0" oninput="onEquivChange()" style="background:color-mix(in srgb,var(--tint) 5%,transparent);border-color:color-mix(in srgb,var(--tint) 20%,transparent)">
         </div>
       </div>
       <div id="f-tc-preview" style="font-size:11px;color:var(--txt3);margin-bottom:8px;text-align:right"></div>
@@ -466,7 +466,7 @@
       <label class="f-lbl">Persona</label>
       <div style="display:flex;gap:8px">
         <select class="f-ctrl teal-focus" id="df-person" style="flex:1" onchange="debtPersonChange()"></select>
-        <button class="btn-plus" onclick="addDebtPersonPrompt()" style="border-color:rgba(45,212,191,.3);color:var(--teal)">＋</button>
+        <button class="btn-plus" onclick="addDebtPersonPrompt()" style="border-color:color-mix(in srgb,var(--acc) 30%,transparent);color:var(--teal)">＋</button>
       </div>
     </div>
     <div class="f-grp">
@@ -695,11 +695,11 @@
       <div style="border-top:1px solid var(--bdr);margin-top:10px;padding-top:10px">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <span style="font-size:12px;color:var(--txt3)">Subtotal ARS</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-weight:600" id="ccp-subtotal-ars">$0</span>
+          <span style="font-family:var(--num);font-weight:600" id="ccp-subtotal-ars">$0</span>
         </div>
         <div style="display:flex;justify-content:space-between" id="ccp-usd-subtotal-row">
           <span style="font-size:12px;color:var(--txt3)">Subtotal USD</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--gold)" id="ccp-subtotal-usd">U$S 0</span>
+          <span style="font-family:var(--num);font-weight:600;color:var(--gold)" id="ccp-subtotal-usd">U$S 0</span>
         </div>
       </div>
     </div>

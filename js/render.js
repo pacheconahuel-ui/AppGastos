@@ -82,7 +82,7 @@ function renderPieChart(mk){
   box.classList.remove('hidden');
   const ctx=document.getElementById('pie').getContext('2d');
   if(chart){chart.destroy();chart=null;}
-  chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:COLORS.slice(0,labels.length),borderWidth:2,borderColor:chartBorderSep()}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),padding:12,font:{family:'Outfit',size:11,weight:'600'},boxWidth:11,boxHeight:11}},tooltip:{callbacks:{label:c=>`  ${fmt(c.raw)}`},bodyFont:{family:'JetBrains Mono',size:13},backgroundColor:chartBgColor(),borderColor:'rgba(102,126,234,.35)',borderWidth:1,padding:10,cornerRadius:10}}}});
+  chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:COLORS.slice(0,labels.length),borderWidth:2,borderColor:chartBorderSep()}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),padding:12,font:{family:'Outfit',size:11,weight:'600'},boxWidth:11,boxHeight:11}},tooltip:{callbacks:{label:c=>`  ${fmt(c.raw)}`},bodyFont:{family:'Outfit',size:13},backgroundColor:chartBgColor(),borderColor:tok('bdr2'),borderWidth:1,padding:10,cornerRadius:10}}}});
 }
 
 function renderListSec(){
@@ -168,7 +168,7 @@ function renderTcChart(){
   document.getElementById('usd-chart-sub').textContent=`promedio: ${fmtTC(avg)}/U$S`;
   const ctx=document.getElementById('tc-chart').getContext('2d');
   if(tcChart){tcChart.destroy();tcChart=null;}
-  tcChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'TC',data:tcs,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',borderWidth:2.5,pointBackgroundColor:'#f59e0b',pointRadius:5,pointHoverRadius:7,fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmtTC(c.raw)}/U$S`,afterLabel:c=>{const v=ventas[c.dataIndex];return`  ${fmtU(v.usdAmount)} → ${fmt(v.arsAmount)}`;}},bodyFont:{family:'JetBrains Mono',size:12},backgroundColor:chartBgColor(),borderColor:'rgba(245,158,11,.4)',borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'JetBrains Mono',size:11},callback:v=>'$'+Math.round(v/1000)+'k'}}}}});
+  tcChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'TC',data:tcs,borderColor:tok('acc'),backgroundColor:tokA('acc',.1),borderWidth:2.5,pointBackgroundColor:tok('acc'),pointRadius:5,pointHoverRadius:7,fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmtTC(c.raw)}/U$S`,afterLabel:c=>{const v=ventas[c.dataIndex];return`  ${fmtU(v.usdAmount)} → ${fmt(v.arsAmount)}`;}},bodyFont:{family:'Outfit',size:12},backgroundColor:chartBgColor(),borderColor:tok('bdr2'),borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11}}},y:{grid:{color:chartGridColor()},ticks:{color:chartTextColor(),font:{family:'Outfit',size:11},callback:v=>'$'+Math.round(v/1000)+'k'}}}}});
 }
 
 // --- RENDER SALDOS TAB ---
@@ -194,7 +194,7 @@ function renderSaldosTab(){
   const dups=duplicateSplitDebts();
   if(dups.length){
     const total=dups.reduce((s,d)=>s+d.amount,0);
-    html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:rgba(251,191,36,.08);border-radius:12px;border:1px solid rgba(251,191,36,.25)">⚠️ ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
+    html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:12px;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">⚠️ ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
   }
   if(visiblePersons.length===0){
     html+='<div class="empty"><div class="empty-ico">🤝</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
@@ -300,7 +300,7 @@ function renderSaldosTab(){
       if(!byPerson[d.personId])byPerson[d.personId]={name:d.personName,debts:[]};
       byPerson[d.personId].debts.push(d);
     });
-    const alertHtml=`<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:14px;padding:13px 15px;margin-bottom:12px">
+    const alertHtml=`<div style="background:color-mix(in srgb,var(--warn) 8%,transparent);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);border-radius:14px;padding:13px 15px;margin-bottom:12px">
       <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px">⏰ Deudas sin saldar hace más de 30 días</div>
       ${Object.entries(byPerson).map(([pid,{name,debts}])=>{
         const total=debts.reduce((s,d)=>s+d.amount,0);
@@ -309,7 +309,7 @@ function renderSaldosTab(){
             <div style="font-size:13px;font-weight:600;color:var(--txt)">${esc(name)}</div>
             <div style="font-size:11px;color:var(--txt3)">${debts.length} deuda${debts.length!==1?'s':''} · ${total>0?'te deben':'le debés'} ${fmt(Math.abs(total))}</div>
           </div>
-          <button onclick="openSettleModal('${pid}')" style="padding:6px 12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:8px;color:var(--yellow);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
+          <button onclick="openSettleModal('${pid}')" style="padding:6px 12px;background:color-mix(in srgb,var(--warn) 15%,transparent);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:8px;color:var(--yellow);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
             ${total>0?'💸 Cobrar':'✅ Pagar'}
           </button>
         </div>`;
@@ -335,13 +335,13 @@ function expHTML(e,actions){
   const hasSplit=e.splits&&e.splits.length>0;
   const splitBadge=hasSplit?`<span class="badge sh">🤝 ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
-  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?'💳 Pago de tarjeta':'💱 Cambio de moneda'} · no suma al mes</span>`:'';
-  const recurBadge=e.recurring?'<span class="badge" style="background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.25)">🔁</span>':'';
-  const usdBadge=e.currency==='USD'?`<span class="badge" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.25)">U$S ${e.amount}</span>`:'';
-  const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:rgba(251,191,36,.1);color:var(--yellow);border-color:rgba(251,191,36,.25)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
+  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?'💳 Pago de tarjeta':'💱 Cambio de moneda'} · no suma al mes</span>`:'';
+  const recurBadge=e.recurring?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">🔁</span>':'';
+  const usdBadge=e.currency==='USD'?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 10%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--tint) 25%,transparent)">U$S ${e.amount}</span>`:'';
+  const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
   const acc=e.accountId?accounts?.find(a=>a.id===e.accountId):null;
-  const accBadge=acc?`<span class="badge" style="background:rgba(255,255,255,.05);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`
-    :(accounts?.length?'<span class="badge" style="background:rgba(251,191,36,.08);color:var(--yellow);border-color:rgba(251,191,36,.25)">Sin billetera</span>':'');
+  const accBadge=acc?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`
+    :(accounts?.length?'<span class="badge" style="background:color-mix(in srgb,var(--warn) 8%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">Sin billetera</span>':'');
   const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">⏳</span>':'';
   const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${esc(e.notes)}</div>`:'';
   const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">✏️</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">🗑️</button></div>`:'';
@@ -361,7 +361,7 @@ function usdTxHTML(t){
   const isBuy=t.type==='compra';
   const isSell=t.type==='venta';
   const badge=isIn?'<span class="badge usd-in">📥 Ingreso</span>':
-               isBuy?'<span class="badge" style="background:rgba(96,165,250,.12);color:var(--blue);border-color:rgba(96,165,250,.3)">🏦 Compra</span>':
+               isBuy?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 30%,transparent)">🏦 Compra</span>':
                '<span class="badge usd-sell">💸 Venta</span>';
   const tc=(isSell||isBuy)&&t.arsAmount&&t.usdAmount?`<span>TC: ${fmtTC(t.arsAmount/t.usdAmount)}</span>`:'';
   const arsLine=isSell&&t.arsAmount?`<div class="exp-amt-sub">→ ${fmt(t.arsAmount)} ARS</div>`:

@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.1**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.2**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -40,6 +40,14 @@ Estado a **noviembre 2026**: versión **3.1**. El código está en `index.html`,
 - [x] Cotización del dólar del día (dolarapi.com) en gastos en USD y compra/venta.
 - [x] Cuotas y fijos de tarjeta proyectados a los próximos 6 resúmenes.
 - [x] Aviso de vencimiento del resumen de la tarjeta.
+
+## Rediseño visual
+
+- [x] Paleta y tipografía (3.2).
+- [ ] Navegación abajo con un único botón + (reemplaza pestañas de arriba y botones flotantes).
+- [ ] Resumen reordenado: avisos arriba, una tarjeta con Disponible e Ingresos · Gastos · Balance.
+- [ ] Formulario de gasto nuevo: monto primero, categorías y billeteras como botones.
+- [ ] Íconos de línea en vez de emojis en botones y títulos (los de categoría quedan).
 
 ## Ideas para después
 
