@@ -12,7 +12,7 @@ function renderBudgetsSection(){
   budgetCats.forEach(cat=>{
     const limit=budgets[cat],spent=catData[cat]||0,pct=Math.min(100,Math.round((spent/limit)*100));
     const cls=pct>=100?'over':pct>=80?'warn':'ok';
-    html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget(${jsArg(cat)})" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">✕</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' ⚠️ Excedido':pct>=80?' ⚡ Cerca del límite':''}</div></div>`;
+    html+=`<div class="budget-item"><div class="budget-header"><div class="budget-name">${icon(cat)} ${esc(cat)}</div><div class="budget-amounts">${fmt(spent)} / ${fmt(limit)} <button onclick="deleteBudget(${jsArg(cat)})" style="font-size:10px;background:none;border:none;cursor:pointer;color:var(--txt3)">${ic('x')}</button></div></div><div class="budget-bar"><div class="budget-fill ${cls}" style="width:${pct}%"></div></div><div class="budget-pct ${cls}">${pct}%${pct>=100?' · Excedido':pct>=80?' · Cerca del límite':''}</div></div>`;
   });
   el.innerHTML=html;
 }
@@ -43,7 +43,7 @@ function renderGoalsSection(){
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="div-lbl" style="margin:0;flex:1">Metas de ahorro</div><button onclick="openGoalModal()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt3);cursor:pointer;font-family:'Outfit',sans-serif;margin-left:10px">＋ Nueva</button></div>`;
   goals.forEach(g=>{
     const pct=Math.min(100,Math.round((g.current/g.target)*100)),done=pct>=100,remaining=Math.max(0,g.target-g.current);
-    html+=`<div class="goal-card"><div class="goal-header"><div class="goal-ava">${g.emoji}</div><div><div class="goal-name">${esc(g.name)} ${done?'✅':''}</div><div class="goal-target">Meta: ${fmt(g.target)}</div></div><div style="margin-left:auto;display:flex;gap:5px"><button class="btn-ico edit" onclick="openGoalModal('${g.id}')">✏️</button><button class="btn-ico del" onclick="deleteGoal('${g.id}')">🗑️</button></div></div><div class="goal-progress"><div class="goal-bar"><div class="goal-fill ${done?'done':''}" style="width:${pct}%"></div></div><div class="goal-stats"><span>Acumulado: ${fmt(g.current)}</span><span>${done?'🎉 ¡Completado!':'Faltan '+fmt(remaining)}</span><span>${pct}%</span></div></div><div class="goal-actions"><button class="btn-goal-add" onclick="addToGoal('${g.id}')">＋ Agregar ahorro</button></div></div>`;
+    html+=`<div class="goal-card"><div class="goal-header"><div class="goal-ava">${g.emoji}</div><div><div class="goal-name">${esc(g.name)} ${done?ic('check'):''}</div><div class="goal-target">Meta: ${fmt(g.target)}</div></div><div style="margin-left:auto;display:flex;gap:5px"><button class="btn-ico edit" onclick="openGoalModal('${g.id}')">${ic('edit')}</button><button class="btn-ico del" onclick="deleteGoal('${g.id}')">${ic('trash')}</button></div></div><div class="goal-progress"><div class="goal-bar"><div class="goal-fill ${done?'done':''}" style="width:${pct}%"></div></div><div class="goal-stats"><span>Acumulado: ${fmt(g.current)}</span><span>${done?'¡Completado!':'Faltan '+fmt(remaining)}</span><span>${pct}%</span></div></div><div class="goal-actions"><button class="btn-goal-add" onclick="addToGoal('${g.id}')">＋ Agregar ahorro</button></div></div>`;
   });
   el.innerHTML=html;
 }
@@ -137,7 +137,7 @@ function renderPatrimonioCard(){
   const usdAccs=usdWallets();
   if(!arsAccs.length&&!usdAccs.length){
     el.innerHTML=`<div class="pat-card" onclick="switchTab('cuentas')">
-      <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span></div>
+      <div class="pat-header"><span class="pat-label">${ic('wallet')} Disponible ahora</span></div>
       <div class="pat-setup">No tenés billeteras creadas.<br><b style="color:var(--p1)">Tocá para agregar tus cuentas →</b></div>
     </div>`;
     return;
@@ -152,16 +152,16 @@ function renderPatrimonioCard(){
       <div class="pat-acc-left"><span class="pat-acc-ico">${a.emoji}</span><span class="pat-acc-name">${esc(a.name)}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         ${balStr}
-        <button onclick="openAdjustModal('${a.id}',event)" title="Ajustar" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">⚙</button>
+        <button onclick="openAdjustModal('${a.id}',event)" title="Ajustar" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">${ic('sliders')}</button>
       </div>
     </div>`;
   };
   const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
   const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');
   const unassigned=expenses.filter(e=>!e.accountId&&e.type==='Egreso').length+expenses.filter(e=>!e.accountId&&e.type==='Ingreso').length;
-  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:32px;display:flex;align-items:center;cursor:pointer;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:8px;border:1px solid color-mix(in srgb,var(--warn) 20%,transparent)">⚠️ ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · no cuentan en los saldos · tocá para asignar ›</div>`:'';
+  const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:32px;display:flex;align-items:center;cursor:pointer;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:8px;border:1px solid color-mix(in srgb,var(--warn) 20%,transparent)">${ic('warn')} ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · no cuentan en los saldos · tocá para asignar ›</div>`:'';
   el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
-    <div class="pat-header"><span class="pat-label">💰 Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">▾</span></div>
+    <div class="pat-header"><span class="pat-label">${ic('wallet')} Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">▾</span></div>
     <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px">
       <div class="pat-total">${fmt(totalARS)}</div>
       ${totalUSD>0?`<div style="font-family:var(--num);font-size:22px;font-weight:700;color:var(--gold)">${fmtU(totalUSD)}</div>`:''}
@@ -173,8 +173,8 @@ function renderPatrimonioCard(){
       ${arsRows?`<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Pesos ARS</div>${arsRows}`:''}
       ${usdRows?`<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px">Dolares USD</div>${usdRows}`:''}
       <div class="pat-actions">
-        <button class="pat-btn primary" onclick="switchTab('cuentas');event.stopPropagation()">💼 Gestionar</button>
-        <button class="pat-btn secondary" onclick="openAdjustModal(null,event)">⚖️ Ajustar saldo</button>
+        <button class="pat-btn primary" onclick="switchTab('cuentas');event.stopPropagation()">${ic('wallet')} Gestionar</button>
+        <button class="pat-btn secondary" onclick="openAdjustModal(null,event)">${ic('scale')} Ajustar saldo</button>
       </div>
     </div>
   </div>`;
@@ -213,7 +213,7 @@ function updateAdjHint(){
   if(!hint || !accId || isNaN(realVal)) { if(hint) hint.textContent = ''; return; }
   const appBal = accountBalance(accId);
   const diff = realVal - appBal;
-  if(diff === 0){ hint.textContent = '✅ El saldo ya coincide'; hint.style.color = 'var(--green)'; return; }
+  if(diff === 0){ hint.innerHTML = ic('check')+' El saldo ya coincide'; hint.style.color = 'var(--green)'; return; }
   const acc = accounts.find(a => a.id === accId);
   hint.style.color = 'var(--yellow)';
   hint.textContent = diff > 0

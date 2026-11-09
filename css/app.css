@@ -289,7 +289,7 @@
   .pct-inp{width:58px;background:color-mix(in srgb,var(--tint) 5%,transparent);border:1px solid var(--bdr2);border-radius:9px;padding:7px 8px;font-size:14px;color:var(--txt);font-family:var(--num);outline:none;text-align:center}
   .btn-save{width:100%;padding:16px;background:var(--acc-btn);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:6px}
   .btn-save:hover{opacity:.9;transform:translateY(-1px)}
-  .btn-save.gold-btn{background:var(--txt);color:#000}
+  .btn-save.gold-btn{background:var(--acc-btn)}
   .btn-save.teal-btn{background:var(--acc-btn)}
   .btn-cancel{width:100%;padding:14px;background:transparent;color:var(--txt2);border:1px solid var(--bdr);border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;transition:all .18s}
   .btn-cancel:hover{background:var(--surf);color:var(--txt)}
@@ -623,3 +623,14 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .more-opts[open] summary::after{content:'▴'}
 .more-opts summary span{font-weight:400;font-size:12px;color:var(--txt3)}
 .more-opts[open]{padding-bottom:12px}
+
+/* Íconos de línea (js/icons.js): escalan con la letra y toman su color */
+.ico{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex-shrink:0}
+.tab-ico .ico{width:1.2em;height:1.2em;vertical-align:middle}
+.login-logo{color:var(--acc)}
+.empty-ico .ico{width:1em;height:1em;opacity:.45;stroke-width:1.5;vertical-align:baseline}
+.usd-banner-icon,.mig-ico{color:var(--txt2)}
+.help-section-hdr .ico{color:var(--acc)}
+.par-ico .ico{width:1.2em;height:1.2em}
+.exp-ico .ico{width:1.2em;height:1.2em}
+.btn-theme .ico,.search-ico .ico{width:1.1em;height:1.1em;vertical-align:middle}

@@ -58,7 +58,7 @@ document.addEventListener('keydown',e=>{
 // --- THEME TOGGLE ---
 function toggleTheme(){
   const light=document.body.classList.toggle('light');
-  document.getElementById('btn-theme').textContent=light?'☀️':'🌙';
+  document.getElementById('btn-theme').innerHTML=ic(light?'sun':'moon');
   localStorage.setItem('gp_theme',light?'light':'dark');
   syncThemeColor();
   // los gráficos toman los colores del tema al dibujarse
@@ -66,7 +66,7 @@ function toggleTheme(){
 }
 function loadTheme(){
   const t=localStorage.getItem('gp_theme');
-  if(t==='light'){document.body.classList.add('light');document.getElementById('btn-theme').textContent='☀️';}
+  if(t==='light'){document.body.classList.add('light');document.getElementById('btn-theme').innerHTML=ic('sun');}
   syncThemeColor();
 }
 // Barra del sistema del color del fondo
@@ -165,7 +165,7 @@ function renderRecurringReminders(){
   // --- Wallet recurring ---
   if(walletMissing.length){
     html+=`<div style="background:color-mix(in srgb,var(--acc) 8%,transparent);border:1px solid color-mix(in srgb,var(--acc) 20%,transparent);border-radius:14px;padding:14px 16px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">🔁 Movimientos recurrentes pendientes</div>
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">${ic('repeat')} Movimientos recurrentes pendientes</div>
       ${walletMissing.map(e=>recurringItemHTML(e)).join('')}
     </div>`;
   }
@@ -181,7 +181,7 @@ function renderRecurringReminders(){
       byCard[cardId].push(e);
     });
     html+=`<div style="background:color-mix(in srgb,var(--tint) 8%,transparent);border:1px solid color-mix(in srgb,var(--tint) 20%,transparent);border-radius:14px;padding:14px 16px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">💳 Fijos de tarjeta pendientes de agregar</div>`;
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">${ic('card')} Fijos de tarjeta pendientes de agregar</div>`;
     Object.entries(byCard).forEach(([cardId,items])=>{
       const card=accounts.find(a=>a.id===cardId);
       if(card)html+=`<div style="font-size:11px;color:var(--txt3);margin-bottom:6px">${card.emoji} ${esc(card.name)}</div>`;
@@ -204,11 +204,11 @@ function recurringItemHTML(e){
     <div style="display:flex;gap:5px;flex-shrink:0">
       <button onclick="confirmRecurring('${e.id}')"
         style="padding:6px 12px;background:color-mix(in srgb,var(--pos) 15%,transparent);border:1px solid color-mix(in srgb,var(--pos) 30%,transparent);border-radius:8px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
-        ✅ Confirmar
+        ${ic('check')} Confirmar
       </button>
       <button onclick="editRecurringAmt('${e.id}')"
         style="padding:6px 10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);border-radius:8px;color:var(--p1);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
-        ✏️
+        ${ic('edit')}
       </button>
       <button onclick="skipRecurring('${e.id}')"
         style="padding:6px 10px;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;color:var(--txt3);font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif">
@@ -344,7 +344,7 @@ function oldDebtAlerts(){
 function openGlobalSearch(){
   document.getElementById('gsearch-overlay').classList.add('on');history.pushState({modal:true},'');
   document.getElementById('gsearch-inp').value='';
-  document.getElementById('gsearch-results').innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">🔍</div><p>Escribí para buscar en todo</p></div>';
+  document.getElementById('gsearch-results').innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">'+ic('search')+'</div><p>Escribí para buscar en todo</p></div>';
   setTimeout(()=>document.getElementById('gsearch-inp').focus(),200);
 }
 // Movimientos sin billetera (de todos los meses): tocar uno abre la edición para elegirla
@@ -357,7 +357,7 @@ function openUnassigned(ev){
     ?`<div class="div-lbl" style="margin-top:0">Sin billetera (${rows.length})</div>
       <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">No suman ni restan en ningún saldo. Tocá uno y elegí la billetera.</div>
       <div id="unassigned-list">${rows.map(e=>expHTML(e,false)).join('')}</div>`
-    :'<div class="empty" style="padding:24px 0"><div class="empty-ico">✅</div><p>Todos los movimientos tienen billetera</p></div>';
+    :'<div class="empty" style="padding:24px 0"><div class="empty-ico">'+ic('check')+'</div><p>Todos los movimientos tienen billetera</p></div>';
   // En captura: editExp frena la propagación y la lista taparía el formulario
   document.getElementById('unassigned-list')?.addEventListener('click',closeGlobalSearch,{capture:true});
 }
@@ -374,7 +374,7 @@ function runGlobalSearch(){
   const matchDebt=debts.filter(d=>!d.settled&&((d.description||'').toLowerCase().includes(q)||(d.personName||'').toLowerCase().includes(q)));
 
   if(!matchExp.length&&!matchUsd.length&&!matchDebt.length){
-    el.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">🔍</div><p>Sin resultados para "'+esc(q)+'"</p></div>';
+    el.innerHTML='<div class="empty" style="padding:24px 0"><div class="empty-ico">'+ic('search')+'</div><p>Sin resultados para "'+esc(q)+'"</p></div>';
     return;
   }
 
@@ -391,7 +391,7 @@ function runGlobalSearch(){
     html+=`<div class="div-lbl">Deudas (${matchDebt.length})</div>`;
     matchDebt.slice(0,5).forEach(d=>{
       const p=personById(d.personId);
-      html+=`<div class="exp-item"><div class="exp-ico teal-bg">🤝</div><div class="exp-info"><div class="exp-desc">${esc(d.description)}</div><div class="exp-meta"><span>${fmtDate(d.date)}</span>·<span>${esc(d.personName)}</span></div></div><div class="exp-right"><div class="exp-amt ${d.amount>0?'i':'r'}">${d.amount>0?'+':'-'}${fmt(d.amount)}</div></div></div>`;
+      html+=`<div class="exp-item"><div class="exp-ico teal-bg">${ic('users')}</div><div class="exp-info"><div class="exp-desc">${esc(d.description)}</div><div class="exp-meta"><span>${fmtDate(d.date)}</span>·<span>${esc(d.personName)}</span></div></div><div class="exp-right"><div class="exp-amt ${d.amount>0?'i':'r'}">${d.amount>0?'+':'-'}${fmt(d.amount)}</div></div></div>`;
     });
   }
   el.innerHTML=html;

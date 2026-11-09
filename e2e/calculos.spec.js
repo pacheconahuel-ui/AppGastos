@@ -53,11 +53,11 @@ test('saldar: pago parcial, pago total y pago mío desde una billetera', async (
     out.parcial = personBalance('j');
     openSettleModal('j'); document.getElementById('settle-acc').value = 'acc_mp'; await doSettle();
     out.total = personBalance('j');
-    openSettleModal('a'); out.etiqueta = document.getElementById('settle-acc-lbl').textContent; document.getElementById('settle-acc').value = 'acc_efectivo'; await doSettle();
+    openSettleModal('a'); out.etiqueta = document.getElementById('settle-acc-lbl').textContent.trim(); document.getElementById('settle-acc').value = 'acc_efectivo'; await doSettle();
     out.ana = personBalance('a'); out.mp = accountBalance('acc_mp'); out.efectivo = accountBalance('acc_efectivo');
     return out;
   });
-  expect(r).toEqual({ parcial: 600, total: 0, etiqueta: '💼 Pagar desde', ana: 0, mp: 1000, efectivo: -600 });
+  expect(r).toEqual({ parcial: 600, total: 0, etiqueta: 'Pagar desde', ana: 0, mp: 1000, efectivo: -600 });
   noErrors(page);
 });
 

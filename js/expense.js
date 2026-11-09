@@ -28,7 +28,7 @@ function renderSplitRows(){
       </div>
       <input type="number" class="split-amt-inp" value="${row.amount||''}" placeholder="$0"
         oninput="setSplitAmt(${i},this.value)" inputmode="decimal" min="0">
-      <button class="btn-ico del" onclick="removeSplitRow(${i})" style="flex-shrink:0;width:28px;height:28px;font-size:12px">✕</button>
+      <button class="btn-ico del" onclick="removeSplitRow(${i})" style="flex-shrink:0;width:28px;height:28px;font-size:12px">${ic('x')}</button>
     </div>`;
   });
   document.getElementById('split-persons-list').innerHTML=html;
@@ -104,14 +104,14 @@ function renderContactsList(){
   let html='';
 
   if(persons.length===0){
-    html=`<div class="empty" style="padding:24px 0"><div class="empty-ico">👥</div><p>No tenés contactos aún.<br>Agregá a las personas con las que solés dividir gastos.</p></div>`;
+    html=`<div class="empty" style="padding:24px 0"><div class="empty-ico">${ic('users')}</div><p>No tenés contactos aún.<br>Agregá a las personas con las que solés dividir gastos.</p></div>`;
   } else {
     if(favs.length>0){
-      html+=`<div class="cat-section-lbl">⭐ Favoritos (${favs.length})</div>`;
+      html+=`<div class="cat-section-lbl">${ic('star')} Favoritos (${favs.length})</div>`;
       favs.forEach(p=>{ html+=contactItemHTML(p); });
     }
     if(occ.length>0){
-      html+=`<div class="cat-section-lbl">👥 Ocasionales (${occ.length})</div>`;
+      html+=`<div class="cat-section-lbl">${ic('users')} Ocasionales (${occ.length})</div>`;
       occ.forEach(p=>{ html+=contactItemHTML(p); });
     }
   }
@@ -122,10 +122,10 @@ function contactItemHTML(p){
   return`<div class="cat-manager-item">
     <div style="font-size:24px;width:36px;text-align:center">${p.emoji}</div>
     <div class="cat-manager-name custom">${esc(p.name)}</div>
-    <div style="font-size:10px;padding:2px 7px;border-radius:10px;background:${p.isRecurrent?'color-mix(in srgb,var(--acc) 10%,transparent)':'color-mix(in srgb,var(--tint) 5%,transparent)'};color:${p.isRecurrent?'var(--teal)':'var(--txt3)'};border:1px solid ${p.isRecurrent?'color-mix(in srgb,var(--acc) 20%,transparent)':'var(--bdr)'};font-weight:600;flex-shrink:0">${p.isRecurrent?'⭐ Fav':'Ocasional'}</div>
+    <div style="font-size:10px;padding:2px 7px;border-radius:10px;background:${p.isRecurrent?'color-mix(in srgb,var(--acc) 10%,transparent)':'color-mix(in srgb,var(--tint) 5%,transparent)'};color:${p.isRecurrent?'var(--teal)':'var(--txt3)'};border:1px solid ${p.isRecurrent?'color-mix(in srgb,var(--acc) 20%,transparent)':'var(--bdr)'};font-weight:600;flex-shrink:0">${p.isRecurrent?ic('star')+' Fav':'Ocasional'}</div>
     <div class="cat-manager-actions">
-      <button class="cat-mgr-btn rename" onclick="openAddContactModal('${p.id}')" title="Editar">✏️</button>
-      <button class="cat-mgr-btn delete" onclick="confirmDeleteContact('${p.id}')" title="Eliminar">🗑️</button>
+      <button class="cat-mgr-btn rename" onclick="openAddContactModal('${p.id}')" title="Editar">${ic('edit')}</button>
+      <button class="cat-mgr-btn delete" onclick="confirmDeleteContact('${p.id}')" title="Eliminar">${ic('trash')}</button>
     </div>
   </div>`;
 }
@@ -303,10 +303,10 @@ function openModal(data=null){
   const cards=ccAccounts();
   let accOpts='<option value="">— Sin asignar —</option>';
   if(wallets.length){
-    accOpts+='<optgroup label="💰 Billeteras">'+wallets.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')+'</optgroup>';
+    accOpts+='<optgroup label="Billeteras">'+wallets.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')+'</optgroup>';
   }
   if(cards.length){
-    accOpts+='<optgroup label="💳 Tarjetas">'+cards.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')+'</optgroup>';
+    accOpts+='<optgroup label="Tarjetas">'+cards.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('')+'</optgroup>';
   }
   accSel.innerHTML=accOpts;
   // Smart default: use existing accountId, or only wallet if there's just one, or last used
@@ -441,20 +441,20 @@ function renderCatManager(){
       </div>
       <span class="cat-manager-badge">${catTypeFor(c)==='ingreso'?'Ingreso':'Egreso'}</span>
       <div class="cat-manager-actions">
-        <button class="cat-mgr-btn ico" onclick="editCatIcon(${jsArg(c)})" title="Cambiar ícono">🎨</button>
-        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat(${jsArg(c)})`:`renameCat(${jsArg(c)})`}" title="Renombrar">✏️</button>
-        <button class="cat-mgr-btn" onclick="toggleCatType(${jsArg(c)})" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${moveTo==='ingreso'?'📥':'📤'}</button>
-        <button class="cat-mgr-btn" onclick="toggleHideCat(${jsArg(c)})" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?'＋':'👁'}</button>
-        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat(${jsArg(c)})" title="Eliminar">🗑️</button>`}
+        <button class="cat-mgr-btn ico" onclick="editCatIcon(${jsArg(c)})" title="Cambiar ícono">${ic('palette')}</button>
+        <button class="cat-mgr-btn rename" onclick="${isDefault&&DEF_CATS.includes(c)?`renameDefCat(${jsArg(c)})`:`renameCat(${jsArg(c)})`}" title="Renombrar">${ic('edit')}</button>
+        <button class="cat-mgr-btn" onclick="toggleCatType(${jsArg(c)})" title="Mover a ${moveTo==='ingreso'?'Ingreso':'Egreso'}" style="font-size:12px">${ic(moveTo==='ingreso'?'download':'upload')}</button>
+        <button class="cat-mgr-btn" onclick="toggleHideCat(${jsArg(c)})" title="${isHidden?'Mostrar':'Ocultar'}" style="font-size:12px">${isHidden?ic('plus'):ic('eye')}</button>
+        ${isDefault?'':`<button class="cat-mgr-btn delete" onclick="confirmDeleteCat(${jsArg(c)})" title="Eliminar">${ic('trash')}</button>`}
       </div>
     </div>`;
   };
   const egresoCats=byType('egreso');
   const ingresoCats=byType('ingreso');
-  let html=`<div class="cat-section-lbl">📤 Categorías de egreso (${egresoCats.length})</div><div class="cat-manager-list">`;
+  let html=`<div class="cat-section-lbl">${ic('upload')} Categorías de egreso (${egresoCats.length})</div><div class="cat-manager-list">`;
   html+=egresoCats.length?egresoCats.map(row).join(''):`<div class="empty" style="padding:14px 0"><p>Sin categorías de egreso</p></div>`;
   html+=`</div><button class="btn-save" onclick="addCatTyped('egreso')" style="margin:0 0 10px;padding:11px;font-size:13px">＋ Agregar egreso</button>`;
-  html+=`<div class="cat-section-lbl">📥 Categorías de ingreso (${ingresoCats.length})</div><div class="cat-manager-list">`;
+  html+=`<div class="cat-section-lbl">${ic('download')} Categorías de ingreso (${ingresoCats.length})</div><div class="cat-manager-list">`;
   html+=ingresoCats.length?ingresoCats.map(row).join(''):`<div class="empty" style="padding:14px 0"><p>Sin categorías de ingreso</p></div>`;
   html+=`</div><button class="btn-save" onclick="addCatTyped('ingreso')" style="margin:0;padding:11px;font-size:13px;background:var(--pos)">＋ Agregar ingreso</button>`;
   document.getElementById('cat-manager-body').innerHTML=html;

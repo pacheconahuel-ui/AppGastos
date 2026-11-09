@@ -11,6 +11,21 @@ test('carga, muestra la versión y registra el service worker con ella', async (
   noErrors(page);
 });
 
+test('los íconos del HTML se dibujan y no queda ninguno sin reemplazar', async ({ page }) => {
+  await openApp(page);
+  expect(await page.locator('i[data-ico]').count()).toBe(0);
+  expect(await page.locator('.bnav .ico').count()).toBe(0); // la barra de abajo trae sus SVG propios
+  expect(await page.locator('#btn-theme .ico').count()).toBe(1);
+  expect(await page.locator('#usd-overlay .btn-save .ico').count()).toBe(1);
+  // cada ícono tiene tamaño (no quedó en 0 por falta de CSS)
+  for (const b of await page.locator('.ico').all()) {
+    if (!(await b.isVisible())) continue;
+    const r = await b.boundingBox();
+    expect(r.width).toBeGreaterThan(6);
+  }
+  noErrors(page);
+});
+
 test('guardar sin billetera pide un segundo toque y marca "Sin billetera"', async ({ page }) => {
   await openApp(page);
   const r = await page.evaluate(async () => {

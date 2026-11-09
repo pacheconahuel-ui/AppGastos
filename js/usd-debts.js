@@ -43,13 +43,13 @@ function setUsdType(t){
   if(t==='compra'){
     document.getElementById('uf-ars-lbl').textContent='ARS pagados';
     document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Egreso automático';
-    document.getElementById('uf-usd-acc-lbl').textContent='💵 USD van a (billetera USD)';
+    document.getElementById('uf-usd-acc-lbl').innerHTML=ic('dollar')+' USD van a (billetera USD)';
   } else if(t==='venta'){
     document.getElementById('uf-ars-lbl').textContent='ARS recibidos';
     document.getElementById('uf-autoars-lbl').textContent='Registrar ARS como Ingreso automático';
-    document.getElementById('uf-usd-acc-lbl').textContent='💵 USD salen de (billetera USD)';
+    document.getElementById('uf-usd-acc-lbl').innerHTML=ic('dollar')+' USD salen de (billetera USD)';
   } else {
-    document.getElementById('uf-usd-acc-lbl').textContent='💵 USD van a (billetera USD)';
+    document.getElementById('uf-usd-acc-lbl').innerHTML=ic('dollar')+' USD van a (billetera USD)';
   }
   // USD wallet: always show
   document.getElementById('uf-usd-acc-wrap').style.display='block';
@@ -230,7 +230,7 @@ function openSettleModal(personId){
   document.getElementById('settle-date').value=todayStr();
   const accSel=document.getElementById('settle-acc');
   const accWrap=document.getElementById('settle-acc-wrap');
-  document.getElementById('settle-acc-lbl').textContent=bal<0?'💼 Pagar desde':'💼 Acreditar en';
+  document.getElementById('settle-acc-lbl').innerHTML=ic('wallet')+(bal<0?' Pagar desde':' Acreditar en');
   if(arsWallets().length>0){
     accSel.innerHTML='<option value="">— Sin asignar —</option>'+
       arsWallets().map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');

@@ -74,7 +74,7 @@ function renderDashboard(){
   const recentEl=document.getElementById('recent-list');
   if(recentEl)recentEl.innerHTML=recent.length
     ?recent.map(e=>expHTML(e,false)).join('')
-    :'<div class="empty"><div class="empty-ico">📭</div><p>Sin movimientos cargados</p></div>';
+    :'<div class="empty"><div class="empty-ico">'+ic('inbox')+'</div><p>Sin movimientos cargados</p></div>';
 }
 
 function renderPieChart(mk){
@@ -138,7 +138,7 @@ function renderListSec(){
     ?`${rows.length} resultado${rows.length>1?'s':''}${hasFilter?' (filtrado)':''}`:'';
   document.getElementById('full-list').innerHTML=rows.length
     ?rows.map(e=>expHTML(e,true)).join('')
-    :`<div class="empty"><div class="empty-ico">${hasFilter?'🔍':'📭'}</div><p>${hasFilter?'Sin resultados':'Sin movimientos este mes'}</p></div>`;
+    :`<div class="empty"><div class="empty-ico">${ic(hasFilter?'search':'inbox')}</div><p>${hasFilter?'Sin resultados':'Sin movimientos este mes'}</p></div>`;
 }
 
 function renderUsdTab(){
@@ -156,7 +156,7 @@ function renderUsdTab(){
   document.getElementById('usd-c-tc').textContent=soldAmt>0?fmtTC(arsAmt/soldAmt):'—';
   renderTcChart();
   const sorted=[...usdTx].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt);
-  document.getElementById('usd-list').innerHTML=sorted.length?sorted.map(t=>usdTxHTML(t)).join(''):'<div class="empty"><div class="empty-ico">💵</div><p>Sin movimientos USD</p></div>';
+  document.getElementById('usd-list').innerHTML=sorted.length?sorted.map(t=>usdTxHTML(t)).join(''):'<div class="empty"><div class="empty-ico">'+ic('dollar')+'</div><p>Sin movimientos USD</p></div>';
 }
 
 function renderTcChart(){
@@ -196,10 +196,10 @@ function renderSaldosTab(){
   const dups=duplicateSplitDebts();
   if(dups.length){
     const total=dups.reduce((s,d)=>s+d.amount,0);
-    html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:12px;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">⚠️ ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
+    html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:12px;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">${ic('warn')} ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
   }
   if(visiblePersons.length===0){
-    html+='<div class="empty"><div class="empty-ico">🤝</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
+    html+='<div class="empty"><div class="empty-ico">'+ic('users')+'</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
   } else {
     visiblePersons.forEach(p=>{
       const bal=personBalance(p.id);
@@ -235,7 +235,7 @@ function renderSaldosTab(){
               <div class="debt-meta">${fmtDate(d.date)} · ${dir}</div>
             </div>
             <div class="debt-amt ${amtClass}">${d.amount>0?'+':'-'}${fmt(d.amount)}</div>
-            <button class="btn-ico del" onclick="deleteDebt('${d.id}',event)" style="width:28px;height:28px;font-size:12px">🗑️</button>
+            <button class="btn-ico del" onclick="deleteDebt('${d.id}',event)" style="width:28px;height:28px;font-size:12px">${ic('trash')}</button>
           </div>`;
         });
         html+=`</div>`;
@@ -244,10 +244,10 @@ function renderSaldosTab(){
       // Actions
       html+=`<div class="person-actions">
         <button class="btn-settle" onclick="openSettleModal('${p.id}')" ${bal===0?'disabled':''}>
-          ${bal>0?'💸 Marcar cobrado':'✅ Marcar pagado'}
+          ${bal>0?ic('download')+' Marcar cobrado':ic('check')+' Marcar pagado'}
         </button>`;
       if(hasHistory){
-        html+=`<button class="btn-hist" onclick="toggleHistory('${p.id}')">🕐 Historial</button>`;
+        html+=`<button class="btn-hist" onclick="toggleHistory('${p.id}')">${ic('clock')} Historial</button>`;
       }
       html+=`</div>`;
 
@@ -264,7 +264,7 @@ function renderSaldosTab(){
               <div class="debt-meta">${fmtDate(d.date)} · Saldado ${fmtDate(d.settledDate)}</div>
             </div>
             <div class="debt-amt" style="color:var(--txt3)">${fmt(Math.abs(d.amount))}</div>
-            <span class="debt-settled-ico">✓</span>
+            <span class="debt-settled-ico">${ic('check')}</span>
           </div>`;
         });
         html+=`</div></div>`;
@@ -312,7 +312,7 @@ function renderSaldosTab(){
             <div style="font-size:11px;color:var(--txt3)">${debts.length} deuda${debts.length!==1?'s':''} · ${total>0?'te deben':'le debés'} ${fmt(Math.abs(total))}</div>
           </div>
           <button onclick="openSettleModal('${pid}')" style="padding:6px 12px;background:color-mix(in srgb,var(--warn) 15%,transparent);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:8px;color:var(--yellow);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
-            ${total>0?'💸 Cobrar':'✅ Pagar'}
+            ${total>0?ic('download')+' Cobrar':ic('check')+' Pagar'}
           </button>
         </div>`;
       }).join('')}
@@ -335,18 +335,18 @@ function toggleZeroPersons(){
 function expHTML(e,actions){
   const ing=e.type==='Ingreso';
   const hasSplit=e.splits&&e.splits.length>0;
-  const splitBadge=hasSplit?`<span class="badge sh">🤝 ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
+  const splitBadge=hasSplit?`<span class="badge sh">${ic('users')} ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
-  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?'💳 Pago de tarjeta':'💱 Cambio de moneda'} · no suma al mes</span>`:'';
-  const recurBadge=e.recurring?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">🔁</span>':'';
+  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?ic('card')+' Pago de tarjeta':ic('transfer')+' Cambio de moneda'} · no suma al mes</span>`:'';
+  const recurBadge=e.recurring?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">'+ic('repeat')+'</span>':'';
   const usdBadge=e.currency==='USD'?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 10%,transparent);color:var(--gold);border-color:color-mix(in srgb,var(--tint) 25%,transparent)">U$S ${e.amount}</span>`:'';
   const instBadge=e.cardExpType==='installment'&&e.installmentTotal?`<span class="badge" style="background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
   const acc=e.accountId?accounts?.find(a=>a.id===e.accountId):null;
   const accBadge=acc?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt2);border-color:var(--bdr)">${acc.emoji} ${esc(acc.name)}</span>`
     :(accounts?.length?'<span class="badge" style="background:color-mix(in srgb,var(--warn) 8%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">Sin billetera</span>':'');
   const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">⏳</span>':'';
-  const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📝 ${esc(e.notes)}</div>`:'';
-  const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">✏️</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">🗑️</button></div>`:'';
+  const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ic('note')} ${esc(e.notes)}</div>`:'';
+  const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">${ic('edit')}</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">${ic('trash')}</button></div>`:'';
   return`<div class="exp-item swipeable" data-id="${e.id}" onclick="editExp('${e.id}',event)">
     <div class="exp-ico purple-bg">${icon(e.category)}</div>
     <div class="exp-info">
@@ -362,13 +362,13 @@ function usdTxHTML(t){
   const isIn=t.type==='ingreso';
   const isBuy=t.type==='compra';
   const isSell=t.type==='venta';
-  const badge=isIn?'<span class="badge usd-in">📥 Ingreso</span>':
-               isBuy?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 30%,transparent)">🏦 Compra</span>':
-               '<span class="badge usd-sell">💸 Venta</span>';
+  const badge=isIn?'<span class="badge usd-in">'+ic('download')+' Ingreso</span>':
+               isBuy?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 30%,transparent)">'+ic('bank')+' Compra</span>':
+               '<span class="badge usd-sell">'+ic('upload')+' Venta</span>';
   const tc=(isSell||isBuy)&&t.arsAmount&&t.usdAmount?`<span>TC: ${fmtTC(t.arsAmount/t.usdAmount)}</span>`:'';
   const arsLine=isSell&&t.arsAmount?`<div class="exp-amt-sub">→ ${fmt(t.arsAmount)} ARS</div>`:
                 isBuy&&t.arsAmount?`<div class="exp-amt-sub">← ${fmt(t.arsAmount)} ARS</div>`:'';
-  const ico=isIn?'💵':isBuy?'🏦':'🔄';
+  const ico=ic(isIn?'dollar':isBuy?'bank':'refresh');
   const amtClass=isIn?'gold':isBuy?'r':'r';
   const amtSign=isIn?'+':'-';
   return`<div class="exp-item" onclick="editUsdTx('${t.id}',event)">
@@ -379,7 +379,7 @@ function usdTxHTML(t){
     </div>
     <div class="exp-right">
       <div><div class="exp-amt ${amtClass}">${amtSign}${fmtU(t.usdAmount)}</div>${arsLine}</div>
-      <div class="exp-actions"><button class="btn-ico edit" onclick="editUsdTx('${t.id}',event)">✏️</button><button class="btn-ico del" onclick="delUsdTx('${t.id}',event)">🗑️</button></div>
+      <div class="exp-actions"><button class="btn-ico edit" onclick="editUsdTx('${t.id}',event)">${ic('edit')}</button><button class="btn-ico del" onclick="delUsdTx('${t.id}',event)">${ic('trash')}</button></div>
     </div>
   </div>`;
 }

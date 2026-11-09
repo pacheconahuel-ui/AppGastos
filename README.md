@@ -44,6 +44,7 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | Archivo | Qué tiene |
 |---|---|
 | `config.js` | `APP_VERSION`, configuración de Firebase, constantes y estado global |
+| `icons.js` | íconos de línea (SVG): `ic('nombre')` en el JS y `<i data-ico="nombre">` en el HTML |
 | `storage.js` | copia local, rutas de Firebase, cola sin conexión, guardado |
 | `settings.js` | configuración: armarla, aplicarla y subirla |
 | `sync.js` | login, listeners de Firebase, arranque |
