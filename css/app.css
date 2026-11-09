@@ -53,7 +53,7 @@
   .login-toggle span{color:var(--p1);font-weight:600}
 
   /* APP */
-  #app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding-bottom:100px}
+  #app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
   #app.hidden{display:none}
 
   /* HEADER */
@@ -97,7 +97,8 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
   /* TABS — 4 tabs, icon+label */
-  .tabs{display:flex;gap:4px;padding:16px 20px 0}
+  /* En el celular las secciones van en la barra de abajo (.bnav); .tabs es la columna de la compu */
+  .tabs{display:none;gap:4px;padding:16px 20px 0}
   .tab{flex:1;padding:9px 2px;text-align:center;font-size:11px;font-weight:600;border-radius:11px;cursor:pointer;color:var(--txt2);transition:all .2s;border:1px solid transparent;background:transparent;font-family:'Outfit',sans-serif;line-height:1.3}
   /* Pestaña activa: la misma en todas, sin relleno fuerte */
   .tab.on{background:color-mix(in srgb,var(--acc) 16%,transparent);border-color:color-mix(in srgb,var(--acc) 35%,transparent);color:var(--txt)}
@@ -240,13 +241,6 @@
   .settle-partial-wrap.on{display:block}
 
   /* FAB */
-  .fabs{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100}
-  .fab{background:var(--acc-btn);color:#fff;border:none;border-radius:50px;padding:15px 24px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;align-items:center;gap:7px;transition:all .2s;font-family:'Outfit',sans-serif;white-space:nowrap}
-  .fab:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
-  .fab:active{transform:scale(.97)}
-  .fab.gold-fab{background:var(--acc-btn);box-shadow:0 6px 20px rgba(0,0,0,.25);color:var(--on-acc)}
-  .fab.teal-fab{background:var(--acc-btn);box-shadow:0 6px 20px rgba(0,0,0,.25);color:#fff}
-  .fab.hidden{display:none}
 
   /* MODAL */
   .m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(12px);z-index:1000;display:none;align-items:flex-end;justify-content:center}
@@ -327,7 +321,7 @@
   .btn-mig.yes{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
   .btn-mig.no{background:transparent;color:var(--txt3);border-color:var(--bdr)}
 
-  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--modal-bg);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);color:var(--txt);padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:all .28s;white-space:nowrap;pointer-events:none}
+  .toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);background:var(--modal-bg);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);color:var(--txt);padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:all .28s;white-space:nowrap;pointer-events:none}
   .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .div-lbl{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px;display:flex;align-items:center;gap:10px}
   .div-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
@@ -478,9 +472,10 @@
 
     /* Sidebar: tabs become vertical nav — items top-aligned, NOT stretched */
     .tabs{
+      display:flex;
       grid-column:1/2;grid-row:2/3;
       flex-direction:column;
-      padding:20px 14px 200px;/* bottom padding reserves space for FABs */
+      padding:20px 14px 40px;
       gap:4px;
       border-right:1px solid var(--bdr);
       position:sticky;top:0;
@@ -506,17 +501,6 @@
     /* 4-col cards on desktop */
     .cards{grid-template-columns:repeat(4,1fr)}
 
-    /* FABs: fixed bottom of sidebar, NOT overlapping tabs */
-    .fabs{
-      position:fixed;bottom:24px;left:0;
-      width:220px;
-      transform:none;
-      padding:0 14px;
-      flex-direction:column;
-      gap:7px;
-      z-index:200;
-    }
-    .fab{width:100%;justify-content:center;border-radius:12px;padding:13px;font-size:14px}
 
     /* Modals centered */
     .m-overlay{align-items:center}
@@ -537,7 +521,6 @@
 
   @media(min-width:1200px){
     #app{grid-template-columns:240px 1fr}
-    .fabs{width:240px}
     .sec{padding:28px 40px}
   }
 
@@ -570,3 +553,33 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 /* Fecha y categoría una debajo de la otra: al lado, el buscador de categoría quedaba aplastado ("Bı") */
 .f-row:has(#f-cat-search){grid-template-columns:1fr;display:grid;gap:12px}
+
+/* Barra de navegación de abajo (celular) */
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:100;max-width:520px;margin:0 auto;background:var(--surf);border-top:1px solid var(--bdr);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.bnav-item{background:none;border:0;color:var(--txt3);font:500 11px 'Outfit',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;cursor:pointer;padding:0}
+.bnav-item svg,.bnav-plus svg,.new-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bnav-item.on{color:var(--txt)}
+.bnav-item.on svg{stroke:var(--acc)}
+.bnav-plus{justify-self:center;width:52px;height:52px;border-radius:16px;border:0;background:var(--acc-btn);color:var(--on-acc);display:grid;place-items:center;cursor:pointer}
+.bnav-plus svg{width:26px;height:26px;stroke-width:2.2}
+#app.hidden~.bnav{display:none}
+
+/* Menú del "+" */
+.new-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.new-item{display:flex;align-items:center;gap:14px;min-height:60px;padding:10px 14px;border-radius:14px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);text-align:left;cursor:pointer;font-family:'Outfit',sans-serif}
+.new-item svg{flex-shrink:0;color:var(--acc)}
+.new-item b{display:block;font-size:15px;font-weight:600}
+.new-item small{display:block;font-size:12px;color:var(--txt3);margin-top:1px}
+.tabs-new{display:none}
+
+/* USD dentro de Cuentas */
+.usd-link{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;padding:10px 16px;margin-bottom:12px;border-radius:14px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);text-align:left;cursor:pointer;font-family:'Outfit',sans-serif;font-size:20px}
+.usd-link b{display:block;font-size:14px;font-weight:600}
+.usd-link small{display:block;font-size:12px;color:var(--txt3)}
+.back-link{min-height:44px;padding:0 4px;margin:-6px 0 6px;background:none;border:0;color:var(--acc);font:600 14px 'Outfit',sans-serif;cursor:pointer}
+
+@media(min-width:900px){
+  .bnav{display:none}
+  .tabs-new{display:block;min-height:44px;margin-bottom:10px;border-radius:12px;border:0;background:var(--acc-btn);color:var(--on-acc);font:700 14px 'Outfit',sans-serif;cursor:pointer}
+  .usd-link,.back-link{display:none}
+}

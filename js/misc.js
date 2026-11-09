@@ -1,19 +1,19 @@
 // Pestañas, aviso, migración, teclado, tema, CSV, recurrentes, gráficos, búsqueda, deslizar
+// --- "+" (agregar) ---
+function openNewSheet(){document.getElementById('new-overlay').classList.add('on');history.pushState({modal:true},'');}
+function closeNewSheet(){document.getElementById('new-overlay').classList.remove('on');}
+
 // --- TAB SWITCH ---
 function switchTab(t){
   activeTab=t;
-  document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('on',(i===0&&t==='dashboard')||(i===1&&t==='lista')||(i===2&&t==='usd')||(i===3&&t==='saldos')||(i===4&&t==='cuentas'));
+  // data-tab puede tener varias secciones: "Cuentas" queda marcada también en USD
+  document.querySelectorAll('.tab[data-tab],.bnav-item[data-tab]').forEach(b=>{
+    b.classList.toggle('on',b.dataset.tab.split(' ').includes(t));
   });
   ['dashboard','lista','usd','saldos','cuentas'].forEach(s=>{
     const el=document.getElementById('tab-'+s);if(el)el.classList.toggle('on',s===t);
   });
-  const inMain=t==='dashboard'||t==='lista';
-  document.getElementById('fab-ars').classList.toggle('hidden',!inMain);
-  document.getElementById('fab-quick').classList.toggle('hidden',!inMain);
-  document.getElementById('fab-usd').classList.toggle('hidden',t!=='usd');
-  document.getElementById('fab-debt').classList.toggle('hidden',t!=='saldos');
-  document.getElementById('fab-account').classList.toggle('hidden',t!=='cuentas');
+  window.scrollTo(0,0);
   if(t==='lista')renderListSec();
   if(t==='dashboard')renderDashboard();
   if(t==='usd')renderUsdTab();
@@ -51,7 +51,7 @@ function dismissMigration(){document.getElementById('mig-banner').classList.remo
 
 // --- KEYBOARD ---
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();closeAdjustModal();}
+  if(e.key==='Escape'){closeNewSheet();closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();closeAdjustModal();}
   if(e.key==='Enter'&&(document.activeElement.id==='login-email'||document.activeElement.id==='login-pass'))loginEmail();
 });
 

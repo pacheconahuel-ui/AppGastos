@@ -1,5 +1,15 @@
 # Cambios
 
+## 3.3 — noviembre 2026
+
+Segunda parte del rediseño: navegación.
+
+- **Barra de navegación abajo** (Resumen · Lista · **+** · Saldos · Cuentas), al alcance del pulgar. Antes las pestañas estaban arriba.
+- **Un solo botón +** para agregar cualquier cosa: gasto o ingreso, gasto rápido, dólares, deuda o transferencia. Reemplaza los cinco botones flotantes que cambiaban según la pantalla.
+- **Dólares dentro de Cuentas:** se entra desde "Dólares" en Cuentas y se vuelve con "‹ Cuentas".
+- En la compu sigue la columna de la izquierda, ahora con un botón **+ Nuevo** arriba.
+- Controles de la barra y del menú de al menos 44×44; nada queda tapado por la barra (también en iPhone con la barra de inicio).
+
 ## 3.2 — noviembre 2026
 
 Primera parte del rediseño: colores y tipografía. La estructura de las pantallas no cambia.
