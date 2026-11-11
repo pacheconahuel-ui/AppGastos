@@ -21,12 +21,12 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 
 ### Cómo se calcula el saldo de una billetera
 
-Saldo inicial (o el ajuste) + ingresos − gastos + transferencias que entran − transferencias que salen.
+Saldo inicial (o el ajuste) + ingresos − lo que pagaste + transferencias que entran − transferencias que salen. En un gasto dividido sale el total que pagaste; la parte de la otra persona vuelve cuando la cobrás.
 Solo cuentan los movimientos **que tienen esa billetera elegida**.
 
 ### Qué cuenta como gasto o ingreso del mes
 
-Todo, salvo lo que solo mueve plata entre cuentas: el **pago del resumen de la tarjeta** (las compras con tarjeta ya cuentan el mes en que se hacen) y la **compra o venta de dólares**. Esos movimientos igual suman o restan en el saldo de la billetera. Un movimiento "sin billetera" no suma ni resta en ningún saldo; la app avisa al guardarlo y lo marca con la etiqueta *Sin billetera* en la lista.
+Todo, salvo lo que solo mueve plata entre cuentas: el **pago del resumen de la tarjeta** (las compras con tarjeta ya cuentan el mes en que se hacen), la **compra o venta de dólares**, las **liquidaciones de deudas** (lo que te devuelven o devolvés) y los **ajustes de saldo**. Esos movimientos igual suman o restan en el saldo de la billetera. Un movimiento "sin billetera" no suma ni resta en ningún saldo; la app avisa al guardarlo y lo marca con la etiqueta *Sin billetera* en la lista.
 
 ## Cómo está armada
 

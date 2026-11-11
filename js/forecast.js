@@ -51,7 +51,7 @@ function fcCards(today=todayStr()){
     for(let m=-1;m<=FC_N;m++){
       let ars=0,usd=0;const subs=[];
       pend.filter(e=>charged(e,m)).forEach(e=>{
-        const v=effAmt(e),isUsd=e.currency==='USD';
+        const v=e.amount,isUsd=e.currency==='USD'; // la tarjeta cobra el total
         if(isUsd)usd+=v;else ars+=v;
         subs.push({label:e.description||e.category,amount:isUsd?0:v,usd:isUsd?v:0,nota:nota(e,m)});
       });

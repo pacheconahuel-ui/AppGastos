@@ -686,6 +686,7 @@
     <div class="f-grp" id="acc-initial-wrap">
       <label class="f-lbl" id="acc-initial-lbl">Saldo inicial</label>
       <input type="number" class="f-ctrl" id="acc-initial" placeholder="0" inputmode="decimal" step="any">
+      <label class="acc-neg"><input type="checkbox" id="acc-initial-neg"> El saldo es negativo (en descubierto)</label>
     </div>
     <!-- Credit card extras -->
     <div id="acc-cc-extras" style="display:none">
@@ -905,7 +906,7 @@
     </div>
     <div class="f-grp">
       <label class="f-lbl">Saldo real ahora ($)</label>
-      <input type="number" class="f-ctrl" id="adj-real" placeholder="ej: 20000" inputmode="decimal" step="any" min="0" oninput="updateAdjHint()">
+      <input type="number" class="f-ctrl" id="adj-real" placeholder="ej: 20000" inputmode="text" step="any" oninput="updateAdjHint()">
     </div>
     <div id="adj-hint" style="background:var(--surf);border:1px solid var(--bdr);border-radius:11px;padding:11px 13px;font-size:13px;color:var(--txt3);margin-bottom:14px;min-height:44px;display:flex;align-items:center"></div>
     <button class="btn-save" onclick="saveAdjust()"><i data-ico="check"></i> Registrar ajuste</button>

@@ -343,7 +343,7 @@ function expHTML(e,actions){
   const hasSplit=e.splits&&e.splits.length>0;
   const splitBadge=hasSplit?`<span class="badge sh">${ic('users')} ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
   const ingBadge=ing?'<span class="badge ing">Ingreso</span>':'';
-  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?ic('card')+' Pago de tarjeta':ic('transfer')+' Cambio de moneda'} · no suma al mes</span>`:'';
+  const moveBadge=!countsInMonth(e)?`<span class="badge" style="background:color-mix(in srgb,var(--tint) 5%,transparent);color:var(--txt3);border-color:var(--bdr)">${isCCPayment(e)?ic('card')+' Pago de tarjeta':e.ajuste?ic('sliders')+' Ajuste de saldo':isLiquidation(e)?ic('transfer')+' Liquidación':ic('transfer')+' Cambio de moneda'} · no suma al mes</span>`:'';
   const progBadge=esFuturo(e)?`<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">${ic('calendar')} Programado</span>`:'';
   const serieBadge=e.serieTotal>1?`<span class="badge" style="background:color-mix(in srgb,var(--warn) 10%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">${e.serieIdx}/${e.serieTotal}</span>`:'';
   const recurBadge=e.recurring?'<span class="badge" style="background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--blue);border-color:color-mix(in srgb,var(--acc) 25%,transparent)">'+ic('repeat')+'</span>':'';

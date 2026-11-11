@@ -1,5 +1,15 @@
 # Cambios
 
+## 3.12 — noviembre 2026
+
+Cuatro arreglos que aparecieron al armar las cuentas de cero y conciliar con el banco.
+
+- **Gastos divididos:** de la billetera ahora sale **el total que pagaste**. Antes solo descontaba tu parte: si pagabas $1.000 y tu parte era $600, la billetera mostraba −$600 en vez de −$1.000, y cuando te devolvían $400 quedaba −$200 en vez de −$600. Lo mismo para el resumen de la tarjeta, la proyección de cuotas y "Lo que viene": la tarjeta cobra el total.
+- **Liquidar deudas ya no infla el mes:** lo que te devuelven (o devolvés) al tocar "Marcar cobrado/pagado", y los pagos y cobros de la bandeja de avisos, mueven la billetera pero **no suman a ingresos ni a gastos del mes**. Se ven con la etiqueta "Liquidación". Tu gasto cuenta cuando lo cargás, no cuando se compensa.
+- **Saldo inicial negativo:** la cuenta tiene una casilla "El saldo es negativo (en descubierto)", porque el teclado de números del celular no siempre trae el signo menos.
+- **Ajustar saldo:** deja poner un saldo negativo, y el ajuste ya no se anota como un ingreso "Sueldo" ni suma a los gastos o ingresos del mes (se ve como "Ajuste de saldo").
+- Pruebas nuevas: saldo con compra dividida y cobro, liquidaciones y ajustes fuera del mes, tarjeta con total, saldo inicial negativo, y la casilla y el ajuste en pantalla.
+
 ## 3.11 — noviembre 2026
 
 **Lo que viene:** cuánto es lo mínimo que ya está comprometido para el mes que viene y los siguientes.

@@ -716,3 +716,5 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .fc-item-name{overflow-wrap:anywhere}
 .fc-item-nota{font-size:12px;color:var(--txt3);margin-top:2px}
 .fc-sub{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--txt2);margin-top:4px;padding-left:10px}
+.acc-neg{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13px;color:var(--txt2);margin-top:4px}
+.acc-neg input{width:22px;height:22px}
