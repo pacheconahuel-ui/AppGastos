@@ -45,14 +45,14 @@ function accountBalance(accId){
     // Gastos e ingresos en USD con esta billetera (ej. pago del resumen en dólares)
     expenses.forEach(e=>{
       if(e.accountId!==accId||e.currency!=='USD'||esFuturo(e))return;
-      if(e.type==='Ingreso')bal+=e.amount;else bal-=effAmt(e);
+      if(e.type==='Ingreso')bal+=e.amount;else bal-=e.amount; // sale lo que se pagó, no solo la parte propia
     });
   } else {
     // ARS wallet: balance from expenses
     expenses.forEach(e=>{
       if(e.accountId!==accId||esFuturo(e))return;
       if(e.type==='Ingreso')bal+=amtArs(e);
-      else bal-=effArs(e);
+      else bal-=amtArs(e); // de la billetera sale el total pagado; la parte de otros vuelve cuando la cobrás
     });
     transfers.forEach(t=>{
       if(esFuturo(t))return;
@@ -75,7 +75,7 @@ function ccEstimated(accId){
     const isUSD=e.currency==='USD';
     const arsAmt = isUSD
       ? (e.arsEquiv || (e.amount*(e.exchangeRate||0)))
-      : effAmt(e);
+      : e.amount; // el resumen cobra el total, aunque la compra se haya dividido
     if(isUSD)totalUSD+=e.amount; else totalARS+=arsAmt;
     return{...e,arsAmt};
   });
@@ -211,7 +211,8 @@ function openAccountModal(id=null,ev=null){
   document.getElementById('acc-id').value=id||'';
   document.getElementById('acc-name').value=a?.name||'';
   document.getElementById('acc-emoji-preview').textContent=a?.emoji||(a?.type==='credit'?'💳':'🏦');
-  document.getElementById('acc-initial').value=a?.initialBalance||0;
+  document.getElementById('acc-initial').value=Math.abs(a?.initialBalance||0);
+  document.getElementById('acc-initial-neg').checked=(a?.initialBalance||0)<0;
   document.getElementById('acc-closing-day').value=a?.closingDay||'';
   document.getElementById('acc-due-offset').value=a?.dueOffset||10;
   const pw=document.getElementById('acc-pay-wallet');
@@ -246,7 +247,8 @@ function saveAccount(){
   const emoji=document.getElementById('acc-emoji-preview').textContent;
   const type=document.getElementById('acc-type').value;
   const currency=type==='wallet'?(document.getElementById('acc-currency').value||'ARS'):'ARS';
-  const initial=parseFloat(document.getElementById('acc-initial').value)||0;
+  const neg=document.getElementById('acc-initial-neg').checked?-1:1;
+  const initial=(parseFloat(document.getElementById('acc-initial').value)||0)*neg; // el teclado del celular no siempre trae el signo −
   const closingDay=parseInt(document.getElementById('acc-closing-day').value)||0;
   const dueOffset=parseInt(document.getElementById('acc-due-offset').value)||10;
   const payWalletId=document.getElementById('acc-pay-wallet').value||null;

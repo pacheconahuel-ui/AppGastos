@@ -242,8 +242,8 @@ function updateAdjHint(){
   const acc = accounts.find(a => a.id === accId);
   hint.style.color = 'var(--yellow)';
   hint.textContent = diff > 0
-    ? `Se va a crear un Ingreso de ${fmt(diff)} en ${acc?.name} (diferencia positiva)`
-    : `Se va a crear un Gasto de ${fmt(Math.abs(diff))} en ${acc?.name} (diferencia negativa)`;
+    ? `Se va a registrar un ajuste de +${fmt(diff)} en ${acc?.name} (no suma a tus ingresos del mes)`
+    : `Se va a registrar un ajuste de −${fmt(Math.abs(diff))} en ${acc?.name} (no suma a tus gastos del mes)`;
 }
 
 async function saveAdjust(){
@@ -258,7 +258,8 @@ async function saveAdjust(){
     id: newId(),
     type: diff > 0 ? 'Ingreso' : 'Egreso',
     date: todayStr(),
-    category: diff > 0 ? 'Sueldo' : 'Otro',
+    category: diff > 0 ? 'Otros ingresos' : 'Otro',
+    ajuste: true,
     description: `Ajuste de saldo — ${acc?.name}`,
     amount: Math.abs(diff), myAmount: Math.abs(diff),
     accountId: accId,

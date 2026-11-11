@@ -31,7 +31,9 @@ function effArs(e){return effAmt(e)*usdRate(e);}
 // Siguen sumando y restando en el saldo de cada billetera.
 function isCCPayment(e){return !!e.ccPayment||(e.description||'').startsWith('Pago resumen ');}
 function isFxEntry(e){return !!e.fxOp||usdTx.some(t=>t.linkedArsId===e.id);}
-function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e);}
+// Liquidar una deuda (lo que te devuelven o devolvés) y los ajustes de saldo mueven plata pero no son gasto ni ingreso
+function isLiquidation(e){return !!e.liquidacion||!!e.ajuste;}
+function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e)&&!isLiquidation(e);}
 function amtArs(e){return e.amount*usdRate(e);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
 // Texto como argumento de un onclick="...": comillas de JS + escape HTML (un ' en el nombre ya no rompe el botón)

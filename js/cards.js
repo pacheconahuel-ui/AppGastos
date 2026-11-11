@@ -39,7 +39,7 @@ function ccProjection(accId,n=6,today=todayStr()){
       if(!charged)return;
       count++;
       // Como en el resumen: lo cargado en dólares va aparte
-      if(e.currency==='USD')usd+=effAmt(e);else ars+=effAmt(e);
+      if(e.currency==='USD')usd+=e.amount;else ars+=e.amount;
     });
     out.push({label:`${MES_CORTO[m.getMonth()]} ${String(m.getFullYear()).slice(2)}`,ars,usd,count});
   }

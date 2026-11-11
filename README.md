@@ -13,6 +13,7 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 - **Resumen del mes:** gráficos (por mes, trimestre o año), presupuestos por categoría, metas, recurrentes pendientes.
 - **Cuotas de varios meses:** se cargan de una vez ("Cargar varios meses de una vez"), programadas mes a mes, y se pueden borrar una o desde esa en adelante.
 - **Movimientos programados:** con fecha futura no tocan el saldo hasta ese día. Los gastos fijos se marcan como "Se repite todos los meses" y la app los recuerda cada mes.
+- **Lo que viene:** el mínimo ya comprometido para el mes que viene y los próximos 5 (tarjetas, cuotas, programados y fijos), con detalle; opcionalmente suma los servicios que cambian y lo compara con tus ingresos.
 - **Lista** con búsqueda, filtros (billetera, ingreso o egreso, categoría) y exportación a CSV.
 - **Tarjetas:** aviso de vencimiento del resumen y próximos 6 resúmenes (cuotas y fijos).
 - **Dólar del día** al cargar movimientos en USD.
@@ -20,12 +21,12 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 
 ### Cómo se calcula el saldo de una billetera
 
-Saldo inicial (o el ajuste) + ingresos − gastos + transferencias que entran − transferencias que salen.
+Saldo inicial (o el ajuste) + ingresos − lo que pagaste + transferencias que entran − transferencias que salen. En un gasto dividido sale el total que pagaste; la parte de la otra persona vuelve cuando la cobrás.
 Solo cuentan los movimientos **que tienen esa billetera elegida**.
 
 ### Qué cuenta como gasto o ingreso del mes
 
-Todo, salvo lo que solo mueve plata entre cuentas: el **pago del resumen de la tarjeta** (las compras con tarjeta ya cuentan el mes en que se hacen) y la **compra o venta de dólares**. Esos movimientos igual suman o restan en el saldo de la billetera. Un movimiento "sin billetera" no suma ni resta en ningún saldo; la app avisa al guardarlo y lo marca con la etiqueta *Sin billetera* en la lista.
+Todo, salvo lo que solo mueve plata entre cuentas: el **pago del resumen de la tarjeta** (las compras con tarjeta ya cuentan el mes en que se hacen), la **compra o venta de dólares**, las **liquidaciones de deudas** (lo que te devuelven o devolvés) y los **ajustes de saldo**. Esos movimientos igual suman o restan en el saldo de la billetera. Un movimiento "sin billetera" no suma ni resta en ningún saldo; la app avisa al guardarlo y lo marca con la etiqueta *Sin billetera* en la lista.
 
 ## Cómo está armada
 
@@ -64,6 +65,8 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `periods.js` | gráfico por meses, trimestres o años |
 | `form-chips.js` | categorías y billeteras como botones en el formulario de movimiento |
 | `dolar.js` | cotización del día (dolarapi.com) para gastos en USD y compra/venta |
+| `forecast.js` | "Lo que viene": el mínimo comprometido por mes (lógica) |
+| `forecast-ui.js` | pantalla de "Lo que viene" y su línea en el Resumen |
 | `linked.js` | vínculo con otras personas, avisos de deudas y pagos (lógica y Firebase) |
 | `linked-ui.js` | bandeja de avisos, pagar y confirmar, mi código, vincular un contacto |
 | `init.js` | arranque |

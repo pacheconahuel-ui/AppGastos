@@ -222,3 +222,103 @@ describe('dateAddMonths (repetir mes a mes)', () => {
     ['2026-11-30', 3, '2027-02-28'],
   ])('%s + %i meses → %s', (d, k, r) => expect(app.run(`dateAddMonths('${d}',${k})`)).toBe(r));
 });
+
+describe('Lo que viene (mínimo comprometido por mes)', () => {
+  const HOY = '2026-11-10';
+  const visa = { id: 'cc', name: 'Visa', emoji: '💳', type: 'credit', closingDay: 25, dueOffset: 10 };
+  const E = (o) => ({ type: 'Egreso', myAmount: o.amount, category: 'Otro', description: o.id, accountId: 'acc_mp', ...o });
+  const cargar = () => {
+    app.set('accounts', [{ id: 'acc_mp', name: 'MP', emoji: '📱', type: 'wallet' }, visa]);
+    app.set('expenses', [
+      // tarjeta: una compra del resumen ya cerrado, una cuota 1/3 y un fijo del resumen que viene
+      E({ id: 'cerrada', amount: 8000, accountId: 'cc', date: '2026-10-10', ccPaid: false }),
+      E({ id: 'cuota', amount: 30000, accountId: 'cc', date: '2026-11-05', cardExpType: 'installment', installmentCurrent: 1, installmentTotal: 3, ccPaid: false }),
+      E({ id: 'netflix', amount: 5000, accountId: 'cc', date: '2026-11-05', cardExpType: 'recurring', ccPaid: false }),
+      // fijo de billetera (alquiler): el último monto es el del mes pasado
+      E({ id: 'alq1', description: 'Alquiler', amount: 380000, date: '2026-09-01', recurring: true }),
+      E({ id: 'alq2', description: 'Alquiler', amount: 400000, date: '2026-10-01', recurring: true }),
+      // 12 cuotas de la heladera desde el 7/12 (programadas)
+      ...Array.from({ length: 12 }, (_, i) => E({ id: 'h' + i, description: 'Heladera', amount: 25000, date: app.run(`dateAddMonths('2026-12-07',${i})`), serieId: 's1', serieIdx: i + 1, serieTotal: 12 })),
+      // servicios de los últimos 3 meses (ago, sep, oct) y sueldo
+      E({ id: 'l1', category: 'Luz', description: 'Luz', amount: 30000, date: '2026-08-12' }),
+      E({ id: 'l2', category: 'Luz', description: 'Luz', amount: 30000, date: '2026-09-12' }),
+      E({ id: 'l3', category: 'Luz', description: 'Luz', amount: 30000, date: '2026-10-12' }),
+      E({ id: 'g1', category: 'Gas', description: 'Gas', amount: 15000, date: '2026-10-20' }),
+      ...['2026-08-01', '2026-09-01', '2026-10-01'].map((d, i) => E({ id: 'sue' + i, type: 'Ingreso', amount: 1000000, date: d, category: 'Salario' })),
+    ]);
+    app.set('usdTx', []);
+  };
+  const f = (mk, o = {}) => app.run(`fcForecast('${mk}',${JSON.stringify(o)},'${HOY}')`);
+
+  it('los meses van desde el actual', () => {
+    expect(app.run(`fcMonths('${HOY}')`)).toEqual(['2026-11', '2026-12', '2027-01', '2027-02', '2027-03', '2027-04']);
+  });
+  it('tarjeta: el resumen cerrado vence este mes y lo nuevo, el mes que viene; las cuotas y fijos siguen', () => {
+    cargar();
+    expect(f('2026-11').tot.tarjeta).toBe(8000); // resumen cerrado sin pagar: vence el 4/11
+    expect(f('2026-12').tot.tarjeta).toBe(35000); // cuota 1/3 + netflix
+    expect(f('2027-01').tot.tarjeta).toBe(35000); // cuota 2/3 + netflix
+    expect(f('2027-02').tot.tarjeta).toBe(35000); // cuota 3/3 + netflix
+    expect(f('2027-03').tot.tarjeta).toBe(5000); // terminó la cuota: queda el fijo
+    const det = f('2027-01').items.find(i => i.grupo === 'tarjeta').subs.map(s => `${s.label}:${s.nota}`).sort();
+    expect(det).toEqual(['cuota:cuota 2/3', 'netflix:fijo']);
+  });
+  it('cuotas cargadas de varios meses y fijos de billetera', () => {
+    cargar();
+    expect(f('2026-12').tot.cuotas).toBe(25000);
+    expect(f('2027-03').tot.cuotas).toBe(25000);
+    expect(f('2026-11').tot.cuotas).toBe(0);
+    expect(f('2026-12').items.find(i => i.label === 'Heladera').nota).toBe('cuota 1/12 · hasta 07/11');
+    // alquiler: el último monto (400.000) en cada mes que viene; este mes ya se cargó el de octubre, falta el de noviembre
+    expect(f('2026-11').tot.fijos).toBe(400000);
+    expect(f('2026-12').tot.fijos).toBe(400000);
+  });
+  it('total: tarjeta + cuotas + fijos, y los servicios solo si se piden (y no en este mes)', () => {
+    cargar();
+    expect(f('2026-12').total).toBe(35000 + 25000 + 400000);
+    expect(app.run(`fcServicios('${HOY}')`).avg).toBe(35000); // (3 × 30.000 + 15.000) / 3
+    expect(f('2026-12', { servicios: true }).total).toBe(35000 + 25000 + 400000 + 35000);
+    expect(f('2026-11', { servicios: true }).servicios).toBe(0);
+    expect(app.run(`fcIngresos('${HOY}')`)).toBe(1000000);
+  });
+  it('un fijo que dejó de aparecer hace más de un mes no se proyecta', () => {
+    cargar();
+    app.set('expenses', [E({ id: 'viejo', description: 'Gimnasio', amount: 20000, date: '2026-06-01', recurring: true })]);
+    expect(f('2026-12').tot.fijos).toBe(0);
+  });
+});
+
+describe('gastos divididos, liquidaciones y ajustes (3.12)', () => {
+  const split = () => mov({ id: 'sp', amount: 1000, myAmount: 600, accountId: 'acc_mp', date: '2026-11-05', category: 'Supermercado', splits: [{ personId: 'v', personName: 'Vicky', amount: 400 }] });
+  it('de la billetera sale el total pagado; la parte de otros vuelve cuando la cobrás', () => {
+    app.set('expenses', [split()]);
+    expect(app.run('accountBalance("acc_mp")')).toBe(-1000);
+    // Vicky devuelve 400: es una liquidación, la billetera la recibe pero no es ingreso del mes
+    app.set('expenses', [split(), { id: 'liq', type: 'Ingreso', amount: 400, myAmount: 400, date: '2026-11-06', category: 'Otro', description: 'Liquidación Vicky', accountId: 'acc_mp', autoGenerated: true, liquidacion: true }]);
+    expect(app.run('accountBalance("acc_mp")')).toBe(-600);
+    const r = app.run('calcSummary("2026-11")');
+    expect(r.ing).toBe(0); // la liquidación no cuenta como ingreso
+    expect(r.real).toBe(600); // y el gasto del mes es solo la parte propia
+    expect(r.pag).toBe(1000); // lo pagado en total
+  });
+  it('una liquidación o un ajuste no suman a gastos ni ingresos del mes, pero sí al saldo', () => {
+    app.set('expenses', [
+      mov({ id: 'g', amount: 100, accountId: 'acc_mp', date: '2026-11-05' }),
+      mov({ id: 'aj', type: 'Egreso', amount: 50, accountId: 'acc_mp', date: '2026-11-06', ajuste: true }),
+      mov({ id: 'aj2', type: 'Ingreso', amount: 30, accountId: 'acc_mp', date: '2026-11-06', ajuste: true }),
+    ]);
+    const r = app.run('calcSummary("2026-11")');
+    expect([r.ing, r.real]).toEqual([0, 100]);
+    expect(app.run('accountBalance("acc_mp")')).toBe(-120);
+  });
+  it('la tarjeta cobra el total de una compra dividida', () => {
+    app.set('accounts', [{ id: 'cc', name: 'Visa', emoji: '💳', type: 'credit', closingDay: 25 }]);
+    app.set('expenses', [mov({ id: 'c', amount: 1000, myAmount: 600, accountId: 'cc', date: '2026-11-05', ccPaid: false })]);
+    expect(app.run('ccEstimated("cc").totalARS')).toBe(1000);
+  });
+  it('un saldo inicial negativo cuenta en la billetera', () => {
+    app.set('accounts', [{ id: 'acc_mp', name: 'MP', emoji: '📱', type: 'wallet', initialBalance: -80195.81 }]);
+    app.set('expenses', [mov({ id: 'i', type: 'Ingreso', amount: 1482477.76, accountId: 'acc_mp', date: '2026-11-02' })]);
+    expect(Math.round(app.run('accountBalance("acc_mp")') * 100) / 100).toBe(1402281.95);
+  });
+});

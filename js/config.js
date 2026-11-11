@@ -1,6 +1,6 @@
 // Versión, configuración de Firebase, constantes y estado global
 // --- VERSION (única fuente: la usan el encabezado y el service worker) ---
-const APP_VERSION='3.10';
+const APP_VERSION='3.12';
 
 // --- FIREBASE CONFIG ---
 const FB_CONFIG={apiKey:"AIzaSyAMUb7e_ngGiTc9lRTazNf290bKKRGvZN0",authDomain:"gastos-pache.firebaseapp.com",databaseURL:"https://gastos-pache-default-rtdb.firebaseio.com",projectId:"gastos-pache",storageBucket:"gastos-pache.firebasestorage.app",messagingSenderId:"151998147367",appId:"1:151998147367:web:6918969bcadef03048d702"};

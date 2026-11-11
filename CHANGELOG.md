@@ -1,5 +1,27 @@
 # Cambios
 
+## 3.12 — noviembre 2026
+
+Cuatro arreglos que aparecieron al armar las cuentas de cero y conciliar con el banco.
+
+- **Gastos divididos:** de la billetera ahora sale **el total que pagaste**. Antes solo descontaba tu parte: si pagabas $1.000 y tu parte era $600, la billetera mostraba −$600 en vez de −$1.000, y cuando te devolvían $400 quedaba −$200 en vez de −$600. Lo mismo para el resumen de la tarjeta, la proyección de cuotas y "Lo que viene": la tarjeta cobra el total.
+- **Liquidar deudas ya no infla el mes:** lo que te devuelven (o devolvés) al tocar "Marcar cobrado/pagado", y los pagos y cobros de la bandeja de avisos, mueven la billetera pero **no suman a ingresos ni a gastos del mes**. Se ven con la etiqueta "Liquidación". Tu gasto cuenta cuando lo cargás, no cuando se compensa.
+- **Saldo inicial negativo:** la cuenta tiene una casilla "El saldo es negativo (en descubierto)", porque el teclado de números del celular no siempre trae el signo menos.
+- **Ajustar saldo:** deja poner un saldo negativo, y el ajuste ya no se anota como un ingreso "Sueldo" ni suma a los gastos o ingresos del mes (se ve como "Ajuste de saldo").
+- Pruebas nuevas: saldo con compra dividida y cobro, liquidaciones y ajustes fuera del mes, tarjeta con total, saldo inicial negativo, y la casilla y el ajuste en pantalla.
+
+## 3.11 — noviembre 2026
+
+**Lo que viene:** cuánto es lo mínimo que ya está comprometido para el mes que viene y los siguientes.
+
+- **En el Resumen** queda una línea chica, "Mes que viene · $X ›", que abre la pantalla completa.
+- **Mínimo del mes** (el número grande) con el desglose: tarjetas, cuotas y programados, y fijos.
+- **Tira de 6 meses** (este mes y los 5 que siguen) con el total de cada uno; tocás un mes y ves su detalle. Sirve para ver cuándo baja el total, por ejemplo cuando termina una cuota.
+- **Detalle** como las filas de un Excel: cada tarjeta con sus compras (cuota 2/3, fijo), las cuotas cargadas de varios meses con hasta cuándo llegan, y los fijos de cada mes.
+- Cómo se arma, todo aproximado: **tarjetas** por vencimiento del resumen (lo ya cerrado vence en su fecha; lo nuevo, en el próximo cierre) con las cuotas y fijos que siguen; **gastos programados y cuotas de varios meses** en su mes; **fijos de cada mes** (alquiler, internet) con el último monto que confirmaste, mientras sigan apareciendo.
+- **Opcionales** (se prenden y apagan, y quedan recordados): sumar los **servicios que cambian** (luz, gas, servicios) con el promedio de los últimos 3 meses, y **comparar con mis ingresos** (promedio de 3 meses) para ver cuánto queda libre.
+- Pruebas nuevas: el cálculo mes a mes (cuotas de tarjeta que terminan, resumen cerrado, fijos vencidos, servicios e ingresos) y la pantalla a 320/360/390 px.
+
 ## 3.10 — noviembre 2026
 
 - **Cargar varios meses de una vez** (para cuotas fijas: la heladera en 12 pagos, el curso, un sueldo): en el formulario, "Más opciones → Cargar varios meses de una vez" con la cantidad de meses (hasta 36). Se crea un movimiento por mes, con la misma fecha de cada mes (si el mes no tiene ese día queda el último), y el formulario avisa cuántos son, hasta cuándo y el total. Los de fecha futura quedan **programados**: no restan hasta su día. En la lista se ven con su número (3/12).
