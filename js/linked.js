@@ -131,12 +131,21 @@ function lkAttach(){
   if(!db||!currentUID)return;
   lkLoadOut();
   avisosRef=db.ref(`avisos/${currentUID}`);
-  avisosRef.on('value',s=>{avisosIn=Object.values(s.val()||{}).filter(a=>a&&a.id);lkRender();},e=>console.warn('[FB] avisos:',e&&e.code));
+  avisosRef.on('value',s=>{avisosIn=Object.values(s.val()||{}).filter(a=>a&&a.id);lkLimpiar();lkRender();},e=>console.warn('[FB] avisos:',e&&e.code));
   vinculosRef=db.ref(`vinculos/${currentUID}/aceptados`);
   vinculosRef.on('value',s=>{vinculosIn=s.val()||{};lkRender();},e=>console.warn('[FB] vinculos:',e&&e.code));
   flushAvisos();
 }
+// Avisos ya vistos con más de 60 días: se borran (una vez por sesión)
+const LK_VIDA=60*86400000;
+let _lkLimpio=false;
+function lkLimpiar(){
+  if(_lkLimpio||!avisosRef||!fbOnline)return;
+  _lkLimpio=true;
+  avisosIn.filter(a=>a.visto&&a.creado<Date.now()-LK_VIDA).forEach(a=>avisosRef.child(a.id).remove().catch(()=>{}));
+}
 function lkDetach(){
+  _lkLimpio=false;
   if(avisosRef){avisosRef.off();avisosRef=null;}
   if(vinculosRef){vinculosRef.off();vinculosRef=null;}
   avisosIn=[];vinculosIn={};

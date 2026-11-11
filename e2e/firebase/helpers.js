@@ -17,7 +17,7 @@ export async function device(browser, email) {
   page.on('pageerror', e => page.errs.push(e.message));
   page.on('dialog', d => d.accept());
   await page.goto('./');
-  await page.waitForFunction(() => typeof auth !== 'undefined' && auth);
+  await page.waitForFunction(() => window.APP_LISTA === true && typeof auth !== 'undefined' && auth);
   await page.evaluate(e => auth.signInWithEmailAndPassword(e, 'secreta12'), email);
   await page.waitForFunction(() => currentUID && fbOnline && fbReady !== undefined);
   // que lleguen los primeros datos y corra la subida de pendientes del arranque

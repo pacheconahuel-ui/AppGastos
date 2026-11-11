@@ -18,36 +18,12 @@ function switchTab(t){
   if(t==='dashboard')renderDashboard();
   if(t==='usd')renderUsdTab();
   if(t==='saldos')renderSaldosTab();
-  if(t==='cuentas'){loadAccounts();renderCuentasTab();}
+  if(t==='cuentas')renderCuentasTab();
 }
 
 // --- TOAST ---
 let toastTimer;
 function toast(msg,ms=2500){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),ms);}
-
-// --- MIGRATION ---
-async function checkMigration(){
-  if(!db||!currentUID)return;
-  try{
-    const snap=await db.ref('gastos').once('value');
-    const snapUsd=await db.ref('usd').once('value');
-    if(snap.val()||snapUsd.val())document.getElementById('mig-banner').classList.add('on');
-  }catch(e){console.warn('Migration check:',e);}
-}
-async function runMigration(){
-  const banner=document.getElementById('mig-banner');
-  banner.querySelector('.mig-title').textContent='Migrando datos…';
-  banner.querySelector('.mig-btns').style.display='none';
-  try{
-    let ma=0,mu=0;
-    const sA=await db.ref('gastos').once('value');const aD=sA.val();
-    if(aD){for(const e of Object.values(aD).filter(e=>e&&e.id)){await db.ref(arsPath(e.id)).set(e);ma++;}await db.ref('gastos').remove();}
-    const sU=await db.ref('usd').once('value');const uD=sU.val();
-    if(uD){for(const t of Object.values(uD).filter(t=>t&&t.id)){await db.ref(usdPath(t.id)).set(t);mu++;}await db.ref('usd').remove();}
-    banner.classList.remove('on');toast(`✅ Migración: ${ma} gastos + ${mu} USD importados`,4000);
-  }catch(e){console.error('Migration error:',e);banner.querySelector('.mig-title').textContent='⚠️ Error en la migración';banner.querySelector('.mig-btns').style.display='flex';toast('❌ Error al migrar');}
-}
-function dismissMigration(){document.getElementById('mig-banner').classList.remove('on');}
 
 // --- KEYBOARD ---
 document.addEventListener('keydown',e=>{
@@ -316,22 +292,23 @@ function setDashChart(view){
   try{view==='pie'?renderPieChart(getDashMk()):renderMonthlyChart();}catch(e){console.warn('chart:',e);}
 }
 
-// --- PROJECTION CARD ---
+// --- PROYECCIÓN DEL MES ---
+// Lo gastado hasta hoy + el ritmo diario de lo que NO es fijo × los días que faltan + los fijos que todavía no se cargaron.
+// Los fijos (luz, seguro, patente…) se pagan una vez por mes: contarlos como si se repitieran cada día inflaba la cuenta.
 function renderProjection(){
-  const mk=getDashMk();
-  const cur=nowKey();
-  if(mk!==cur){document.getElementById('proj-card').style.display='none';return;}
-  const today=new Date();
-  const dayOfMonth=today.getDate();
-  const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
-  if(dayOfMonth<3){document.getElementById('proj-card').style.display='none';return;}
-  const spentSoFar=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)&&!esFuturo(e)).reduce((s,e)=>s+effArs(e),0);
-  const dailyRate=spentSoFar/dayOfMonth;
-  const projected=Math.round(dailyRate*daysInMonth);
+  const mk=getDashMk(),projCard=document.getElementById('proj-card');
+  if(mk!==nowKey()){projCard.style.display='none';return;}
+  const hoy=new Date(),dia=hoy.getDate(),dias=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+  if(dia<5){projCard.style.display='none';return;} // la primera semana todavía no alcanza para estimar
+  const delMes=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)&&!esFuturo(e));
+  const total=delMes.reduce((s,e)=>s+effArs(e),0);
+  const fijos=delMes.filter(e=>e.recurring).reduce((s,e)=>s+effArs(e),0);
+  const porDia=(total-fijos)/dia;
+  const faltanFijos=fcAll({},todayStr())[0].tot.fijos;
+  const projected=Math.round(total+porDia*(dias-dia)+faltanFijos);
   const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
-  const projCard=document.getElementById('proj-card');
-  const projVal=document.getElementById('c-proj');
   projCard.style.display='';
+  const projVal=document.getElementById('c-proj');
   projVal.textContent=fmt(projected);
   projVal.className=projected>ing&&ing>0?'neg':'';
 }

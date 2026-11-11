@@ -93,6 +93,13 @@ Un contacto se puede **vincular** con otra persona que use la app, solo para avi
 
 El código lleva un secreto: sin haberlo recibido nadie puede mandarte avisos. **Cambiar mi código** frena vínculos nuevos; para sacar a alguien ya vinculado, **Desvincular** en el contacto. Las reglas están en `database.rules.json` (`vinculos` y `avisos`): hay que **publicarlas** para que esto ande.
 
+## Rendimiento y datos
+
+- **Carga:** cada apertura baja los gastos, USD y deudas completos (no hay carga parcial). Un movimiento pesa ≈230 bytes: 1.000 movimientos ≈ 230 KB y 10.000 ≈ 2,3 MB por apertura. Con el plan gratis de Firebase (10 GB de descarga por mes) sobra para un uso personal.
+- **Copia en el celular:** `localStorage` guarda todo (límite ≈5 MB, unos 20.000 movimientos). Si algún día se acerca, hay que pasar a IndexedDB.
+- **Dibujo:** con 3.000 a 8.000 movimientos y un celular 4 veces más lento que la compu, dibujar el Resumen lleva 100 a 170 ms; los gráficos solo se dibujan cuando se ven.
+- **Caché:** el service worker pide primero la red (así cada versión se ve al toque) con tope de 4 segundos, y las librerías de afuera salen de la caché.
+
 ## Respaldo
 
 Perfil → Respaldo → **Descargar respaldo completo** baja un JSON con todo. **Restaurar un respaldo** reemplaza todos los datos por los del archivo (antes descarga uno de lo actual).

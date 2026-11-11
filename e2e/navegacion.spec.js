@@ -81,6 +81,6 @@ test('en la compu: columna de secciones con "+ Nuevo" y sin barra de abajo', asy
 
 test('sin sesión no se ve la barra', async ({ page }) => {
   await page.goto('./');
-  await page.waitForFunction(() => typeof renderAll === 'function');
+  await page.waitForFunction(() => window.APP_LISTA === true && window.AUTH_LISTA === true);
   await expect(page.locator('.bnav')).toBeHidden();
 });

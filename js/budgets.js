@@ -120,11 +120,14 @@ function renderStats(mk){
   if(!rows.length){el.textContent='';return;}
   const{ing,real}=calcSummary(mk);
   const rate=ing>0?Math.round((1-real/ing)*100):0;
-  const today=new Date().getDate(),dailyAvg=today>0?Math.round(real/today):0;
+  // Gasto por día sin contar los fijos (que se pagan una vez por mes)
+  const today=new Date().getDate();
+  const variable=rows.filter(e=>!e.recurring&&!esFuturo(e)).reduce((s,e)=>s+effArs(e),0);
+  const dailyAvg=today>0?Math.round(variable/today):0;
   // Una línea: ahorro y gasto por día
   const parts=[];
   if(ing>0)parts.push(rate>=0?`Ahorrás el ${rate}%`:`Gastaste ${-rate}% más de lo que entró`);
-  if(dailyAvg>0&&mk===nowKey())parts.push(`${fmt(dailyAvg)}/día`);
+  if(dailyAvg>0&&mk===nowKey())parts.push(`${fmt(dailyAvg)}/día sin fijos`);
   el.textContent=parts.join(' · ');
 }
 

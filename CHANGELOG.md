@@ -1,5 +1,28 @@
 # Cambios
 
+## 3.13 — noviembre 2026
+
+Auditoría completa: sincronización con Firebase, caché, rendimiento y pantallas (celular y escritorio), revisada con tus datos reales de noviembre.
+
+**Sincronización y lecturas de Firebase**
+- **Se sacó la migración vieja:** en cada inicio la app hacía 2 lecturas (`/gastos` y `/usd` de la raíz) que las reglas no permiten, así que siempre fallaban. Era código de antes de tener cuentas.
+- **Los avisos viejos se limpian solos:** los avisos ya vistos con más de 60 días se borran. Antes la bandeja crecía para siempre y se bajaba entera en cada inicio.
+- **Los eventos de Firebase dibujan una sola vez:** gastos, USD, deudas y configuración llegan de a varios al abrir; antes cada uno redibujaba todo (≈5 veces).
+- **Cuentas, metas y presupuestos se leen al entrar** (antes con un retraso, que dejaba un instante la pantalla "sin billeteras") y **ya no se vuelven a leer al cambiar de pestaña**, que además podía pisar lo que estaba en memoria.
+
+**Caché y arranque**
+- **Los scripts van diferidos** (`defer`) y se agregaron conexiones tempranas a los servidores de las librerías: la pantalla se dibuja sin esperar a que bajen Firebase y los gráficos.
+- **Service worker:** sigue pidiendo primero la red, pero con tope de 4 segundos: con mala señal ahora abre al toque con lo guardado, en vez de colgarse. Al instalar guarda también los archivos de la app (se leen de `index.html`, sin lista que mantener), no solo las librerías.
+- **Guardado local:** solo se escribe en el celular lo que cambió.
+- **Los gráficos se dibujan solo cuando se ven** (con otra pestaña abierta no se redibujan).
+
+**Pantallas**
+- **Lista:** la descripción se ve entera en 2 renglones (antes se cortaba a ~12 letras). Tocar la fila edita; queda solo el botón de borrar.
+- **Cuentas:** el total en pesos y dólares ya no se aprieta con "transferencias este mes".
+- **Resumen en escritorio ancho (≥1280 px):** dos columnas (movimientos y mes a la izquierda; presupuestos, metas y gráficos a la derecha).
+- **Proyección a fin de mes corregida:** antes repetía todos los días lo ya pagado una sola vez (luz, seguro, patente), y daba cifras absurdas ($3,9 millones con $1,4 millones gastados). Ahora cuenta lo gastado, más el ritmo diario de lo que no es fijo, más los fijos que todavía faltan cargar. No aparece la primera semana del mes. "Gasto por día" también es sin fijos.
+- Pruebas nuevas (8 de navegador, 1 con emuladores): scripts diferidos, un solo dibujo por tanda de eventos, gráficos solo a la vista, guardado selectivo, Lista, Cuentas, proyección, escritorio de dos columnas y limpieza de avisos.
+
 ## 3.12 — noviembre 2026
 
 Cuatro arreglos que aparecieron al armar las cuentas de cero y conciliar con el banco.

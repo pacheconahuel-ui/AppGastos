@@ -6,3 +6,5 @@ document.getElementById('f-amt')?.addEventListener('input',()=>updateSerieHint()
 loadTheme();
 initFirebase();
 setTimeout(checkMagicLink,500);
+// Los scripts van diferidos: las pruebas esperan esta marca para no adelantarse al arranque
+window.APP_LISTA=true;

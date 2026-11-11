@@ -97,6 +97,7 @@ async function resetAllData(){
       await db.ref(`usuarios/${currentUID}`).remove();
     }
     // Clear all localStorage keys for this user
+    lsForget();
     const keysToRemove=Object.keys(localStorage).filter(k=>k.includes(currentUID)||k.includes('gp_'));
     keysToRemove.forEach(k=>localStorage.removeItem(k));
     toast('✅ Todos los datos eliminados');

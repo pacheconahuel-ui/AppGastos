@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.12**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.13**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -85,6 +85,14 @@ Estado a **noviembre 2026**: versión **3.12**. El código está en `index.html`
 - [x] Liquidaciones y ajustes fuera del gasto e ingreso del mes.
 - [x] Saldo inicial negativo y "Ajustar saldo" con negativos.
 - [ ] Idea: "Pagó la otra persona" en el formulario (carga tu parte y la deuda en un solo paso).
+
+## 3.13 — auditoría de rendimiento y pantallas ✅
+
+- [x] Lecturas de Firebase de más, avisos que crecían sin fin y renders repetidos.
+- [x] Scripts diferidos, service worker con tope de espera, guardado local selectivo.
+- [x] Lista, Cuentas, proyección y Resumen en dos columnas en escritorio.
+- [ ] Idea: carga parcial de movimientos (solo los últimos meses) cuando haya más de 10.000.
+- [ ] Idea: botón de borrar billetera dentro de su pantalla de edición, no en la tarjeta.
 
 ## Ideas para después
 
