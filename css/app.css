@@ -682,3 +682,37 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .serie-row .f-ctrl{flex:1}
 .conf-btns{flex-wrap:wrap}
 .conf-btns button{min-width:calc(50% - 5px)}
+/* Lo que viene (3.11) */
+.fc-line{width:100%;min-height:44px;margin-bottom:12px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:14px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font:600 14px 'Outfit',sans-serif;cursor:pointer}
+.fc-line-lbl{display:flex;align-items:center;gap:6px;color:var(--txt2);flex:1;text-align:left}
+.fc-line-val{font-family:var(--num);font-weight:700}
+.fc-line-chev{display:flex;color:var(--txt3);transform:rotate(-90deg)}
+.fc-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;margin-bottom:14px}
+.fc-mes{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt2);cursor:pointer;font-family:'Outfit',sans-serif;min-width:0}
+.fc-mes.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--surf));color:var(--txt)}
+.fc-bar{height:44px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.fc-bar i{display:block;width:60%;background:var(--acc);border-radius:3px 3px 0 0;opacity:.85}
+.fc-m{font-size:11px;font-weight:700}
+.fc-v{font-size:10px;color:var(--txt3);white-space:nowrap}
+.fc-kpi{text-align:center;padding:6px 0 12px}
+.fc-kpi-lbl{font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.fc-kpi-val{font-family:var(--num);font-size:34px;font-weight:700;line-height:1.15}
+.fc-kpi-sub{font-size:12px;color:var(--txt3);margin-top:2px}
+.fc-usd{font-size:12px;color:var(--gold)}
+.fc-rows{display:grid;gap:8px;margin-bottom:12px}
+.fc-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.fc-row-bar{height:6px;background:var(--bdr2);border-radius:3px;overflow:hidden;display:block}
+.fc-row-bar i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.fc-tog{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px;margin-bottom:8px;border-radius:12px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font:500 13px 'Outfit',sans-serif;cursor:pointer}
+.fc-sw{flex:0 0 36px;height:20px;border-radius:10px;background:var(--bdr2);position:relative;transition:background .2s}
+.fc-sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+.fc-sw.on{background:var(--acc-btn)}
+.fc-sw.on::after{left:18px}
+.fc-libre{font-size:13px;padding:10px 12px;border-radius:12px;background:var(--surf);border:1px solid var(--bdr);margin-bottom:8px}
+.fc-libre.pos{color:var(--green)} .fc-libre.neg{color:var(--red)}
+.fc-sec{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px}
+.fc-item{padding:8px 0;border-bottom:1px solid var(--bdr)}
+.fc-item-top{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.fc-item-name{overflow-wrap:anywhere}
+.fc-item-nota{font-size:12px;color:var(--txt3);margin-top:2px}
+.fc-sub{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--txt2);margin-top:4px;padding-left:10px}

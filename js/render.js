@@ -66,6 +66,7 @@ function renderDashboard(){
     const pc=document.getElementById('proj-card'); if(pc)pc.style.display='none';
     const rr=document.getElementById('recurring-reminders'); if(rr)rr.innerHTML='';
   }
+  try{renderFcLine();}catch(e){console.warn('lo que viene:',e);}
   try{renderBudgetsSection();}catch(e){console.warn('budgets:',e);}
   try{renderGoalsSection();}catch(e){console.warn('goals:',e);}
   try{renderStats(mk);}catch(e){console.warn('stats:',e);}

@@ -13,6 +13,7 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 - **Resumen del mes:** gráficos (por mes, trimestre o año), presupuestos por categoría, metas, recurrentes pendientes.
 - **Cuotas de varios meses:** se cargan de una vez ("Cargar varios meses de una vez"), programadas mes a mes, y se pueden borrar una o desde esa en adelante.
 - **Movimientos programados:** con fecha futura no tocan el saldo hasta ese día. Los gastos fijos se marcan como "Se repite todos los meses" y la app los recuerda cada mes.
+- **Lo que viene:** el mínimo ya comprometido para el mes que viene y los próximos 5 (tarjetas, cuotas, programados y fijos), con detalle; opcionalmente suma los servicios que cambian y lo compara con tus ingresos.
 - **Lista** con búsqueda, filtros (billetera, ingreso o egreso, categoría) y exportación a CSV.
 - **Tarjetas:** aviso de vencimiento del resumen y próximos 6 resúmenes (cuotas y fijos).
 - **Dólar del día** al cargar movimientos en USD.
@@ -64,6 +65,8 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `periods.js` | gráfico por meses, trimestres o años |
 | `form-chips.js` | categorías y billeteras como botones en el formulario de movimiento |
 | `dolar.js` | cotización del día (dolarapi.com) para gastos en USD y compra/venta |
+| `forecast.js` | "Lo que viene": el mínimo comprometido por mes (lógica) |
+| `forecast-ui.js` | pantalla de "Lo que viene" y su línea en el Resumen |
 | `linked.js` | vínculo con otras personas, avisos de deudas y pagos (lógica y Firebase) |
 | `linked-ui.js` | bandeja de avisos, pagar y confirmar, mi código, vincular un contacto |
 | `init.js` | arranque |

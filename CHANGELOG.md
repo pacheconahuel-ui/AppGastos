@@ -1,5 +1,17 @@
 # Cambios
 
+## 3.11 — noviembre 2026
+
+**Lo que viene:** cuánto es lo mínimo que ya está comprometido para el mes que viene y los siguientes.
+
+- **En el Resumen** queda una línea chica, "Mes que viene · $X ›", que abre la pantalla completa.
+- **Mínimo del mes** (el número grande) con el desglose: tarjetas, cuotas y programados, y fijos.
+- **Tira de 6 meses** (este mes y los 5 que siguen) con el total de cada uno; tocás un mes y ves su detalle. Sirve para ver cuándo baja el total, por ejemplo cuando termina una cuota.
+- **Detalle** como las filas de un Excel: cada tarjeta con sus compras (cuota 2/3, fijo), las cuotas cargadas de varios meses con hasta cuándo llegan, y los fijos de cada mes.
+- Cómo se arma, todo aproximado: **tarjetas** por vencimiento del resumen (lo ya cerrado vence en su fecha; lo nuevo, en el próximo cierre) con las cuotas y fijos que siguen; **gastos programados y cuotas de varios meses** en su mes; **fijos de cada mes** (alquiler, internet) con el último monto que confirmaste, mientras sigan apareciendo.
+- **Opcionales** (se prenden y apagan, y quedan recordados): sumar los **servicios que cambian** (luz, gas, servicios) con el promedio de los últimos 3 meses, y **comparar con mis ingresos** (promedio de 3 meses) para ver cuánto queda libre.
+- Pruebas nuevas: el cálculo mes a mes (cuotas de tarjeta que terminan, resumen cerrado, fijos vencidos, servicios e ingresos) y la pantalla a 320/360/390 px.
+
 ## 3.10 — noviembre 2026
 
 - **Cargar varios meses de una vez** (para cuotas fijas: la heladera en 12 pagos, el curso, un sueldo): en el formulario, "Más opciones → Cargar varios meses de una vez" con la cantidad de meses (hasta 36). Se crea un movimiento por mes, con la misma fecha de cada mes (si el mes no tiene ese día queda el último), y el formulario avisa cuántos son, hasta cuándo y el total. Los de fecha futura quedan **programados**: no restan hasta su día. En la lista se ven con su número (3/12).

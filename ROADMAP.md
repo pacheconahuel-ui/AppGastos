@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.10**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.11**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -72,6 +72,12 @@ Estado a **noviembre 2026**: versión **3.10**. El código está en `index.html`
 
 - [x] Movimientos programados (fecha futura) que no tocan el saldo hasta su día.
 - [x] Cargar varios meses de una vez, con borrado de una o de las siguientes.
+
+## 3.11 — lo que viene ✅
+
+- [x] Mínimo comprometido del mes que viene y de los próximos 5, con detalle.
+- [x] Opcional: servicios que cambian (promedio de 3 meses) y comparación con ingresos.
+- [ ] Idea: aviso de "se libera" cuando termina una cuota (cuánta plata se libera y en qué mes).
 
 ## Ideas para después
 
