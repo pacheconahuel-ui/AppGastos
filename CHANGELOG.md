@@ -1,5 +1,16 @@
 # Cambios
 
+## 3.18 — noviembre 2026
+
+Resumen más limpio (pedido de un usuario: "me confunde tanto texto y números").
+
+- **Selector Resumen | Análisis** arriba (en la compu, de 1280 px en adelante, se ven juntos y el selector no aparece; la vista elegida se recuerda en el celular):
+  - **Resumen:** lo de todos los días: avisos, disponible, el mes, «Mes que viene» y los últimos movimientos.
+  - **Análisis:** presupuestos, metas y los gráficos (por categoría y evolución). Los gráficos se dibujan recién al verlos.
+- **El mes en una tarjeta simple:** el **balance** en grande, ingresos y gastos debajo. Las líneas de texto («Pagaste X en total», «Proyección a fin de mes», «Ahorrás/Gastaste X%», «gasto por día sin fijos») pasan a **«Ver detalle»**, plegado; si no hay nada para mostrar, no aparece. La proyección no se muestra si todavía no hay gastos.
+- **Últimos movimientos:** 3 en vez de 5, en una línea cada uno (fecha y categoría). Las etiquetas (billetera, tarjeta, dólares, dividido…) quedan para Lista; lo programado lleva solo un icono.
+- Pruebas: Resumen a 320, 360 y 390 px, Análisis y gráficos, la vista recordada, el detalle sin datos y la compu.
+
 ## 3.17 — noviembre 2026
 
 Quién usa la app y respaldo (para el grupo familiar).

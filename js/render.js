@@ -55,13 +55,13 @@ function renderDashboard(){
   const pag_el=document.getElementById('c-pag'); if(pag_el)pag_el.textContent=fmt(pag);
   const pagLine=document.getElementById('c-pag-line'); if(pagLine)pagLine.style.display=Math.round(pag)!==Math.round(real)?'':'none';
   const balEl=document.getElementById('c-bal');
-  if(balEl){balEl.textContent=(bal<0?'−':'+')+fmt(bal);balEl.className='sum-v '+(bal>=0?'pos':'neg');}
+  if(balEl){balEl.textContent=(bal<0?'−':'+')+fmt(bal);balEl.className='sum-big '+(bal>=0?'pos':'neg');}
 
   const chartTitle=document.getElementById('chart-box-title');
   if(chartTitle)chartTitle.textContent=`Distribución — ${monthLabel(mk)}`;
 
   // Los gráficos son lo más caro de dibujar: con otra pestaña abierta no se ven, se dibujan al volver al Resumen
-  if(activeTab==='dashboard'){
+  if(activeTab==='dashboard'&&dashAnalisisVisible()){
     try{renderPieChart(mk);}catch(e){console.warn('pie chart:',e);}
     try{renderMonthlyChart();}catch(e){console.warn('monthly chart:',e);}
   }
@@ -80,13 +80,17 @@ function renderDashboard(){
   try{renderGoalsSection();}catch(e){console.warn('goals:',e);}
   try{renderStats(mk);}catch(e){console.warn('stats:',e);}
 
-  // Últimos 5 movimientos — todos los meses (el resto en Lista)
+  // Detalle plegable: solo si tiene algo para mostrar
+  const det=document.getElementById('sum-det');
+  if(det)det.style.display=[...det.querySelectorAll('.sum-foot>div')].some(d=>d.style.display!=='none'&&d.textContent.trim())?'':'none';
+
+  // Últimos 3 movimientos, en una línea cada uno — todos los meses (el resto en Lista)
   const recent=[...expenses]
     .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.createdAt-a.createdAt)
-    .slice(0,5);
+    .slice(0,3);
   const recentEl=document.getElementById('recent-list');
   if(recentEl)recentEl.innerHTML=recent.length
-    ?recent.map(e=>expHTML(e,false)).join('')
+    ?recent.map(e=>expHTML(e,false,true)).join('')
     :'<div class="empty"><div class="empty-ico">'+ic('inbox')+'</div><p>Sin movimientos cargados</p></div>';
 }
 
@@ -347,7 +351,8 @@ function toggleZeroPersons(){
 }
 
 // --- EXPENSE HTML ---
-function expHTML(e,actions){
+// compact: para el Resumen: fecha y categoría, sin etiquetas (solo un icono si es programado)
+function expHTML(e,actions,compact){
   const ing=e.type==='Ingreso';
   const hasSplit=e.splits&&e.splits.length>0;
   const splitBadge=hasSplit?`<span class="badge sh">${ic('users')} ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
@@ -370,7 +375,7 @@ function expHTML(e,actions){
     <div class="exp-info">
       <div class="exp-desc">${esc(displayName(e.description||e.category))} ${pending}</div>
       ${notesLine}
-      <div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${progBadge}${serieBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>
+      ${compact?`<div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${esFuturo(e)?`<span style="color:var(--blue)" title="Programado">${ic('calendar')}</span>`:''}</div>`:`<div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${progBadge}${serieBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>`}
     </div>
     <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${e.currency==='USD'&&!usdRate(e)?fmtU(effAmt(e)):fmt(effArs(e))}</div>${btns}</div>
   </div>`;

@@ -786,3 +786,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .ad-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--bdr2)}
 .ad-chip.ok{color:var(--green)}
 .ad-chip.no{color:var(--red)}
+
+/* 3.18 · Resumen más limpio: balance grande, detalle plegado, Análisis aparte */
+.sum-main{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0 12px;border-top:1px solid var(--bdr)}
+.sum-big{font-size:min(32px,8.4vw);font-weight:700;white-space:nowrap;font-family:var(--num)}
+.sum-big.pos{color:var(--pos)} .sum-big.neg{color:var(--neg)}
+.sum-card .sum-row{grid-template-columns:repeat(2,1fr);padding-top:0;border-top:0;text-align:center}
+.sum-card .sum-row>div{align-items:center}
+.sum-det{margin-top:8px;border-top:1px solid var(--bdr);padding-top:2px}
+.sum-det summary{min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--txt2)}
+.sum-det .sum-foot{margin-top:2px;padding-bottom:4px}
+#tab-dashboard[data-vista="resumen"] .dash-side{display:none}
+#tab-dashboard[data-vista="analisis"] .dash-main{display:none}
+@media(min-width:1280px){
+  .dash-seg{display:none}
+  #tab-dashboard[data-vista] .dash-side,#tab-dashboard[data-vista] .dash-main{display:block}
+}

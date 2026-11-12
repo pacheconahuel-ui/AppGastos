@@ -307,6 +307,23 @@ function renderMonthlyChart(){
   });
 }
 
+// --- RESUMEN / ANÁLISIS (3.18) ---
+// En el celular son dos vistas con un selector; en la compu (≥1280 px) se ven juntas.
+let dashVista='resumen';
+try{dashVista=localStorage.getItem('dash_vista')==='analisis'?'analisis':'resumen';}catch(e){}
+function dashAnalisisVisible(){return dashVista==='analisis'||window.matchMedia('(min-width:1280px)').matches;}
+function aplicarDashVista(){
+  const t=document.getElementById('tab-dashboard');if(t)t.dataset.vista=dashVista;
+  document.querySelectorAll('#dash-seg button').forEach(b=>{const on=b.dataset.vista===dashVista;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);});
+}
+function setDashVista(v){
+  dashVista=v==='analisis'?'analisis':'resumen';
+  try{localStorage.setItem('dash_vista',dashVista);}catch(e){}
+  aplicarDashVista();window.scrollTo(0,0);
+  // Los gráficos se dibujan recién cuando se ven (Chart.js mide el lienzo al dibujar)
+  if(dashVista==='analisis'){try{renderPieChart(getDashMk());renderMonthlyChart();}catch(e){console.warn('chart:',e);}}
+}
+
 // --- GRÁFICOS DEL RESUMEN: uno por vez ---
 function setDashChart(view){
   document.getElementById('dash-charts').dataset.view=view;
@@ -324,6 +341,7 @@ function renderProjection(){
   const hoy=new Date(),dia=hoy.getDate(),dias=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
   if(dia<5){projCard.style.display='none';return;} // la primera semana todavía no alcanza para estimar
   const delMes=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)&&!esFuturo(e));
+  if(!delMes.length){projCard.style.display='none';return;} // sin gastos no hay nada que proyectar
   const total=delMes.reduce((s,e)=>s+effArs(e),0);
   const fijos=delMes.filter(e=>e.recurring).reduce((s,e)=>s+effArs(e),0);
   const porDia=(total-fijos)/dia;
