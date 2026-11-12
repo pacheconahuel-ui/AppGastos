@@ -104,6 +104,30 @@ function renderPieChart(mk){
   chart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:COLORS.slice(0,labels.length),borderWidth:2,borderColor:chartBorderSep()}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:chartTextColor(),padding:12,font:{family:'Outfit',size:11,weight:'600'},boxWidth:11,boxHeight:11}},tooltip:{callbacks:{label:c=>`  ${fmt(c.raw)}`},bodyFont:{family:'Outfit',size:13},backgroundColor:chartBgColor(),borderColor:tok('bdr2'),borderWidth:1,padding:10,cornerRadius:10}}}});
 }
 
+function toggleFiltros(){
+  const m=document.getElementById('list-more'),b=document.getElementById('filtros-btn');
+  const abrir=m.classList.contains('hidden');
+  m.classList.toggle('hidden',!abrir);b.setAttribute('aria-expanded',abrir);b.classList.toggle('on',abrir);
+}
+// Línea de abajo de un movimiento en la Lista: categoría y billetera en texto gris; solo lo que se sale de lo común lleva marca
+function listaMeta(e,acc,pending){
+  const fuera=e.sinBilletera&&!e.accountId;
+  const bil=fuera?'Fuera de las billeteras':acc?`${acc.emoji} ${esc(acc.name)}`:(accounts?.length?'<span class="exp-warn">Sin billetera</span>':'');
+  const tags=[
+    esFuturo(e)?`<span class="exp-tag blue" title="Programado">${ic('calendar')}</span>`:'',
+    e.recurring?`<span class="exp-tag blue" title="Se repite todos los meses">${ic('repeat')}</span>`:'',
+    e.serieTotal>1?`<span class="exp-tag">${e.serieIdx}/${e.serieTotal}</span>`:'',
+    e.cardExpType==='installment'&&e.installmentTotal?`<span class="exp-tag">${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
+    e.currency==='USD'?`<span class="exp-tag gold">U$D ${e.amount}</span>`:'',
+    e.splits&&e.splits.length?`<span class="exp-tag">${ic('users')} ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'',
+    e.pagoPor?`<span class="exp-tag">${ic('users')} pagó ${esc(e.pagoPor.personName)}</span>`:'',
+    !countsInMonth(e)?`<span class="exp-tag">${isCCPayment(e)?'Pago de tarjeta':isAjuste(e)?'Ajuste de saldo':isLiquidation(e)?'Liquidación':'Cambio de moneda'} · no suma al mes</span>`:'',
+  ].filter(Boolean).join('');
+  // Si la descripción ya dice la categoría ("Luz" en Luz), no se repite
+  const cat=displayName(e.category),repite=(e.description||'').trim().toLowerCase()===cat.trim().toLowerCase();
+  const partes=[repite?'':`<span>${esc(cat)}</span>`,bil?`<span>${bil}</span>`:''].filter(Boolean).join('<span class="exp-dot">·</span>');
+  return`<div class="exp-meta">${partes}${tags}</div>`;
+}
 function renderListSec(){
   const el=document.getElementById('fil-month'),prev=el.value;
   const months=allMonths();
@@ -153,8 +177,15 @@ function renderListSec(){
   const hasFilter=search||catFil||typeFil||accFil;
   document.getElementById('list-count').textContent=rows.length
     ?`${rows.length} resultado${rows.length>1?'s':''}${hasFilter?' (filtrado)':''}`:'';
+  const nFil=[catFil,typeFil,accFil].filter(Boolean).length;
+  const fn=document.getElementById('filtros-n');if(fn){fn.textContent=nFil?String(nFil):'';fn.style.display=nFil?'':'none';}
+  const hoy=todayStr();let ultimo=null;
   document.getElementById('full-list').innerHTML=rows.length
-    ?rows.map(e=>expHTML(e,true)).join('')
+    ?rows.map(e=>{
+      const cab=e.date!==ultimo?`<div class="list-day">${esc(diaLabel(e.date,hoy))}</div>`:'';
+      ultimo=e.date;
+      return cab+expHTML(e,true,'lista');
+    }).join('')
     :`<div class="empty"><div class="empty-ico">${ic(hasFilter?'search':'inbox')}</div><p>${hasFilter?'Sin resultados':'Sin movimientos este mes'}</p></div>`;
 }
 
@@ -215,10 +246,13 @@ function renderSaldosTab(){
     const total=dups.reduce((s,d)=>s+d.amount,0);
     html+=`<div onclick="confirmCleanDuplicates()" style="cursor:pointer;font-size:12px;color:var(--yellow);margin-bottom:12px;padding:10px 12px;min-height:44px;display:flex;align-items:center;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:12px;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">${ic('warn')} ${dups.length} deuda${dups.length>1?'s':''} repetida${dups.length>1?'s':''} de gastos compartidos editados (${fmt(Math.abs(total))}) · tocá para revisar y limpiar ›</div>`;
   }
-  if(visiblePersons.length===0){
+  // Sin deudas, sin saldo y sin historial: una línea al final, no una tarjeta entera
+  const sinNada=p=>personBalance(p.id)===0&&personDebtsActive(p.id).length===0&&personDebtsSettled(p.id).length===0;
+  const conMov=visiblePersons.filter(p=>!sinNada(p)),sinMov=visiblePersons.filter(sinNada);
+  if(conMov.length===0){
     html+='<div class="empty"><div class="empty-ico">'+ic('users')+'</div><p>Sin cuentas pendientes<br><small>Agregá una deuda con el botón ＋</small></p></div>';
   } else {
-    visiblePersons.forEach(p=>{
+    conMov.forEach(p=>{
       const bal=personBalance(p.id);
       const activeDebts=personDebtsActive(p.id);
       const hasHistory=personDebtsSettled(p.id).length>0;
@@ -293,6 +327,7 @@ function renderSaldosTab(){
     });
   }
 
+  if(sinMov.length)html+=`<div class="person-zeros">Sin deudas: ${sinMov.map(p=>`${p.emoji||''} ${esc(p.name)}`).join(' · ')}</div>`;
   // Eventuales with zero balance — show "ver historial" section
   const hiddenPersons=debtPeople().filter(p=>!p.isRecurrent&&personBalance(p.id)===0&&debts.some(d=>d.personId===p.id));
   if(hiddenPersons.length>0){
@@ -352,7 +387,8 @@ function toggleZeroPersons(){
 
 // --- EXPENSE HTML ---
 // compact: para el Resumen: fecha y categoría, sin etiquetas (solo un icono si es programado)
-function expHTML(e,actions,compact){
+function expHTML(e,actions,modo){
+  const compact=modo===true||modo==='resumen',enLista=modo==='lista';
   const ing=e.type==='Ingreso';
   const hasSplit=e.splits&&e.splits.length>0;
   const splitBadge=hasSplit?`<span class="badge sh">${ic('users')} ${esc(e.splits.map(s=>s.personName).join(', '))}</span>`:'';
@@ -375,7 +411,7 @@ function expHTML(e,actions,compact){
     <div class="exp-info">
       <div class="exp-desc">${esc(displayName(e.description||e.category))} ${pending}</div>
       ${notesLine}
-      ${compact?`<div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${esFuturo(e)?`<span style="color:var(--blue)" title="Programado">${ic('calendar')}</span>`:''}</div>`:`<div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${progBadge}${serieBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>`}
+      ${enLista?listaMeta(e,acc,pending):''}${enLista?'':compact?`<div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${esFuturo(e)?`<span style="color:var(--blue)" title="Programado">${ic('calendar')}</span>`:''}</div>`:`<div class="exp-meta"><span>${fmtDate(e.date)}</span><span style="color:var(--txt3)">·</span><span>${esc(displayName(e.category))}</span>${splitBadge}${ingBadge}${progBadge}${serieBadge}${recurBadge}${usdBadge}${instBadge}${accBadge}${moveBadge}</div>`}
     </div>
     <div class="exp-right"><div class="exp-amt ${ing?'i':'e'}">${ing?'+':'-'}${e.currency==='USD'&&!usdRate(e)?fmtU(effAmt(e)):fmt(effArs(e))}</div>${btns}</div>
   </div>`;

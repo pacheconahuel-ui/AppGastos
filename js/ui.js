@@ -71,15 +71,7 @@ function openProfilePanel(){
         <div class="profile-user-email">${esc(email)}</div>
       </div>
     </div>
-    <div class="profile-sec-lbl">Configuración</div>
-    <button class="profile-action-row" onclick="toggleTheme();renderProfileThemeRow()">
-      <span class="par-ico" id="par-theme-ico">${ic(isLight?'moon':'sun')}</span>
-      <span id="par-theme-lbl">${isLight?'Modo oscuro':'Modo claro'}</span>
-      <span class="par-chevron">›</span>
-    </button>
-    <button class="profile-action-row" onclick="closeProfilePanel();openCatManager()">
-      <span class="par-ico">${ic('tag')}</span>Gestionar categorías<span class="par-chevron">›</span>
-    </button>
+    <div class="profile-sec-lbl">Mi cuenta</div>
     <button class="profile-action-row" onclick="closeProfilePanel();openContactsModal()">
       <span class="par-ico">${ic('users')}</span>Contactos<span class="par-chevron">›</span>
     </button>
@@ -89,12 +81,28 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="closeProfilePanel();openMiCodigo()">
       <span class="par-ico">${ic('link')}</span>Mi código de contacto<span class="par-chevron">›</span>
     </button>
-    <button class="profile-action-row" onclick="closeProfilePanel();switchTab('cuentas')">
-      <span class="par-ico">${ic('card')}</span>Cuentas y tarjetas<span class="par-chevron">›</span>
-    </button>
     ${ES_ADMIN?`<button class="profile-action-row" onclick="closeProfilePanel();openAdmin()">
       <span class="par-ico">${ic('users')}</span>Administración · quién usa la app<span class="par-chevron">›</span>
     </button>`:''}
+    <div class="profile-sec-lbl">Configuración</div>
+    <button class="profile-action-row" onclick="toggleTheme();renderProfileThemeRow()">
+      <span class="par-ico" id="par-theme-ico">${ic(isLight?'moon':'sun')}</span>
+      <span id="par-theme-lbl">${isLight?'Modo oscuro':'Modo claro'}</span>
+      <span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();openCatManager()">
+      <span class="par-ico">${ic('tag')}</span>Gestionar categorías<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="closeProfilePanel();switchTab('cuentas')">
+      <span class="par-ico">${ic('card')}</span>Cuentas y tarjetas<span class="par-chevron">›</span>
+    </button>
+    <div class="profile-sec-lbl">Respaldo</div>
+    <button class="profile-action-row" onclick="exportBackup()">
+      <span class="par-ico">${ic('save')}</span>Descargar respaldo completo<span class="par-chevron">›</span>
+    </button>
+    <button class="profile-action-row" onclick="document.getElementById('backup-file').click()">
+      <span class="par-ico">${ic('restore')}</span>Restaurar un respaldo<span class="par-chevron">›</span>
+    </button>
     <div class="profile-sec-lbl">Ayuda</div>
     <button class="profile-action-row" onclick="closeProfilePanel();openHelpModal()">
       <span class="par-ico">${ic('help')}</span>Guía rápida<span class="par-chevron">›</span>
@@ -102,7 +110,11 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="closeProfilePanel();openGlobalSearch()">
       <span class="par-ico">${ic('search')}</span>Búsqueda global<span class="par-chevron">›</span>
     </button>
-    <div class="profile-sec-lbl">Diagnóstico</div>
+    <button class="profile-action-row profile-logout" onclick="confirmLogout()">
+      <span class="par-ico">${ic('logout')}</span>Cerrar sesión
+    </button>
+    <details class="profile-adv">
+      <summary>Avanzado</summary>
     <button class="profile-action-row" onclick="runDiagnostics()">
       <span class="par-ico">${ic('activity')}</span>Verificar datos en Firebase<span class="par-chevron">›</span>
     </button>
@@ -112,22 +124,11 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="forcePushSettings(this)">
       <span class="par-ico">${ic('upload')}</span>Subir mi config al servidor<span class="par-chevron" id="force-push-status">›</span>
     </button>
-    <div id="diag-result"></div>
-    <div class="profile-sec-lbl">Respaldo</div>
-    <button class="profile-action-row" onclick="exportBackup()">
-      <span class="par-ico">${ic('save')}</span>Descargar respaldo completo<span class="par-chevron">›</span>
-    </button>
-    <button class="profile-action-row" onclick="document.getElementById('backup-file').click()">
-      <span class="par-ico">${ic('restore')}</span>Restaurar un respaldo<span class="par-chevron">›</span>
-    </button>
-    <div class="profile-sec-lbl">Sesión</div>
-    <button class="profile-action-row profile-logout" onclick="confirmLogout()">
-      <span class="par-ico">${ic('logout')}</span>Cerrar sesión
-    </button>
-    <div class="profile-sec-lbl profile-danger-lbl">Zona de peligro</div>
-    <button class="profile-action-row" onclick="confirmResetAll()" style="color:var(--red)">
-      <span class="par-ico">${ic('trash')}</span>Borrar todos mis datos<span class="par-chevron">›</span>
-    </button>
+      <div id="diag-result"></div>
+      <button class="profile-action-row" onclick="confirmResetAll()" style="color:var(--red)">
+        <span class="par-ico">${ic('trash')}</span>Borrar todos mis datos<span class="par-chevron">›</span>
+      </button>
+    </details>
   `;
   document.getElementById('profile-overlay').classList.add('on');history.pushState({modal:true},'');
 }

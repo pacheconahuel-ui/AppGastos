@@ -42,8 +42,8 @@ test('el resumen muestra el mínimo del mes que viene y la pantalla lo desarma',
   await expect(v).toContainText('cuota 1/12 · hasta 07/11');
   await expect(v).toContainText('Alquiler');
   // los servicios que cambian se suman solo si se pide (promedio de 3 meses: luz 30.000 / 3 = 10.000)
-  await expect(v).toContainText('promedio de 3 meses, $10.000');
-  await v.getByRole('switch', { name: /Sumar servicios/ }).click();
+  await expect(v).toContainText('promedio de 3 meses: $10.000');
+  await v.getByRole('switch', { name: /Sumar luz y gas/ }).click();
   await expect(v.locator('.fc-kpi-val')).toHaveText('$470.000');
   await expect(page.locator('#fc-line')).toContainText('$470.000');
   // comparar con ingresos (D)

@@ -39,6 +39,18 @@ function isAjuste(e){return !!e.ajuste||(!e.liquidacion&&/^Ajuste de saldo( —|
 function isLiquidation(e){return !!e.liquidacion||isAjuste(e);}
 function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e)&&!isLiquidation(e);}
 function amtArs(e){return e.amount*usdRate(e);}
+// Encabezado de cada día en la Lista: "Hoy", "Ayer", "12 de noviembre"; lo futuro, "Programado · 19 de noviembre"
+const MESES_LARGO=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function diaLabel(ymdStr,hoy=todayStr()){
+  if(!ymdStr)return'Sin fecha';
+  const [y,m,d]=ymdStr.split('-').map(Number);
+  const largo=`${d} de ${MESES_LARGO[m-1]}`;
+  if(ymdStr===hoy)return'Hoy';
+  if(ymdStr>hoy)return'Programado · '+largo;
+  const ayer=new Date(parseInt(hoy.slice(0,4)),parseInt(hoy.slice(5,7))-1,parseInt(hoy.slice(8,10))-1);
+  const a=`${ayer.getFullYear()}-${String(ayer.getMonth()+1).padStart(2,'0')}-${String(ayer.getDate()).padStart(2,'0')}`;
+  return ymdStr===a?'Ayer':largo+(y!==parseInt(hoy.slice(0,4))?' de '+y:'');
+}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}
 // Texto como argumento de un onclick="...": comillas de JS + escape HTML (un ' en el nombre ya no rompe el botón)
 function jsArg(s){return esc(JSON.stringify(String(s)));}

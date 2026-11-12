@@ -108,6 +108,7 @@ function stLinesHTML(st){
 }
 function stBlockHTML(a,st,tipo){
   if(!st)return'';
+  if(tipo==='open'&&!st.lines.length)return''; // un período abierto sin consumos no aporta
   const per=st.from?`compras del ${fmtDate(st.from)} al ${fmtDate(st.to)}`:'todo lo que todavía no pagaste';
   const dias=st.due?daysBetween(todayStr(),st.due):null;
   const cuando=st.due?`vence el ${fmtDate(st.due)}${dias===0?' (hoy)':dias>0?` (en ${dias} día${dias>1?'s':''})`:` (hace ${-dias} día${dias<-1?'s':''})`}`:'';
@@ -136,10 +137,11 @@ function cardBoxHTML(a){
       </div>`;
   return`<div class="cc-summary-box ${col?'col':''}">
     <button class="cc-summary-header cc-toggle" onclick="toggleCardBox('${a.id}')" aria-expanded="${!col}">
-      <span style="font-size:22px">${a.emoji}</span>
-      <span class="cc-tg-main"><span class="cc-summary-name">${esc(a.name)}</span><span class="cc-summary-dates">${sub} · ${n} consumo${n!==1?'s':''}</span></span>
+      <span class="cc-emo">${a.emoji}</span>
+      <span class="cc-summary-name">${esc(a.name)}</span>
       <span class="cc-estimated"><span class="cc-estimated-lbl">${lbl}</span><span class="cc-estimated-val">${total}</span></span>
       <span class="cc-chev" aria-hidden="true">${col?'▸':'▾'}</span>
+      <span class="cc-summary-dates cc-tg-sub">${sub} · ${n} consumo${n!==1?'s':''}</span>
     </button>${body}
   </div>`;
 }
@@ -160,17 +162,16 @@ function renderCuentasTab(){
     const movCount=isUsd
       ?usdTx.filter(t=>t.usdAccountId===a.id&&monthKey(t.date)===mk).length
       :expenses.filter(e=>e.accountId===a.id&&monthKey(e.date)===mk).length;
-    return`<div class="account-card" onclick="openAccountModal('${a.id}')">
-      <div class="account-ava" style="background:${isUsd?'color-mix(in srgb,var(--tint) 10%,transparent)':'color-mix(in srgb,var(--acc) 10%,transparent)'};border-color:${isUsd?'color-mix(in srgb,var(--tint) 20%,transparent)':'color-mix(in srgb,var(--acc) 20%,transparent)'}">${a.emoji}</div>
-      <div class="account-info">
-        <div class="account-name">${esc(a.name)}${isUsd?' <span style="font-size:10px;color:var(--gold);font-weight:700">USD</span>':''}</div>
-        <div class="account-type">${movCount} mov. este mes ${negAlert}</div>
-        <button class="acc-why" onclick="openSaldoDetalle('${a.id}',event)">¿Por qué este saldo?</button>
-      </div>
-      <div class="account-bal">
-        ${balStr}
-      </div>
-    </div>`;
+    // Toda la fila abre "¿Por qué este saldo?" (desde ahí se puede editar la billetera)
+    return`<button class="account-card" onclick="openSaldoDetalle('${a.id}',event)" aria-label="${esc(a.name)}: ${isUsd?fmtU(bal):(bal<0?'-':'')+fmt(bal)}. Ver por qué este saldo">
+      <span class="account-ava" style="background:${isUsd?'color-mix(in srgb,var(--tint) 10%,transparent)':'color-mix(in srgb,var(--acc) 10%,transparent)'};border-color:${isUsd?'color-mix(in srgb,var(--tint) 20%,transparent)':'color-mix(in srgb,var(--acc) 20%,transparent)'}">${a.emoji}</span>
+      <span class="account-info">
+        <span class="account-name">${esc(a.name)}${isUsd?' <span style="font-size:10px;color:var(--gold);font-weight:700">USD</span>':''}</span>
+        <span class="account-type">${movCount} mov. este mes ${negAlert}</span>
+      </span>
+      <span class="account-bal">${balStr}</span>
+      <span class="account-chev" aria-hidden="true">›</span>
+    </button>`;
   };
 
   const arsWalletHtml=arsAccs.map(a=>makeWalletCard(a,false)).join('')

@@ -683,8 +683,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .fc-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;margin-bottom:14px}
 .fc-mes{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt2);cursor:pointer;font-family:'Outfit',sans-serif;min-width:0}
 .fc-mes.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--surf));color:var(--txt)}
-.fc-bar{height:44px;width:100%;display:flex;align-items:flex-end;justify-content:center}
-.fc-bar i{display:block;width:60%;background:var(--acc);border-radius:3px 3px 0 0;opacity:.85}
 .fc-m{font-size:11px;font-weight:700}
 .fc-v{font-size:10px;color:var(--txt3);white-space:nowrap}
 .fc-kpi{text-align:center;padding:6px 0 12px}
@@ -827,3 +825,51 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .ad-foot .btn-hist{flex:1;min-width:180px}
 #admin-buscar{margin-top:6px}
 .ad-foot button{min-height:44px;justify-content:center}
+
+/* 3.21 · Menos ruido */
+.list-csv{min-height:44px;padding:0 14px;background:color-mix(in srgb,var(--pos) 10%,transparent);border:1px solid color-mix(in srgb,var(--pos) 25%,transparent);border-radius:11px;color:var(--green);font:700 12px 'Outfit',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.list-filtros-btn{min-height:44px;padding:0 14px;border-radius:11px;border:1px solid var(--bdr2);background:var(--surf);color:var(--txt2);font:600 13px 'Outfit',sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.list-filtros-btn.on{border-color:var(--acc);color:var(--txt)}
+.filtros-n{min-width:18px;height:18px;border-radius:9px;background:var(--acc);color:var(--on-acc);font-size:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.list-more{display:grid;grid-template-columns:1fr;gap:8px}
+.list-more.hidden{display:none}
+@media(min-width:520px){.list-more{grid-template-columns:repeat(3,1fr)}}
+.list-day{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin:14px 2px 6px}
+.list-day:first-child{margin-top:2px}
+.exp-tag{font-size:11px;color:var(--txt3);display:inline-flex;align-items:center;gap:3px}
+.exp-tag.blue{color:var(--blue)} .exp-tag.gold{color:var(--gold)}
+.exp-warn{color:var(--yellow)}
+.exp-dot{color:var(--txt3)}
+
+/* Billeteras compactas: una fila tocable */
+button.account-card{width:100%;text-align:left;font:inherit;color:inherit;padding:10px 14px;gap:12px;min-height:64px;margin-bottom:8px}
+button.account-card .account-ava{width:40px;height:40px;font-size:20px;border-radius:12px;border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+button.account-card .account-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+button.account-card .account-name{font-weight:600;font-size:15px}
+button.account-card .account-type{font-size:12px;color:var(--txt3)}
+button.account-card .account-bal{display:flex;align-items:center}
+.account-chev,.pat-row-chev{color:var(--txt3);font-size:18px;margin-left:4px}
+button.pat-row{width:100%;background:none;border:0;border-bottom:1px solid var(--bdr);color:inherit;font:inherit;text-align:left;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;cursor:pointer}
+.pat-acc-right{display:flex;align-items:center;gap:4px}
+/* Tarjeta de crédito: nombre y total arriba, fechas debajo */
+.cc-toggle{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;column-gap:10px;row-gap:2px}
+.cc-toggle .cc-emo{font-size:22px}
+.cc-toggle .cc-summary-name{min-width:0}
+.cc-toggle .cc-tg-sub{grid-column:1/-1;font-size:12px;margin:0;line-height:1.35}
+.cc-proj summary{min-height:44px;border:1px solid var(--bdr2);border-radius:10px;padding:0 12px;justify-content:space-between;margin-top:6px}
+.cc-proj summary::after{content:'▾';color:var(--txt3)}
+.cc-proj[open] summary::after{content:'▴'}
+
+.person-zeros{font-size:13px;color:var(--txt3);padding:10px 4px;text-align:center;overflow-wrap:anywhere}
+/* "Ver detalle" y las listas plegables se reconocen como botones */
+.sum-det summary::after{content:'▾';margin-left:6px;color:var(--txt3)}
+.sum-det[open] summary::after{content:'▴'}
+details.fc-item summary{list-style:none;cursor:pointer;min-height:44px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.fc-item summary::-webkit-details-marker{display:none}
+details.fc-item summary::after{content:'▾';color:var(--txt3);margin-left:6px}
+details.fc-item[open] summary::after{content:'▴'}
+.fc-tog small{color:var(--txt3);font-size:12px}
+.profile-adv{margin-top:14px;border-top:1px solid var(--bdr);padding-top:4px}
+.profile-adv summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--txt3)}
+.profile-adv summary::after{content:'▾';margin-left:8px}
+.profile-adv[open] summary::after{content:'▴'}
