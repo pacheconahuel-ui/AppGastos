@@ -25,9 +25,11 @@ for (const ancho of [320, 360, 390]) {
     expect(await activa(page)).toEqual(['Saldos']);
     await expect(page.locator('#tab-saldos')).toBeVisible();
 
-    // "+" abre el menú; cada opción abre su formulario
+    // "+" mantenido abre el menú; cada opción abre su formulario (un toque va directo al gasto)
     for (const [opcion, overlay] of [['Gasto o ingreso', 'm-overlay'], ['Gasto rápido', 'qa-overlay'], ['Dólares', 'usd-overlay'], ['Deuda', 'debt-overlay'], ['Transferencia', 'transfer-overlay']]) {
-      await page.locator('.bnav-plus').click();
+      await page.locator('.bnav-plus').dispatchEvent('pointerdown'); // mantenido: abre el menú con todo
+      await page.waitForTimeout(550);
+      await page.locator('.bnav-plus').dispatchEvent('pointerup');
       await expect(page.locator('#new-overlay')).toHaveClass(/\bon\b/);
       const item = page.locator('.new-item', { hasText: opcion });
       expect((await item.boundingBox()).height).toBeGreaterThanOrEqual(44);
@@ -71,8 +73,11 @@ test('en la compu: columna de secciones con "+ Nuevo" y sin barra de abajo', asy
   await openApp(page);
   await expect(page.locator('.bnav')).toBeHidden();
   await expect(page.locator('.tabs')).toBeVisible();
-  await page.locator('.tabs-new').click();
+  await page.locator('.tabs-new-more').click(); // la flecha ▾ abre el menú con todo
   await expect(page.locator('#new-overlay')).toHaveClass(/\bon\b/);
+  await page.keyboard.press('Escape');
+  await page.locator('.tabs-new').click(); // "+ Gasto" va directo al formulario
+  await expect(page.locator('#m-overlay')).toHaveClass(/\bon\b/);
   await page.keyboard.press('Escape');
   await page.locator('.tab[data-tab="usd"]').click();
   await expect(page.locator('#tab-usd')).toBeVisible();

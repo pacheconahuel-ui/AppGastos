@@ -70,7 +70,7 @@
   </div>
 
   <div class="tabs">
-    <button class="tabs-new" onclick="openNewSheet()">＋ Nuevo</button>
+    <div class="tabs-new-row"><button class="tabs-new" id="tabs-new" aria-label="Nuevo gasto">＋ Gasto</button><button class="tabs-new-more" id="tabs-new-more" onclick="openNewSheet()" aria-label="Más tipos de movimiento: ingreso, dólares, deuda, transferencia">▾</button></div>
     <button class="tab on" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="tab-ico"><i data-ico="chart"></i></span>Resumen</button>
     <button class="tab" data-tab="lista" onclick="switchTab('lista')"><span class="tab-ico"><i data-ico="list"></i></span>Lista</button>
     <button class="tab usd-tab" data-tab="usd" onclick="switchTab('usd')"><span class="tab-ico"><i data-ico="dollar"></i></span>USD</button>
@@ -246,7 +246,7 @@
 <nav class="bnav" aria-label="Secciones">
   <button class="bnav-item on" data-tab="dashboard" onclick="switchTab('dashboard')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Resumen</span></button>
   <button class="bnav-item" data-tab="lista" onclick="switchTab('lista')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span>Lista</span></button>
-  <button class="bnav-plus" onclick="openNewSheet()" aria-label="Agregar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="bnav-plus" id="bnav-plus" aria-label="Agregar gasto. Mantené apretado para más opciones"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   <button class="bnav-item" data-tab="saldos" onclick="switchTab('saldos')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .7 3 2.5 3 6"/></svg><span>Saldos</span></button>
   <button class="bnav-item" data-tab="cuentas usd" onclick="switchTab('cuentas')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>Cuentas</span></button>
 </nav>
@@ -281,7 +281,7 @@
     <!-- El monto primero, grande -->
     <div class="amt-block">
       <div class="amt-row">
-        <input type="number" class="amt-input" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" aria-labelledby="f-amt-lbl" oninput="recalcSplit();onAmtOrCurrencyChange();updateAmtFmt()">
+        <input type="number" class="amt-input" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" aria-labelledby="f-amt-lbl" oninput="recalcSplit();onAmtOrCurrencyChange();updateAmtFmt();updatePayerHint()">
         <select class="amt-cur" id="f-currency" onchange="onAmtOrCurrencyChange()" aria-label="Moneda">
           <option value="ARS">ARS</option>
           <option value="USD">USD</option>
@@ -385,6 +385,15 @@
         <label class="f-lbl" for="f-serie">Cargar varios meses de una vez (cuotas)</label>
         <div class="serie-row"><input type="number" class="f-ctrl" id="f-serie" min="1" max="36" placeholder="Cantidad de meses" inputmode="numeric" oninput="updateSerieHint()"><span>meses</span></div>
         <div class="f-hint" id="f-serie-hint"></div>
+      </div>
+      <button class="split-toggle-btn" id="payer-toggle-btn" onclick="togglePayer()">
+        <span id="payer-toggle-lbl">Lo pagó otra persona</span>
+        <span id="payer-toggle-ico">＋</span>
+      </button>
+      <div class="split-panel" id="payer-panel">
+        <div class="f-grp"><label class="f-lbl" for="f-payer">¿Quién pagó?</label><select class="f-ctrl" id="f-payer" onchange="updatePayerHint()"></select></div>
+        <div class="f-grp" style="margin-bottom:6px"><label class="f-lbl" for="f-payer-mine">Mi parte ($)</label><input type="number" class="f-ctrl" id="f-payer-mine" inputmode="decimal" step="any" min="0" oninput="payerMineTouched=true;updatePayerHint()"></div>
+        <div class="f-hint" id="f-payer-hint"></div>
       </div>
       <button class="split-toggle-btn" id="split-toggle-btn" onclick="toggleSplitPanel()">
         <span id="split-toggle-lbl">Dividir con alguien</span>

@@ -1,6 +1,40 @@
 // Formulario de gastos: split, contactos, categorías y guardado
+// --- LO PAGÓ OTRA PERSONA (3.16) ---
+// El gasto no sale de ninguna billetera tuya; tu parte queda como deuda tuya con quien pagó (Saldos, "le debés").
+let payerOn=false,payerMineTouched=false;
+function payerOptions(sel){
+  const el=document.getElementById('f-payer');
+  el.innerHTML=debtPeople().map(p=>`<option value="${esc(p.id)}">${esc(p.emoji||'')} ${esc(p.name)}</option>`).join('');
+  if(sel)el.value=sel;
+}
+function setPayerUI(on){
+  payerOn=on;
+  document.getElementById('payer-panel').classList.toggle('on',on);
+  document.getElementById('payer-toggle-btn').classList.toggle('active',on);
+  document.getElementById('payer-toggle-ico').textContent=on?'−':'＋';
+  const acc=document.getElementById('f-account');
+  if(acc){acc.disabled=on;if(on)acc.value='';}
+  updatePayerHint();
+}
+function togglePayer(){
+  if(!payerOn){
+    if(splitPanelOpen&&splitRows.length){toast('⚠️ Elegí una: dividir con alguien o que lo pagó otra persona');return;}
+    if(!debtPeople().length){toast('⚠️ Primero agregá a la persona en Contactos');return;}
+    payerOptions();payerMineTouched=false;
+    document.getElementById('f-payer-mine').value=document.getElementById('f-amt').value||'';
+  }
+  setPayerUI(!payerOn);
+}
+function updatePayerHint(){
+  const h=document.getElementById('f-payer-hint');if(!h||!payerOn){if(h)h.textContent='';return;}
+  const amt=parseFloat(document.getElementById('f-amt').value)||0,m=document.getElementById('f-payer-mine');
+  if(!payerMineTouched)m.value=amt||'';
+  const mine=parseFloat(m.value)||0,name=document.getElementById('f-payer').selectedOptions[0]?.textContent.trim()||'esa persona';
+  h.textContent=mine>0?`No sale de tu billetera. Le debés ${fmt(mine)} a ${name}.`:'Poné cuánto te corresponde pagar a vos.';
+}
 // --- SPLIT PANEL ---
 function toggleSplitPanel(){
+  if(!splitPanelOpen&&payerOn){toast('⚠️ Elegí una: dividir con alguien o que lo pagó otra persona');return;}
   splitPanelOpen=!splitPanelOpen;
   document.getElementById('split-panel').classList.toggle('on',splitPanelOpen);
   document.getElementById('split-toggle-btn').classList.toggle('active',splitPanelOpen);
@@ -332,6 +366,11 @@ function openModal(data=null){
   document.getElementById('split-toggle-ico').textContent=splitPanelOpen?'−':'＋';
   if(splitPanelOpen)renderSplitRows();
   recalcSplit();
+  // Lo pagó otra persona
+  payerMineTouched=!!data?.pagoPor;
+  if(data?.pagoPor){payerOptions(data.pagoPor.personId);document.getElementById('f-payer-mine').value=data.myAmount??data.amount;}
+  setPayerUI(!!data?.pagoPor);
+  if(data?.pagoPor)document.getElementById('f-more').open=true;
   document.getElementById('m-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('f-amt').focus(),200);
 }
@@ -356,7 +395,7 @@ function updateSerieHint(){
   const n=serieCount(),d=document.getElementById('f-date').value,a=parseFloat(document.getElementById('f-amt').value)||0;
   el.textContent=n>1&&d?`Se cargan ${n} movimientos, del ${fechaLarga(d)} al ${fechaLarga(dateAddMonths(d,n-1))}${a?` (${fmt(a*n)} en total)`:''}. Los de fecha futura quedan programados.`:'';
 }
-function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;backToUnassigned();}
+function closeModal(){document.getElementById('m-overlay').classList.remove('on');splitRows=[];splitPanelOpen=false;setPayerUI(false);backToUnassigned();}
 function overlayClick(ev){if(ev.target===document.getElementById('m-overlay'))closeModal();}
 function setType(t){
   document.getElementById('f-type').value=t;
@@ -537,7 +576,7 @@ async function saveExpense(){
   const notes=document.getElementById('f-notes').value.trim();
   const amt=parseFloat(document.getElementById('f-amt').value);
   const recurring=document.getElementById('f-recur').checked;
-  const accountId=document.getElementById('f-account')?.value||null;
+  const accountId=payerOn?null:(document.getElementById('f-account')?.value||null);
   if(accountId&&currentUID) localStorage.setItem(lsKey('gp_last_acc'), accountId);
   const currency=document.getElementById('f-currency')?.value||'ARS';
   const exchangeRate=currency==='USD'?(parseFloat(document.getElementById('f-tc').value)||null):null;
@@ -551,7 +590,12 @@ async function saveExpense(){
   const serieN=id?1:serieCount();
   if(serieN>1&&acc?.type==='credit'){toast('⚠️ Con tarjeta usá "Cuotas" arriba, no repetir meses');return;}
   if(serieN>1&&splitPanelOpen&&splitRows.length){toast('⚠️ No se puede repetir un gasto dividido con otras personas');return;}
-  if(!accountId&&walletAccounts().length&&!_noAccConfirmed){
+  const payerSel=payerOn&&type==='Egreso'?debtPeople().find(p=>p.id===document.getElementById('f-payer').value):null;
+  const payerMine=payerSel?(parseFloat(document.getElementById('f-payer-mine').value)||0):0;
+  if(payerOn&&type!=='Egreso'){toast('⚠️ «Lo pagó otra persona» es solo para gastos');return;}
+  if(payerOn&&(!payerSel||payerMine<=0||payerMine>amt)){toast('⚠️ Elegí quién pagó y tu parte (hasta el total)');return;}
+  if(payerOn&&serieN>1){toast('⚠️ No se puede repetir meses con «Lo pagó otra persona»');return;}
+  if(!accountId&&!payerSel&&walletAccounts().length&&!_noAccConfirmed){
     _noAccConfirmed=true;
     document.getElementById('f-account').focus();
     toast('⚠️ Sin billetera, no cuenta en ningún saldo. Elegí una o tocá Guardar de nuevo.',5000);
@@ -561,7 +605,7 @@ async function saveExpense(){
   // Calculate my amount from split
   const splits=splitPanelOpen&&splitRows.length>0?splitRows.map(r=>({personId:r.personId,personName:r.personName,emoji:r.emoji,amount:parseFloat(r.amount)||0})):[];
   const theirTotal=splits.reduce((s,r)=>s+r.amount,0);
-  const myAmount=splitPanelOpen&&splits.length>0?Math.max(0,amt-theirTotal):amt;
+  const myAmount=payerSel?payerMine:(splitPanelOpen&&splits.length>0?Math.max(0,amt-theirTotal):amt);
 
   const prev=id?expenses.find(e=>e.id===id):null;
   // Editar un gasto de tarjeta ya pagado no lo vuelve a poner en el próximo resumen
@@ -578,7 +622,8 @@ async function saveExpense(){
     installmentCurrent:cardExpType==='installment'?installmentCurrent:null,
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
     ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
-    ...(prev?.sinBilletera&&!accountId?{sinBilletera:true}:{}),
+    ...((prev?.sinBilletera||payerSel)&&!accountId?{sinBilletera:true}:{}),
+    ...(payerSel?{pagoPor:{personId:payerSel.id,personName:payerSel.name}}:{}),
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
     updatedAt:Date.now()
@@ -602,7 +647,8 @@ async function saveExpense(){
   // Deudas del split: al editar se actualizan las que ya existían (antes se creaban
   // de nuevo y la persona quedaba debiendo el doble). Las ya saldadas no se tocan.
   const linked=id?debts.filter(d=>d.linkedExpenseId===exp.id&&!d.settled):[];
-  const wanted=type==='Egreso'?splits.filter(s=>s.amount>0):[];
+  // Si lo pagó otra persona, la deuda va en negativo: es tuya con ella ("le debés")
+  const wanted=payerSel?[{personId:payerSel.id,personName:payerSel.name,amount:-payerMine}]:(type==='Egreso'?splits.filter(s=>s.amount>0):[]);
   if(wanted.length||linked.length){
     for(const s of wanted){
       const old=linked.find(d=>d.personId===s.personId);
@@ -617,13 +663,13 @@ async function saveExpense(){
       if(i>-1)debts[i]=debt;else debts.push(debt);
       skipNextDebt=fbOnline;
       await persistDebt(debt,null);
-      if(!old||old.amount!==debt.amount||old.description!==debt.description)avisarDeuda(debt,old?'cambio':'deuda');
+      if(debt.amount>0&&(!old||old.amount!==debt.amount||old.description!==debt.description))avisarDeuda(debt,old?'cambio':'deuda');
     }
     for(const d of linked.filter(d=>!wanted.some(s=>s.personId===d.personId))){
       debts=debts.filter(x=>x.id!==d.id);
       skipNextDebt=fbOnline;
       await persistDebt(null,d.id);
-      avisarDeuda(d,'baja');
+      if(d.amount>0)avisarDeuda(d,'baja');
     }
     renderSaldosTab();
   }

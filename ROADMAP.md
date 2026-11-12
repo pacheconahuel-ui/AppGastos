@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.15.1**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.16**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -84,7 +84,7 @@ Estado a **noviembre 2026**: versión **3.15.1**. El código está en `index.htm
 - [x] Gastos divididos: de la billetera sale el total pagado.
 - [x] Liquidaciones y ajustes fuera del gasto e ingreso del mes.
 - [x] Saldo inicial negativo y "Ajustar saldo" con negativos.
-- [ ] Idea: "Pagó la otra persona" en el formulario (carga tu parte y la deuda en un solo paso).
+- [x] "Lo pagó otra persona" en el formulario (3.16): carga tu parte y la deuda en un solo paso.
 
 ## 3.13 — auditoría de rendimiento y pantallas ✅
 
