@@ -135,7 +135,7 @@
   .exp-ico.gold-bg{background:color-mix(in srgb,var(--tint) 15%,transparent);border-color:color-mix(in srgb,var(--tint) 20%,transparent)}
   .exp-ico.teal-bg{background:color-mix(in srgb,var(--acc) 12%,transparent);border-color:color-mix(in srgb,var(--acc) 20%,transparent)}
   .exp-info{flex:1;min-width:0}
-  .exp-desc{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .exp-desc{font-size:14px;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
   .exp-meta{font-size:11px;color:var(--txt3);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
   .badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid}
   .badge.sh{background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--teal);border-color:color-mix(in srgb,var(--acc) 25%,transparent)}
@@ -308,13 +308,6 @@
   .cat-section-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
 
   /* MIGRATION */
-  .mig-banner{background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:16px;padding:16px;margin:16px 20px 0;display:none;align-items:flex-start;gap:12px}
-  .mig-banner.on{display:flex}
-  .mig-ico{font-size:26px;flex-shrink:0;margin-top:2px}
-  .mig-body{flex:1}
-  .mig-title{font-size:14px;font-weight:700;color:var(--yellow);margin-bottom:4px}
-  .mig-txt{font-size:12px;color:var(--txt3);line-height:1.5;margin-bottom:12px}
-  .mig-btns{display:flex;gap:8px;flex-wrap:wrap}
   .btn-mig{padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:1px solid;transition:all .18s}
   .btn-mig.yes{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
   .btn-mig.no{background:transparent;color:var(--txt3);border-color:var(--bdr)}
@@ -493,8 +486,6 @@
     .sec{grid-column:2/3;grid-row:2/3;padding:24px 32px;display:none;max-width:960px}
     .sec.on{display:block}
 
-    /* Migration banner */
-    .mig-banner{grid-column:1/3;margin:0 32px 0}
 
     /* 4-col cards on desktop */
     .cards{grid-template-columns:repeat(4,1fr)}
@@ -630,7 +621,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .tab-ico .ico{width:1.2em;height:1.2em;vertical-align:middle}
 .login-logo{color:var(--acc)}
 .empty-ico .ico{width:1em;height:1em;opacity:.45;stroke-width:1.5;vertical-align:baseline}
-.usd-banner-icon,.mig-ico{color:var(--txt2)}
 .help-section-hdr .ico{color:var(--acc)}
 .par-ico .ico{width:1.2em;height:1.2em}
 .exp-ico .ico{width:1.2em;height:1.2em}
@@ -718,3 +708,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .fc-sub{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--txt2);margin-top:4px;padding-left:10px}
 .acc-neg{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13px;color:var(--txt2);margin-top:4px}
 .acc-neg input{width:22px;height:22px}
+/* Auditoría 3.13 */
+.cuentas-total{flex-wrap:wrap;gap:6px 16px}
+.cuentas-total-val{overflow-wrap:anywhere}
+.cuentas-total-sub{width:100%;font-size:13px;color:var(--txt3)}
+@media(min-width:1280px){
+  #tab-dashboard{max-width:1240px}
+  .dash-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
+}

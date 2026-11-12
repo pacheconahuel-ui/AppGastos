@@ -30,7 +30,7 @@ function confirmLogout(){
   showConf('logout','¿Cerrar sesión?','Tus datos quedan guardados en tu cuenta. Para volver a entrar vas a necesitar iniciar sesión de nuevo.',()=>{closeProfilePanel();doLogout();},'Cerrar sesión');
 }
 function doLogout(){
-  lkDetach();
+  lkDetach();lsForget();
   if(arsListener)db?.ref(arsBase()).off('value',arsListener);
   if(usdListener)db?.ref(usdBase()).off('value',usdListener);
   if(debtListener)db?.ref(debtBase()).off('value',debtListener);
@@ -67,9 +67,9 @@ function attachListeners(){
       for(const p of pendingQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(e=>e.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
       expenses=rows;
       localStorage.setItem(syncedKey('ars'),'1');
-      saveLocal();renderAll();
+      saveLocal();renderAllSoon();
     }else if(expenses.length>0){
-      expenses=onEmptyRemote('ars',expenses,pendingQ,arsPath);saveLocal();renderAll();
+      expenses=onEmptyRemote('ars',expenses,pendingQ,arsPath);saveLocal();renderAllSoon();
     }
   },err=>{console.warn('[FB] gastos:',err);fbReady=true;});
 
@@ -81,8 +81,8 @@ function attachListeners(){
       const pRem=new Set(usdPendQ.filter(p=>p.op==='remove').map(p=>p.path.split('/').pop()));
       rows=rows.filter(t=>!pRem.has(t.id));
       for(const p of usdPendQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(t=>t.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
-      usdTx=rows;localStorage.setItem(syncedKey('usd'),'1');saveLocal();renderAll();
-    }else if(usdTx.length>0){usdTx=onEmptyRemote('usd',usdTx,usdPendQ,usdPath);saveLocal();renderAll();}
+      usdTx=rows;localStorage.setItem(syncedKey('usd'),'1');saveLocal();renderAllSoon();
+    }else if(usdTx.length>0){usdTx=onEmptyRemote('usd',usdTx,usdPendQ,usdPath);saveLocal();renderAllSoon();}
   },err=>console.warn('[FB] usd:',err));
 
   debtListener=db.ref(debtBase()).on('value',snap=>{
@@ -93,8 +93,8 @@ function attachListeners(){
       const pRem=new Set(debtPendQ.filter(p=>p.op==='remove').map(p=>p.path.split('/').pop()));
       rows=rows.filter(d=>!pRem.has(d.id));
       for(const p of debtPendQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(d=>d.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
-      debts=rows;localStorage.setItem(syncedKey('debt'),'1');saveLocal();renderAll();
-    }else if(debts.length>0){debts=onEmptyRemote('debt',debts,debtPendQ,debtPath);saveLocal();renderAll();}
+      debts=rows;localStorage.setItem(syncedKey('debt'),'1');saveLocal();renderAllSoon();
+    }else if(debts.length>0){debts=onEmptyRemote('debt',debts,debtPendQ,debtPath);saveLocal();renderAllSoon();}
   },err=>console.warn('[FB] debts:',err));
 
   // Settings listener — always applies Firebase data when it arrives
@@ -113,7 +113,7 @@ function attachListeners(){
 }
 
 function initFirebase(){
-  if(typeof firebase==='undefined'){setStatus('offline','⚠ Sin Firebase');fbReady=true;showApp(null);return;}
+  if(typeof firebase==='undefined'){setStatus('offline','⚠ Sin Firebase');fbReady=true;window.AUTH_LISTA=true;showApp(null);return;}
   try{
     firebase.initializeApp(FB_CONFIG);
     db=firebase.database();auth=firebase.auth();
@@ -140,6 +140,7 @@ function initFirebase(){
       else setStatus('offline','⚠ Offline');
     });
     auth.onAuthStateChanged(user=>{
+      window.AUTH_LISTA=true; // las pruebas esperan a que Firebase diga si hay sesión
       if(user){
         currentUID=user.uid;
         loadLocal();
@@ -149,7 +150,6 @@ function initFirebase(){
         showApp(user);
         // Push a state now that we're inside the app — back button stays here
         history.replaceState({app:true}, '');
-        setTimeout(checkMigration,1500);
         // Only push settings on login if there are LOCAL changes pending upload
         // (don't push on every login — it would overwrite Firebase with stale local data
         //  before the settings listener has a chance to pull the latest from server)
@@ -173,7 +173,7 @@ function initFirebase(){
         document.getElementById('login-err').textContent=e.message;
       }
     });
-  }catch(e){console.error('[Firebase] Init failed:',e);setStatus('offline','⚠ Sin Firebase');fbReady=true;showApp(null);}
+  }catch(e){console.error('[Firebase] Init failed:',e);setStatus('offline','⚠ Sin Firebase');fbReady=true;window.AUTH_LISTA=true;showApp(null);}
 }
 
 function showApp(user){

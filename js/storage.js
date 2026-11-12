@@ -19,24 +19,32 @@ function loadLocal(){
   try{hiddenCats=new Set(JSON.parse(localStorage.getItem(lsKey(HCK)))||[]);}catch{hiddenCats=new Set();}
   try{renamedCats=JSON.parse(localStorage.getItem(lsKey(RCK)))||{};}catch{renamedCats={};}
   loadCatTypes();
-  // Load new modules
-  setTimeout(()=>{if(typeof loadAccounts==='function'){loadAccounts();loadBudgets();loadGoals();}},0);
+  loadAccounts();loadBudgets();loadGoals();
 }
+// Lo último que se escribió en cada clave: si no cambió, no se vuelve a escribir (escribir en localStorage es lo caro)
+let _lsLast={};
+function lsPut(k,v){
+  const s=JSON.stringify(v);
+  if(_lsLast[k]===s)return;
+  localStorage.setItem(k,s);
+  _lsLast[k]=s;
+}
+function lsForget(){_lsLast={};}
 function saveLocal(){
   if(!currentUID)return;
   try{
-    localStorage.setItem(lsKey(SK),JSON.stringify(expenses));
-    localStorage.setItem(lsKey(USK),JSON.stringify(usdTx));
-    localStorage.setItem(lsKey(DSK),JSON.stringify(debts));
-    localStorage.setItem(lsKey(PSK),JSON.stringify(persons));
+    lsPut(lsKey(SK),expenses);
+    lsPut(lsKey(USK),usdTx);
+    lsPut(lsKey(DSK),debts);
+    lsPut(lsKey(PSK),persons);
     const custom=cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));
-    localStorage.setItem(lsKey(CK),JSON.stringify(custom));
-    localStorage.setItem(lsKey(HCK),JSON.stringify([...hiddenCats]));
-    localStorage.setItem(lsKey(RCK),JSON.stringify(renamedCats));
-    localStorage.setItem(lsKey(CT_SK),JSON.stringify(catTypes));
-    localStorage.setItem(lsKey(PQ),JSON.stringify(pendingQ));
-    localStorage.setItem(lsKey(UPQ),JSON.stringify(usdPendQ));
-    localStorage.setItem(lsKey(DPQ),JSON.stringify(debtPendQ));
+    lsPut(lsKey(CK),custom);
+    lsPut(lsKey(HCK),[...hiddenCats]);
+    lsPut(lsKey(RCK),renamedCats);
+    lsPut(lsKey(CT_SK),catTypes);
+    lsPut(lsKey(PQ),pendingQ);
+    lsPut(lsKey(UPQ),usdPendQ);
+    lsPut(lsKey(DPQ),debtPendQ);
   }catch(e){console.warn('localStorage error:',e);}
 }
 

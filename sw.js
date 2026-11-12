@@ -12,11 +12,22 @@ const CDN_ASSETS = [
   'https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js'
 ];
 
+// Archivos de la app que carga index.html (se leen de la propia página: no hay lista que mantener)
+async function appShell() {
+  const base = new URL('./', self.registration.scope).href;
+  try {
+    const html = await (await fetch(base + 'index.html', { cache: 'no-cache' })).text();
+    const urls = [...html.matchAll(/(?:src|href)="((?:js|css|public)\/[^"]+|manifest\.json)"/g)].map(m => new URL(m[1], base).href);
+    return [base + 'index.html', ...new Set(urls)];
+  } catch { return []; }
+}
+
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c =>
-      Promise.allSettled(CDN_ASSETS.map(url => c.add(url).catch(() => {})))
-    )
+    caches.open(CACHE).then(async c => {
+      const shell = await appShell();
+      await Promise.allSettled([...CDN_ASSETS, ...shell].map(url => c.add(url).catch(() => {})));
+    })
   );
   self.skipWaiting();
 });
@@ -29,13 +40,27 @@ self.addEventListener('activate', e => {
   );
 });
 
+// Red primero. Si la red tarda más de WAIT ms (mala señal), se muestra lo guardado y la red sigue
+// por detrás para dejar la copia al día para la próxima.
+const WAIT = 4000;
 function networkFirst(request, key) {
-  return fetch(request, { cache: 'no-cache' })
-    .then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(key || request, copy)); }
-      return res;
-    })
-    .catch(() => caches.match(key || request));
+  return new Promise(resolve => {
+    let respondido = false;
+    const responder = res => { if (!respondido) { respondido = true; resolve(res); } };
+    const timer = setTimeout(() => {
+      caches.match(key || request).then(c => { if (c) responder(c); });
+    }, WAIT);
+    fetch(request, { cache: 'no-cache' })
+      .then(res => {
+        clearTimeout(timer);
+        if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(key || request, copy)); }
+        responder(res);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        caches.match(key || request).then(c => responder(c || Response.error()));
+      });
+  });
 }
 
 self.addEventListener('fetch', e => {

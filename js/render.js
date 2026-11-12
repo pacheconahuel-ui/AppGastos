@@ -1,5 +1,11 @@
 // Dibujar resumen, lista, USD y saldos
 // --- RENDER ALL ---
+// Los eventos de Firebase llegan de a varios (gastos, USD, deudas…): se dibuja una sola vez por cuadro
+let _rqRender=0;
+function renderAllSoon(){
+  if(_rqRender)return;
+  _rqRender=requestAnimationFrame(()=>{_rqRender=0;try{renderAll();}catch(e){console.error('[render]',e);}});
+}
 function renderAll(){renderDashboard();renderListSec();renderUsdTab();renderSaldosTab();if(activeTab==='cuentas')renderCuentasTab();try{renderPatrimonioCard();}catch(e){}}
 
 function getDashMk(){
@@ -54,8 +60,11 @@ function renderDashboard(){
   const chartTitle=document.getElementById('chart-box-title');
   if(chartTitle)chartTitle.textContent=`Distribución — ${monthLabel(mk)}`;
 
-  try{renderPieChart(mk);}catch(e){console.warn('pie chart:',e);}
-  try{renderMonthlyChart();}catch(e){console.warn('monthly chart:',e);}
+  // Los gráficos son lo más caro de dibujar: con otra pestaña abierta no se ven, se dibujan al volver al Resumen
+  if(activeTab==='dashboard'){
+    try{renderPieChart(mk);}catch(e){console.warn('pie chart:',e);}
+    try{renderMonthlyChart();}catch(e){console.warn('monthly chart:',e);}
+  }
   try{renderPatrimonioCard();}catch(e){console.warn('patrimonio:',e);}
   // Los vencimientos dependen de hoy, no del mes que se está mirando
   try{renderCardReminders();}catch(e){console.warn('card reminders:',e);}
@@ -354,7 +363,7 @@ function expHTML(e,actions){
     :(accounts?.length?'<span class="badge" style="background:color-mix(in srgb,var(--warn) 8%,transparent);color:var(--yellow);border-color:color-mix(in srgb,var(--warn) 25%,transparent)">Sin billetera</span>':'');
   const pending=pendingQ.some(p=>p.path===arsPath(e.id))?'<span style="color:var(--yellow);font-size:10px">'+ic('clock')+'</span>':'';
   const notesLine=e.notes?`<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ic('note')} ${esc(e.notes)}</div>`:'';
-  const btns=actions?`<div class="exp-actions"><button class="btn-ico edit" onclick="editExp('${e.id}',event)">${ic('edit')}</button><button class="btn-ico del" onclick="delExp('${e.id}',event)">${ic('trash')}</button></div>`:'';
+  const btns=actions?`<div class="exp-actions"><button class="btn-ico del" onclick="delExp('${e.id}',event)" aria-label="Borrar">${ic('trash')}</button></div>`:'';
   return`<div class="exp-item swipeable" data-id="${e.id}" onclick="editExp('${e.id}',event)">
     <div class="exp-ico purple-bg">${icon(e.category)}</div>
     <div class="exp-info">

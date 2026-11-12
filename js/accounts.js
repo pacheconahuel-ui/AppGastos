@@ -181,7 +181,7 @@ function renderCuentasTab(){
   document.getElementById('cuentas-total-ars').textContent=
     fmt(totalARS)+(totalUSD>0?` + ${fmtU(totalUSD)}`:'');
   const mTf=transfers.filter(t=>monthKey(t.date)===mk);
-  document.getElementById('cuentas-transfers-count').textContent=`${mTf.length} transferencia${mTf.length!==1?'s':''}`;
+  document.getElementById('cuentas-transfers-count').textContent=mTf.length;
   const tHtml=transfers.length?[...transfers].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(t=>{
     const fr=accounts.find(a=>a.id===t.fromId),to=accounts.find(a=>a.id===t.toId);
     return`<div class="transfer-box"><div style="font-size:20px">${fr?.emoji||'💼'}</div>

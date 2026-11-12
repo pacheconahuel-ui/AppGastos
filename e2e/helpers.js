@@ -6,7 +6,7 @@ export async function openApp(page) {
   page.errs = [];
   page.on('pageerror', e => page.errs.push(e.message));
   await page.goto('./');
-  await page.waitForFunction(() => typeof APP_VERSION !== 'undefined' && typeof renderAll === 'function');
+  await page.waitForFunction(() => window.APP_LISTA === true && window.AUTH_LISTA === true); // los scripts van diferidos: esperar al arranque y a la respuesta de Firebase
   await page.evaluate(() => {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
