@@ -1,5 +1,18 @@
 # Cambios
 
+## 3.21 — noviembre 2026
+
+Menos ruido: menos texto repetido y menos controles iguales (a partir de una revisión de las pantallas en el celular).
+
+- **Lista:** arriba solo el mes, el buscador y un botón **Filtros** (categoría, tipo y billetera se despliegan; el botón muestra cuántos hay activos). Los movimientos van **agrupados por día** («Hoy», «Ayer», «12 de noviembre», «Programado · 19 de noviembre») y cada uno muestra categoría y billetera en texto gris; solo lo que se sale de lo común lleva una marca chica (programado, se repite, cuota, dólares, dividido, pagó otra persona).
+- **Cuentas:** las billeteras son **una fila** tocable (nombre, saldo y una flecha) que abre «¿Por qué este saldo?», desde donde también se edita la billetera. En las tarjetas, las fechas pasan a una línea propia debajo del nombre y el total; el período «en curso» no aparece si está vacío; «Próximos resúmenes» se ve como un botón.
+- **Disponible ahora:** sin el botón de ajuste repetido en cada billetera; tocar una fila abre el detalle.
+- **Perfil:** agrupado en Mi cuenta, Configuración, Respaldo y Ayuda; lo técnico (diagnóstico, traer y subir configuración) y «Borrar todos mis datos» quedan en **Avanzado**, plegado.
+- **Lo que viene:** sin las barras de cada mes (decían poco), textos más cortos y el detalle de cada tarjeta plegado.
+- **Saldos:** quien no tiene saldo, deudas ni historial va en una línea («Sin deudas: Nacho») en vez de una tarjeta entera.
+- **Resumen:** «Ver detalle» y las listas plegables llevan una flecha, para que se vean como botones.
+- Pruebas: encabezados de día, y en el navegador cada pantalla (Lista, Cuentas, Disponible ahora, Perfil, Lo que viene, Saldos) a 390 px con controles de 44; se ajustaron las pruebas que dependían del diseño anterior.
+
 ## 3.20 — noviembre 2026
 
 Categorías de fábrica más neutras: lo personal lo crea cada uno.

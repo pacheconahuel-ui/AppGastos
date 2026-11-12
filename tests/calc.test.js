@@ -384,3 +384,18 @@ describe('¿Por qué este saldo? (accountBreakdown)', () => {
     expect(app.run('fmtS(5)')).toBe('$5');
   });
 });
+
+describe('encabezados de día de la Lista (3.21)', () => {
+  it('hoy, ayer, fecha larga, otro año y programado', () => {
+    const app = loadApp();
+    const d = (s) => app.run(`diaLabel('${s}','2026-11-12')`);
+    expect(d('2026-11-12')).toBe('Hoy');
+    expect(d('2026-11-11')).toBe('Ayer');
+    expect(d('2026-11-05')).toBe('5 de noviembre');
+    expect(d('2025-12-31')).toBe('31 de diciembre de 2025');
+    expect(d('2026-11-19')).toBe('Programado · 19 de noviembre');
+    expect(app.run(`diaLabel('2026-03-01','2026-03-02')`)).toBe('Ayer');
+    expect(app.run(`diaLabel('2026-02-28','2026-03-01')`)).toBe('Ayer'); // cruza de mes
+    expect(app.run(`diaLabel('','2026-03-01')`)).toBe('Sin fecha');
+  });
+});

@@ -158,25 +158,26 @@
   <div class="sec" id="tab-lista">
     <div class="list-filters">
       <div class="list-filters-row1">
-        <select class="f-ctrl" id="fil-month" onchange="renderListSec()" style="flex:1"></select>
-        <button onclick="exportCSV()" style="padding:10px 14px;background:color-mix(in srgb,var(--pos) 10%,transparent);border:1px solid color-mix(in srgb,var(--pos) 25%,transparent);border-radius:11px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0"><i data-ico="download"></i> CSV</button>
-        <span class="list-count" id="list-count"></span>
+        <select class="f-ctrl" id="fil-month" onchange="renderListSec()" style="flex:1" aria-label="Mes"></select>
+        <button onclick="exportCSV()" class="list-csv" aria-label="Exportar a CSV"><i data-ico="download"></i> CSV</button>
       </div>
       <div class="list-filters-row2">
         <div class="search-wrap">
           <span class="search-ico"><i data-ico="search"></i></span>
-          <input type="text" class="f-ctrl search-inp" id="fil-search" placeholder="Buscar…" oninput="renderListSec()">
+          <input type="text" class="f-ctrl search-inp" id="fil-search" placeholder="Buscar…" oninput="renderListSec()" aria-label="Buscar">
         </div>
-        <select class="f-ctrl" id="fil-cat" onchange="renderListSec()" style="flex:1"></select>
+        <button class="list-filtros-btn" id="filtros-btn" onclick="toggleFiltros()" aria-expanded="false" aria-controls="list-more"><i data-ico="sliders"></i> Filtros<span class="filtros-n" id="filtros-n"></span></button>
       </div>
-      <div class="list-filters-row2" style="margin-top:6px">
-        <select class="f-ctrl" id="fil-type" onchange="renderListSec()" style="flex:1">
+      <div class="list-more hidden" id="list-more">
+        <select class="f-ctrl" id="fil-cat" onchange="renderListSec()" aria-label="Categoría"></select>
+        <select class="f-ctrl" id="fil-type" onchange="renderListSec()" aria-label="Tipo">
           <option value="">Ingreso + Egreso</option>
           <option value="Ingreso">Solo ingresos</option>
           <option value="Egreso">Solo egresos</option>
         </select>
-        <select class="f-ctrl" id="fil-account" onchange="renderListSec()" style="flex:1"></select>
+        <select class="f-ctrl" id="fil-account" onchange="renderListSec()" aria-label="Billetera"></select>
       </div>
+      <span class="list-count" id="list-count"></span>
     </div>
     <div id="full-list"></div>
   </div>

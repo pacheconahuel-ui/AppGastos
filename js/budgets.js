@@ -176,13 +176,10 @@ function renderPatrimonioCard(){
     if(isUsd)totalUSD+=bal; else totalARS+=bal;
     const cls=bal>0?'pos':bal<0?'neg':'zero';
     const balStr=isUsd?`<span style="color:var(--gold)">${fmtU(bal)}</span>`:`<span class="pat-acc-bal ${cls}">${bal<0?'-':''}${fmt(bal)}</span>`;
-    return`<div class="pat-row">
-      <div class="pat-acc-left"><span class="pat-acc-ico">${a.emoji}</span><span class="pat-acc-name">${esc(a.name)}</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        ${balStr}
-        <button onclick="openAdjustModal('${a.id}',event)" title="Ajustar" style="width:24px;height:24px;border-radius:6px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">${ic('sliders')}</button>
-      </div>
-    </div>`;
+    return`<button class="pat-row" onclick="openSaldoDetalle('${a.id}',event)" aria-label="${esc(a.name)}: ver por qué este saldo">
+      <span class="pat-acc-left"><span class="pat-acc-ico">${a.emoji}</span><span class="pat-acc-name">${esc(a.name)}</span></span>
+      <span class="pat-acc-right">${balStr}<span class="pat-row-chev" aria-hidden="true">›</span></span>
+    </button>`;
   };
   const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
   const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');

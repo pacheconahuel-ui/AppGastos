@@ -30,10 +30,8 @@ function fcToggle(k){fcSetOpt(k,!fcOpt(k));renderForecast();renderFcLine();}
 function renderForecast(){
   const all=fcAll({servicios:fcOpt('serv')});
   const sel=all.find(m=>m.mk===fcSel)||all[1];
-  const max=Math.max(...all.map(m=>m.total),1);
   const modal=document.querySelector('#lk-overlay .modal'),keep=modal?modal.scrollTop:0;
   const strip=all.map(m=>`<button class="fc-mes${m.mk===sel.mk?' on':''}" onclick="fcSelect('${m.mk}')" aria-label="${monthLabel(m.mk)}: ${fmt(m.total)}">
-      <span class="fc-bar"><i style="height:${Math.max(4,Math.round(m.total/max*100))}%"></i></span>
       <span class="fc-m">${MES_CORTO[parseInt(m.mk.slice(5),10)-1]}</span><span class="fc-v">${fcShort(m.total)}</span></button>`).join('');
   const rows=['tarjeta','cuotas','fijos'].map(g=>{
     const v=sel.tot[g],pct=sel.total>0?Math.round(v/sel.total*100):0;
@@ -44,18 +42,22 @@ function renderForecast(){
   const groups=['tarjeta','cuotas','fijos'].map(g=>{
     const its=sel.items.filter(i=>i.grupo===g);
     if(!its.length)return'';
-    return`<div class="fc-sec">${FC_LBL[g]}</div>`+its.map(i=>`<div class="fc-item"><div class="fc-item-top"><span class="fc-item-name">${esc(i.label)}</span><b>${fmt(i.amount)}${i.usd?` <span class="fc-usd">+ ${fmtU(i.usd)}</span>`:''}</b></div>
-      ${i.nota?`<div class="fc-item-nota">${esc(i.nota)}</div>`:''}
-      ${(i.subs||[]).map(s=>`<div class="fc-sub"><span>${esc(s.label)}${s.nota?` · ${esc(s.nota)}`:''}</span><span>${s.usd?fmtU(s.usd):fmt(s.amount)}</span></div>`).join('')}</div>`).join('');
+    // Lo que tiene detalle (cada compra de una tarjeta) va plegado: se ve la tarjeta y su total, y se abre si hace falta
+    return`<div class="fc-sec">${FC_LBL[g]}</div>`+its.map(i=>{
+      const top=`<span class="fc-item-name">${esc(i.label)}</span><b>${fmt(i.amount)}${i.usd?` <span class="fc-usd">+ ${fmtU(i.usd)}</span>`:''}</b>`;
+      const nota=i.nota?`<div class="fc-item-nota">${esc(i.nota)}</div>`:'';
+      const subs=(i.subs||[]).map(s=>`<div class="fc-sub"><span>${esc(s.label)}${s.nota?` · ${esc(s.nota)}`:''}</span><span>${s.usd?fmtU(s.usd):fmt(s.amount)}</span></div>`).join('');
+      return subs?`<details class="fc-item"><summary class="fc-item-top">${top}</summary>${nota}${subs}</details>`:`<div class="fc-item"><div class="fc-item-top">${top}</div>${nota}</div>`;
+    }).join('');
   }).join('');
   lkModal('forecast',`<div class="m-title">${ic('calendar')} Lo que viene</div>
     <div class="fc-strip">${strip}</div>
     <div class="fc-kpi"><div class="fc-kpi-lbl">${sel.actual?'Lo que falta pagar de':'Mínimo de'} ${monthLabel(sel.mk)}</div>
       <div class="fc-kpi-val">${fmt(sel.total)}</div>
       ${sel.usd?`<div class="fc-usd">+ ${fmtU(sel.usd)} en dólares</div>`:''}
-      <div class="fc-kpi-sub">Lo que ya está cargado: tarjetas, cuotas y fijos. Es aproximado.</div></div>
+      <div class="fc-kpi-sub">Es aproximado: tarjetas, cuotas y fijos ya cargados.</div></div>
     ${rows?`<div class="fc-rows">${rows}</div>`:''}
-    <button class="fc-tog" role="switch" aria-checked="${fcOpt('serv')}" onclick="fcToggle('serv')"><span class="fc-sw${fcOpt('serv')?' on':''}"></span><span>Sumar servicios que cambian (luz, gas): promedio de 3 meses, ${fmt(sel.serv.avg)}</span></button>
+    <button class="fc-tog" role="switch" aria-checked="${fcOpt('serv')}" onclick="fcToggle('serv')"><span class="fc-sw${fcOpt('serv')?' on':''}"></span><span>Sumar luz y gas <small>(promedio de 3 meses: ${fmt(sel.serv.avg)})</small></span></button>
     <button class="fc-tog" role="switch" aria-checked="${fcOpt('ing')}" onclick="fcToggle('ing')"><span class="fc-sw${fcOpt('ing')?' on':''}"></span><span>Comparar con mis ingresos</span></button>
     ${comparar}
     ${groups||'<div class="empty" style="padding:20px 0"><p>Todavía no hay nada cargado para este mes<br><small>Aparecen las cuotas y fijos de tarjeta, los gastos programados y los fijos de cada mes</small></p></div>'}`);

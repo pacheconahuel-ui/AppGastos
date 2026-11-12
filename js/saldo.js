@@ -72,6 +72,7 @@ function openSaldoDetalle(accId,ev){
     ${rows}
     <div class="sd-row sd-total"><div>Saldo</div><b class="${b.saldo<0?'neg':'pos'}">${(b.saldo<0?'−':'')+fm(Math.abs(b.saldo))}</b></div>
     <button class="btn-hist sd-real" onclick="corregirSaldoReal('${accId}')">${ic('scale')} Corregir con el saldo real</button>
+    <button class="btn-hist sd-real" onclick="closeLk();openAccountModal('${accId}')">${ic('edit')} Editar billetera</button>
     ${b.programados?`<div class="sd-nota" style="margin-top:6px">Hay ${sdMonto(b,b.programados)} programado para más adelante: todavía no cuenta.</div>`:''}
     ${nOtros?`<div class="sd-sec">Gastos divididos que pesan en este saldo</div>
       <div class="sd-ayuda">Si ya te devolvieron esa plata, entrá a Saldos y marcá la deuda como cobrada: vuelve a tu billetera.${debenTodavia?` Según Saldos, todavía te deben ${fm(debenTodavia)}; el resto ya figura cobrado o no tiene deuda cargada.`:' En Saldos no figura ninguna deuda pendiente de estos gastos.'}</div>

@@ -34,7 +34,7 @@ for (const ancho of [320, 390]) {
     await openApp(page);
     await cargar(page);
     await page.evaluate(() => switchTab('cuentas'));
-    await page.locator('.account-card', { hasText: 'Mercado Pago' }).getByRole('button', { name: '¿Por qué este saldo?' }).click();
+    await page.locator('.account-card', { hasText: 'Mercado Pago' }).click(); // toda la fila abre el detalle (3.21)
     const v = page.locator('#lk-body');
     await expect(v).toContainText('Mercado Pago');
     await expect(v.locator('.sd-row', { hasText: 'Ingresos' })).toContainText('+$100.000');

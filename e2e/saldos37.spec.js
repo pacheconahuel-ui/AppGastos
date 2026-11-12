@@ -29,7 +29,9 @@ test('"Agregar a contactos" reconecta las deudas; con un contacto del mismo nomb
 test('sin deudas activas no hay botón de saldar', async ({ page }) => {
   await openApp(page);
   await page.evaluate(() => { persons = [{ id: 'p1', name: 'Ana', emoji: '👩', isRecurrent: true }]; debts = []; renderAll(); });
-  await expect(page.locator('#saldos-list .person-card')).toHaveCount(1);
+  // sin nada para saldar, la persona va en una línea (3.21) y no hay botón de saldar
+  await expect(page.locator('#saldos-list .person-card')).toHaveCount(0);
+  await expect(page.locator('#saldos-list .person-zeros')).toContainText('Ana');
   await expect(page.locator('#saldos-list .btn-settle')).toHaveCount(0);
   noErrors(page);
 });
