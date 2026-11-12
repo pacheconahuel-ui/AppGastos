@@ -36,10 +36,12 @@ test('acceso restringido: solo autorizados; el administrador ve la actividad y a
   // El administrador, desde la app: ve a todos, autoriza a B y prende la restricción
   await A.evaluate(() => verificarAcceso());
   await A.evaluate(() => openAdmin());
-  await expect(A.locator('#lk-body')).toContainText('Administración');
+  await expect(A.locator('#admin-page')).toBeVisible();
+  await expect(A.locator('#admin-body')).toContainText('Solo personas autorizadas');
   await expect(A.locator('.ad-user')).toHaveCount(3);
-  await expect(A.locator('#lk-body')).toContainText('Sin autorizar');
+  await expect(A.locator('#admin-body')).toContainText('Sin autorizar');
   await A.evaluate(uid => adminAutorizar(uid, true), b.uid);
+  await expect(A.locator('#admin-body .ad-kpi').first()).toContainText('3'); // personas
   await expect(A.locator('.ad-user').filter({ hasText: 'Sin autorizar' })).toHaveCount(1); // queda C
   await A.evaluate(async () => { await db.ref('config/restringido').set(true); });
 
@@ -78,4 +80,33 @@ test('la restricción también cubre vínculos y avisos', async ({ browser }) =>
   expect(await as(b.tok).get(`avisos/${b.uid}`)).toBe(401);
   expect(await as(a.tok).put(`vinculos/${a.uid}/secreto`, 'abcdefghijklmnop')).toBe(200); // el administrador siempre entra
   await owner('config/restringido', false);
+});
+
+
+test('actividad por día: cada uno marca el suyo, solo el administrador lo lee y se ve en la pantalla', async ({ browser }) => {
+  const emailA = await newUser(), emailB = await newUser();
+  const A = await device(browser, emailA), B = await device(browser, emailB);
+  const a = await uidTok(A), b = await uidTok(B);
+  await owner('admin/uid', a.uid);
+  for (const P of [A, B]) await P.evaluate(async () => { localStorage.removeItem('gp_dia_' + currentUID); await registrarDia(); });
+  const hoy = await A.evaluate(() => todayStr());
+  expect(await as(a.tok).get(`actividad_dias/${b.uid}/${hoy}`)).toBe(200);
+  expect(await as(b.tok).get('actividad_dias')).toBe(401); // otro no lo lee
+  expect(await as(b.tok).put(`actividad_dias/${a.uid}/${hoy}`, true)).toBe(401); // ni escribe el de otro
+  expect(await as(b.tok).put(`actividad_dias/${b.uid}/hoy`, true)).toBe(401); // la clave tiene que ser una fecha
+  expect(await as(b.tok).put(`actividad_dias/${b.uid}/2026-01-01`, 'x')).toBe(401); // y el valor, true
+  await A.evaluate(() => verificarAcceso());
+  await A.evaluate(() => { localStorage.removeItem('gp_act_ts_' + currentUID); return registrarActividad(); });
+  await B.evaluate(() => { localStorage.removeItem('gp_act_ts_' + currentUID); return registrarActividad(); });
+  await A.evaluate(() => openAdmin());
+  await expect(A.locator('.ad-kpis')).toContainText('entraron hoy');
+  await expect(A.locator('.ad-bar')).toHaveCount(30);
+  // el emulador conserva a los usuarios de las pruebas anteriores: se busca a estos dos
+  await expect(A.locator('.ad-user').filter({ hasText: emailA })).toHaveCount(1);
+  await expect(A.locator('.ad-user').filter({ hasText: emailB })).toHaveCount(1);
+  await expect(A.locator('.ad-user').filter({ hasText: emailB }).locator('.ad-strip i.on')).toHaveCount(1); // hoy
+  await A.locator('#admin-buscar').fill(emailB);
+  await expect(A.locator('.ad-user')).toHaveCount(1);
+  const csv = await A.evaluate(() => adminCSV(adminEstado.d.users, adminEstado.d.dias, todayStr()));
+  expect(csv).toContain(emailB);
 });

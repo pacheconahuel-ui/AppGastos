@@ -28,14 +28,15 @@ window.addEventListener('popstate', e => {
     'gsearch-overlay','qa-overlay','transfer-overlay','account-overlay',
     'goal-overlay','budget-overlay','cc-pay-overlay','profile-overlay',
     'help-overlay','adjust-overlay','conf-overlay','new-overlay','lk-overlay'
-  ].some(id => document.getElementById(id)?.classList.contains('on'));
+  ].some(id => document.getElementById(id)?.classList.contains('on'))
+    || document.getElementById('admin-page')?.classList.contains('hidden') === false;
 
   if(anyOpen){
     closeModal();closeUsdModal();closeDebtModal();closeSettleModal();
     closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
     closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
     closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
-    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();
+    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();closeAdmin();
     history.pushState({modal:true}, '');
     return;
   }

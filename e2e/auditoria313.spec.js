@@ -103,8 +103,15 @@ test('escritorio ancho: el Resumen va en dos columnas; en el celular, una abajo 
   expect(await x('#bg-card')).toBeGreaterThan((await x('#recent-list')) + 300);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
-  const a = (await page.locator('#recent-list').boundingBox()), b = (await page.locator('#bg-card').boundingBox());
-  expect(b.y).toBeGreaterThan(a.y);
-  expect(Math.abs(a.x - b.x)).toBeLessThan(2);
+  // en el celular: Resumen y Análisis son dos vistas con selector; en la compu van juntas
+  await expect(page.locator('#dash-seg')).toBeVisible();
+  await expect(page.locator('#bg-card')).toBeHidden();
+  await page.getByRole('tab', { name: 'Análisis' }).click();
+  await expect(page.locator('#bg-card')).toBeVisible();
+  await expect(page.locator('#recent-list')).toBeHidden();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator('#dash-seg')).toBeHidden();
+  await expect(page.locator('#bg-card')).toBeVisible();
+  await expect(page.locator('#recent-list')).toBeVisible();
   noErrors(page);
 });

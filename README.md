@@ -70,7 +70,8 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `saldo.js` | "¿Por qué este saldo?": el saldo de una billetera desarmado en renglones |
 | `linked.js` | vínculo con otras personas, avisos de deudas y pagos (lógica y Firebase) |
 | `linked-ui.js` | bandeja de avisos, pagar y confirmar, mi código, vincular un contacto |
-| `admin.js` | acceso restringido opcional, pantalla de administración, actividad de uso y aviso de respaldo |
+| `admin.js` | acceso restringido opcional, actividad de uso, cálculos de la administración y aviso de respaldo |
+| `admin-ui.js` | pantalla de administración (resumen, gráfico, lista con filtros, exportar) |
 | `init.js` | arranque |
 
 - **Datos:** Firebase Realtime Database, en `usuarios/{uid}/...`. Cada usuario solo lee y escribe lo suyo. También hay una copia local en `localStorage` para abrir rápido y funcionar sin conexión.
@@ -87,7 +88,7 @@ Chrome y Samsung Internet en Android tienen un «modo oscuro para sitios web» q
 
 ## Quién usa la app (administración)
 Opcional y pensado para un grupo chico (familia, amigos). Solo el administrador la ve: perfil → **Administración · quién usa la app**.
-- **Actividad:** cada persona deja su último acceso, la versión y cuántos movimientos tiene. Nunca montos ni descripciones.
+- **Actividad:** cada persona deja su último acceso, la versión, cuántos movimientos tiene y una marca por día (solo la fecha). La pantalla muestra el resumen de uso, un gráfico de los últimos 30 días, la lista con búsqueda y filtros, y exporta a CSV. Nunca montos ni descripciones.
 - **Acceso:** el interruptor «Solo personas autorizadas» está apagado por defecto (entra cualquier cuenta de Google). Prendido, solo entran los autorizados y el administrador; los demás ven una pantalla que les pide acceso y aparecen en la lista para autorizarlos. Lo hacen cumplir las reglas de Firebase (`database.rules.json`), no solo la pantalla.
 - **Alta del administrador (una sola vez, a mano en la consola de Firebase):** Realtime Database → agregar el nodo `admin` con un hijo `uid` cuyo valor es el «User UID» de tu cuenta (Authentication → Users). No va en el código porque el repositorio es público.
 - **Orden seguro:** publicar las reglas → cargar `admin/uid` → esperar que cada persona abra la versión nueva (así figura en la lista) → «Autorizar a las N que faltan» → prender el interruptor.

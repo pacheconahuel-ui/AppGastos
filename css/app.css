@@ -786,3 +786,44 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .ad-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--bdr2)}
 .ad-chip.ok{color:var(--green)}
 .ad-chip.no{color:var(--red)}
+
+/* 3.18 · Resumen más limpio: balance grande, detalle plegado, Análisis aparte */
+.sum-main{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0 12px;border-top:1px solid var(--bdr)}
+.sum-big{font-size:min(32px,8.4vw);font-weight:700;white-space:nowrap;font-family:var(--num)}
+.sum-big.pos{color:var(--pos)} .sum-big.neg{color:var(--neg)}
+.sum-card .sum-row{grid-template-columns:repeat(2,1fr);padding-top:0;border-top:0;text-align:center}
+.sum-card .sum-row>div{align-items:center}
+.sum-det{margin-top:8px;border-top:1px solid var(--bdr);padding-top:2px}
+.sum-det summary{min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--txt2)}
+.sum-det .sum-foot{margin-top:2px;padding-bottom:4px}
+#tab-dashboard[data-vista="resumen"] .dash-side{display:none}
+#tab-dashboard[data-vista="analisis"] .dash-main{display:none}
+@media(min-width:1280px){
+  .dash-seg{display:none}
+  #tab-dashboard[data-vista] .dash-side,#tab-dashboard[data-vista] .dash-main{display:block}
+}
+
+/* 3.19 · Administración completa */
+#admin-page{position:fixed;inset:0;z-index:2500;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#admin-page.hidden{display:none}
+.admin-wrap{max-width:860px;margin:0 auto;padding:12px 16px calc(40px + env(safe-area-inset-bottom))}
+.admin-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.admin-top h2{font-size:18px;margin:0}
+.ad-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin:12px 0}
+.ad-kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ad-kpi b{font-size:22px;font-family:var(--num)}
+.ad-kpi span{font-size:12px;color:var(--txt3)}
+.ad-bars{display:flex;align-items:flex-end;gap:3px;height:84px;padding:6px 8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px}
+.ad-bar{flex:1;min-width:2px;background:var(--acc);border-radius:3px 3px 0 0;opacity:.85}
+.ad-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);margin:4px 2px 0}
+.ad-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.ad-chips button{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--bdr2);background:transparent;color:var(--txt2);font:600 13px 'Outfit',sans-serif;cursor:pointer}
+.ad-chips button.on{background:var(--surf2);color:var(--txt);border-color:var(--acc)}
+.ad-act{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ad-strip{display:inline-flex;gap:2px}
+.ad-strip i{width:5px;height:14px;border-radius:2px;background:var(--bdr2)}
+.ad-strip i.on{background:var(--pos)}
+.ad-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ad-foot .btn-hist{flex:1;min-width:180px}
+#admin-buscar{margin-top:6px}
+.ad-foot button{min-height:44px;justify-content:center}

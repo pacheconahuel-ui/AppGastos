@@ -79,7 +79,12 @@
   </div>
 
   <!-- DASHBOARD -->
-  <div class="sec on" id="tab-dashboard">
+  <div class="sec on" id="tab-dashboard" data-vista="resumen">
+    <!-- Resumen: lo de todos los días. Análisis: gráficos, presupuestos y metas (en la compu se ven juntos) -->
+    <div class="seg dash-seg" id="dash-seg" role="tablist">
+      <button class="on" data-vista="resumen" role="tab" onclick="setDashVista('resumen')">Resumen</button>
+      <button data-vista="analisis" role="tab" onclick="setDashVista('analisis')">Análisis</button>
+    </div>
     <div class="dash-grid"><div class="dash-main">
     <!-- Avisos primero: vencimientos de tarjeta y recurrentes pendientes -->
     <div id="backup-aviso"></div>
@@ -97,16 +102,22 @@
         </div>
         <button class="sum-nav" onclick="dashNavMonth(1)" id="dash-next-btn" aria-label="Mes siguiente">›</button>
       </div>
+      <div class="sum-main">
+        <span class="sum-lbl">Balance del mes</span>
+        <span class="sum-big" id="c-bal">$0</span>
+      </div>
       <div class="sum-row">
         <div><span class="sum-lbl">Ingresos</span><span class="sum-v" id="c-ing">$0</span></div>
         <div><span class="sum-lbl">Gastos</span><span class="sum-v" id="c-real">$0</span><span class="sum-usd" id="c-real-usd"></span></div>
-        <div><span class="sum-lbl">Balance</span><span class="sum-v" id="c-bal">$0</span></div>
       </div>
-      <div class="sum-foot">
-        <div id="c-pag-line" style="display:none">Pagaste <b id="c-pag">$0</b> en total · el resto es de otros</div>
-        <div id="proj-card" style="display:none">Proyección a fin de mes: <b id="c-proj">$0</b></div>
-        <div id="sum-stats"></div>
-      </div>
+      <details class="sum-det" id="sum-det">
+        <summary>Ver detalle</summary>
+        <div class="sum-foot">
+          <div id="c-pag-line" style="display:none">Pagaste <b id="c-pag">$0</b> en total · el resto es de otros</div>
+          <div id="proj-card" style="display:none">Proyección a fin de mes: <b id="c-proj">$0</b></div>
+          <div id="sum-stats"></div>
+        </div>
+      </details>
     </div>
     <button class="fc-line" id="fc-line" onclick="openForecast()" style="display:none"></button>
     <!-- Últimos movimientos -->
@@ -939,6 +950,14 @@
 <div class="toast" id="toast"></div>
 <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="onBackupFile(this)">
 
+<!-- Administración: pantalla completa, solo para el administrador -->
+<div id="admin-page" class="hidden" role="dialog" aria-label="Administración">
+  <div class="admin-wrap">
+    <div class="admin-top"><button class="back-link" onclick="closeAdmin()">‹ Volver</button><h2>Administración</h2></div>
+    <div id="admin-body"></div>
+  </div>
+</div>
+
 <!-- Cuenta sin autorización (solo si el administrador prendió la restricción) -->
 <div id="sin-acceso" class="hidden" role="alert">
   <div class="login-card">
@@ -976,6 +995,7 @@
 <script defer src="js/linked.js"></script>
 <script defer src="js/linked-ui.js"></script>
 <script defer src="js/admin.js"></script>
+<script defer src="js/admin-ui.js"></script>
 <script defer src="js/init.js"></script>
 </body>
 </html>

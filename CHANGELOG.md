@@ -1,5 +1,29 @@
 # Cambios
 
+## 3.19 — noviembre 2026
+
+Administración completa (pantalla aparte, solo para el administrador: perfil → «Administración · quién usa la app»).
+
+- **Resumen de uso:** personas, cuántas entraron hoy, en 7 y en 30 días, y cuántas están sin autorizar.
+- **Gráfico de los últimos 30 días:** cuántas personas entraron cada día.
+- **Lista de personas** con estado (administrador, autorizado, sin autorizar), email, último acceso, desde cuándo usa la app, versión, cantidad de movimientos y una tira de los últimos 30 días con los días que entró. **Búsqueda** por nombre o email y filtros: todos, autorizados, sin autorizar, sin entrar en 30 días.
+- **Exportar la lista** a CSV.
+- **Historial diario:** una marca por día y por persona (solo la fecha, nada más) en `actividad_dias/{uid}/{fecha}`. Empieza el día que se publica esta versión; para quien todavía no tiene marcas se usa el día de su último acceso.
+- Sigue siendo solo actividad: nunca montos ni descripciones.
+- **Hay que publicar `database.rules.json`** (nodo nuevo `actividad_dias`: cada uno escribe el suyo, solo el administrador lo lee).
+- Pruebas: cálculos (resumen, días, filtros, CSV), pantalla a 320, 360 y 390 px con controles de 44, exportar y Escape, y contra el emulador de Firebase las reglas del historial diario y la pantalla con datos reales.
+
+## 3.18 — noviembre 2026
+
+Resumen más limpio (pedido de un usuario: "me confunde tanto texto y números").
+
+- **Selector Resumen | Análisis** arriba (en la compu, de 1280 px en adelante, se ven juntos y el selector no aparece; la vista elegida se recuerda en el celular):
+  - **Resumen:** lo de todos los días: avisos, disponible, el mes, «Mes que viene» y los últimos movimientos.
+  - **Análisis:** presupuestos, metas y los gráficos (por categoría y evolución). Los gráficos se dibujan recién al verlos.
+- **El mes en una tarjeta simple:** el **balance** en grande, ingresos y gastos debajo. Las líneas de texto («Pagaste X en total», «Proyección a fin de mes», «Ahorrás/Gastaste X%», «gasto por día sin fijos») pasan a **«Ver detalle»**, plegado; si no hay nada para mostrar, no aparece. La proyección no se muestra si todavía no hay gastos.
+- **Últimos movimientos:** 3 en vez de 5, en una línea cada uno (fecha y categoría). Las etiquetas (billetera, tarjeta, dólares, dividido…) quedan para Lista; lo programado lleva solo un icono.
+- Pruebas: Resumen a 320, 360 y 390 px, Análisis y gráficos, la vista recordada, el detalle sin datos y la compu.
+
 ## 3.17 — noviembre 2026
 
 Quién usa la app y respaldo (para el grupo familiar).

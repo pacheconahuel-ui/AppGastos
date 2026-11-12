@@ -70,46 +70,67 @@ async function registrarActividad(){
   }catch(e){console.warn('[Actividad]',e.message);}
 }
 
-// --- Pantalla del administrador ---
+// Una marca por día y por persona (solo la fecha): alcanza para saber quién usa la app y con qué frecuencia
+async function registrarDia(){
+  if(!db||!currentUID||!fbOnline)return;
+  const hoy=todayStr(),k='gp_dia_'+currentUID;
+  if(localStorage.getItem(k)===hoy)return;
+  try{await db.ref('actividad_dias/'+currentUID+'/'+hoy).set(true);localStorage.setItem(k,hoy);}
+  catch(e){console.warn('[Actividad día]',e.message);}
+}
+
+// --- Cálculos de la pantalla del administrador (sin pantalla, con pruebas) ---
+// Los n días hasta hoy, del más viejo al más nuevo
+function adminDiasAtras(hoy,n){
+  const t=parseYmd(hoy);
+  return Array.from({length:n},(_,i)=>ymd(new Date(t.getFullYear(),t.getMonth(),t.getDate()-(n-1-i))));
+}
+// Días en que entró una persona: las marcas diarias y, para quien todavía no las tiene, el día de su último acceso
+function adminDiasDe(u,dias){
+  const set=new Set(Object.keys((dias&&dias[u.uid])||{}));
+  if(u.ultimo)set.add(ymd(new Date(u.ultimo)));
+  return set;
+}
+function adminResumen(users,dias,hoy){
+  const activos=n=>{const ds=adminDiasAtras(hoy,n);return users.filter(u=>{const s=adminDiasDe(u,dias);return ds.some(d=>s.has(d));}).length;};
+  return{total:users.length,hoy:activos(1),sem:activos(7),mes:activos(30),sinAutorizar:users.filter(u=>!u.permitido&&!u.yo).length};
+}
+// Cuántas personas entraron cada uno de los últimos n días
+function adminPorDia(users,dias,hoy,n=30){
+  return adminDiasAtras(hoy,n).map(d=>({dia:d,n:users.filter(u=>adminDiasDe(u,dias).has(d)).length}));
+}
+function adminFiltrar(users,dias,hoy,{filtro='todos',texto=''}={}){
+  const q=texto.trim().toLowerCase();
+  const mes=adminDiasAtras(hoy,30);
+  return users.filter(u=>{
+    if(filtro==='autorizados'&&!(u.permitido||u.yo))return false;
+    if(filtro==='sin'&&(u.permitido||u.yo))return false;
+    if(filtro==='inactivos'){const s=adminDiasDe(u,dias);if(mes.some(d=>s.has(d)))return false;}
+    return !q||[u.nombre,u.email].some(x=>(x||'').toLowerCase().includes(q));
+  });
+}
+function adminCSV(users,dias,hoy){
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',mes=adminDiasAtras(hoy,30);
+  const f=ms=>ms?new Date(ms).toISOString().slice(0,10):'';
+  const rows=users.map(u=>{const s=adminDiasDe(u,dias);return[u.nombre,u.email,u.yo?'administrador':u.permitido?'autorizado':'sin autorizar',f(u.primero),f(u.ultimo),u.version,u.movs,mes.filter(d=>s.has(d)).length];});
+  return[['nombre','email','estado','primer_acceso','ultimo_acceso','version','movimientos','dias_activos_30'],...rows].map(r=>r.map(q).join(',')).join('\n');
+}
+
+// --- Pantalla del administrador (la pantalla está en admin-ui.js) ---
 async function adminDatos(){
-  const [r,p,a]=await Promise.all([db.ref('config/restringido').once('value'),db.ref('permitidos').once('value'),db.ref('actividad').once('value')]);
-  const perm=p.val()||{},act=a.val()||{};
+  const [r,p,a,dd]=await Promise.all([db.ref('config/restringido').once('value'),db.ref('permitidos').once('value'),db.ref('actividad').once('value'),db.ref('actividad_dias').once('value')]);
+  const perm=p.val()||{},act=a.val()||{},dias=dd.val()||{};
   const uids=new Set([...Object.keys(perm),...Object.keys(act)]);
   const users=[...uids].map(uid=>({uid,...(act[uid]||{}),permitido:perm[uid]===true,yo:uid===currentUID}))
     .sort((x,y)=>(y.ultimo||0)-(x.ultimo||0));
-  return{restringido:r.val()===true,users};
-}
-async function openAdmin(){
-  if(!ES_ADMIN||!db)return;
-  lkModal('admin','<div class="m-title">'+ic('users')+' Administración</div><div class="sd-ayuda">Cargando…</div>');
-  let d;
-  try{d=await adminDatos();}catch(e){lkModal('admin','<div class="m-title">'+ic('users')+' Administración</div><div class="sd-ayuda">No se pudo leer: '+esc(e.message)+'</div>');return;}
-  const noAut=d.users.filter(u=>!u.permitido&&!u.yo);
-  const fila=u=>{
-    const nombre=u.nombre||(u.email?u.email.split('@')[0]:'(sin nombre)');
-    const chip=u.yo?'<span class="ad-chip ok">Administrador</span>':u.permitido?'<span class="ad-chip ok">Autorizado</span>':'<span class="ad-chip no">Sin autorizar</span>';
-    const info=[u.email,u.ultimo?'último acceso '+haceCuanto(u.ultimo):'todavía no usó esta versión',u.version?'v'+u.version:'',u.movs!=null?u.movs+' movimientos':''].filter(Boolean).map(esc).join(' · ');
-    const act=u.yo?'':u.permitido
-      ?`<button class="sd-act" onclick="adminAutorizar(${jsArg(u.uid)},false)">Quitar acceso</button>`
-      :`<button class="sd-act" onclick="adminAutorizar(${jsArg(u.uid)},true)">Autorizar</button>`;
-    return`<div class="ad-user"><div class="ad-t"><b>${esc(nombre)}</b> ${chip}</div><div class="ad-s">${info}</div>${act}</div>`;
-  };
-  lkModal('admin',`<div class="m-title">${ic('users')} Administración</div>
-    <div class="ad-switch ${d.restringido?'on':''}">
-      <div><b>Solo personas autorizadas</b><div class="ad-s">${d.restringido?'Prendido: solo entran los autorizados. Quien no lo está ve un aviso y no puede ver ni guardar datos.':'Apagado: cualquier cuenta de Google puede entrar y usar la app.'}</div></div>
-      <button class="btn-fecha" onclick="adminRestringir(${d.restringido?'false':'true'})">${d.restringido?'Apagar':'Prender'}</button>
-    </div>
-    <div class="sd-sec">Personas (${d.users.length})</div>
-    <div class="sd-ayuda">Solo se ve cuándo entró cada una, con qué versión y cuántos movimientos tiene. No se ven montos ni descripciones desde acá.</div>
-    ${d.users.map(fila).join('')||'<div class="sd-ayuda">Todavía no hay nadie registrado.</div>'}
-    ${noAut.length?`<button class="btn-hist" onclick="adminAutorizarTodos()">Autorizar a las ${noAut.length} que faltan</button>`:''}`);
+  return{restringido:r.val()===true,users,dias};
 }
 async function adminAutorizar(uid,si){
   try{
     if(si)await db.ref('permitidos/'+uid).set(true);else await db.ref('permitidos/'+uid).remove();
     toast(si?'✅ Autorizada':'Acceso quitado');
   }catch(e){toast('❌ '+errMsg(e));}
-  openAdmin();
+  adminRefrescar();
 }
 async function adminAutorizarTodos(){
   try{
@@ -118,13 +139,13 @@ async function adminAutorizarTodos(){
     await db.ref().update(upd);
     toast('✅ Autorizadas');
   }catch(e){toast('❌ '+errMsg(e));}
-  openAdmin();
+  adminRefrescar();
 }
 async function adminRestringir(si){
   const hacer=async()=>{
     try{await db.ref('config/restringido').set(si);toast(si?'🔒 Solo personas autorizadas':'🔓 Entra cualquiera');}
     catch(e){toast('❌ '+errMsg(e));}
-    openAdmin();
+    adminRefrescar();
   };
   if(!si){hacer();return;}
   const d=await adminDatos(),quedan=d.users.filter(u=>!u.permitido&&!u.yo);

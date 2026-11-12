@@ -20,20 +20,32 @@ async function cargar(page, extra = {}) {
   }, extra);
 }
 
-test('orden: avisos, disponible, el mes, últimos movimientos, presupuestos y metas, gráficos', async ({ page }) => {
+test('orden (3.18): avisos, disponible, el mes, últimos movimientos; presupuestos, metas y gráficos van en Análisis', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await cargar(page);
   const y = sel => page.locator(sel).first().evaluate(el => el.getBoundingClientRect().top + window.scrollY);
-  const orden = [await y('#card-reminders .card-reminder'), await y('#patrimonio-card'), await y('.sum-card'), await y('#recent-list'), await y('#bg-card'), await y('#chart-seg')];
+  const orden = [await y('#card-reminders .card-reminder'), await y('#patrimonio-card'), await y('.sum-card'), await y('#recent-list')];
   expect([...orden].sort((a, b) => a - b)).toEqual(orden);
+  await expect(page.locator('#bg-card')).toBeHidden(); // en el celular, Análisis es otra vista
+  await expect(page.locator('#chart-seg')).toBeHidden();
   await expect(page.locator('#c-ing')).toHaveText('$1.000.000');
   await expect(page.locator('#c-real')).toHaveText('$70.000');
   await expect(page.locator('#c-bal')).toHaveText('+$930.000');
   await expect(page.locator('#c-bal')).toHaveClass(/pos/);
   await expect(page.locator('#c-pag-line')).toBeHidden();
+  // lo de más: plegado en «Ver detalle»
+  await expect(page.locator('#sum-stats')).toBeHidden();
+  await page.locator('#sum-det summary').click();
   await expect(page.locator('#sum-stats')).toContainText('Ahorrás el 93%');
-  // últimos 5, con acceso a la lista completa
-  await expect(page.locator('#recent-list .exp-item')).toHaveCount(5);
+  // últimos 3, en una línea cada uno, con acceso a la lista completa
+  await expect(page.locator('#recent-list .exp-item')).toHaveCount(3);
+  await expect(page.locator('#recent-list .badge')).toHaveCount(0);
+  // Análisis: presupuestos, metas y gráficos
+  await page.getByRole('tab', { name: 'Análisis' }).click();
+  await expect(page.locator('#bg-card')).toBeVisible();
+  await expect(page.locator('#chart-seg')).toBeVisible();
+  await expect(page.locator('#recent-list')).toBeHidden();
+  await page.getByRole('tab', { name: 'Resumen' }).click();
   await page.getByRole('button', { name: 'Ver todos ›' }).click();
   await expect(page.locator('#tab-lista')).toBeVisible();
   noErrors(page);
@@ -42,6 +54,7 @@ test('orden: avisos, disponible, el mes, últimos movimientos, presupuestos y me
 test('con gastos compartidos aparece lo pagado en total', async ({ page }) => {
   await cargar(page, { compartido: true });
   await expect(page.locator('#c-real')).toHaveText('$50.000');
+  await page.locator('#sum-det summary').click(); // el detalle viene plegado
   await expect(page.locator('#c-pag-line')).toBeVisible();
   await expect(page.locator('#c-pag')).toHaveText('$70.000');
   noErrors(page);
@@ -90,10 +103,12 @@ for (const ancho of [320, 360, 390]) {
     await expect(page.locator('#c-real')).toHaveText('$10.199');
     await expect(page.locator('#c-real-usd')).toHaveText('+ U$D 5');
     // cada número en una sola línea (alto de una línea de texto) y sin pisar a su vecino
-    const cajas = await page.evaluate(() => ['c-ing', 'c-real', 'c-bal'].map(id => { const r = document.getElementById(id).getBoundingClientRect(); return { id, l: r.left, r: r.right, h: r.height }; }));
-    for (const c of cajas) expect(c.h, c.id).toBeLessThan(30);
+    const cajas = await page.evaluate(() => ['c-ing', 'c-real', 'c-bal'].map(id => { const r = document.getElementById(id).getBoundingClientRect(); return { id, l: r.left, r: r.right, h: r.height, w: r.width }; }));
+    expect(cajas[0].h, 'c-ing').toBeLessThan(30);
+    expect(cajas[1].h, 'c-real').toBeLessThan(30);
+    expect(cajas[2].h, 'c-bal (grande)').toBeLessThan(48);
     expect(cajas[0].r).toBeLessThanOrEqual(cajas[1].l);
-    expect(cajas[1].r).toBeLessThanOrEqual(cajas[2].l);
+    expect(cajas[2].r).toBeLessThanOrEqual(ancho); // el balance grande entra en la pantalla
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(await page.evaluate(() => { const c = document.querySelector('.sum-card'); return c.scrollWidth <= c.clientWidth + 1; })).toBe(true);
     noErrors(page);
