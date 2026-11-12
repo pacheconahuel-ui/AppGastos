@@ -730,3 +730,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .sd-item{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:12px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font:500 14px 'Outfit',sans-serif;cursor:pointer}
 .sd-item-t{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
 .sd-item b{font-family:var(--num);white-space:nowrap;color:var(--red)}
+/* 3.14.1 */
+.sd-box{margin-bottom:8px}
+.sd-box .sd-item{margin-bottom:4px}
+.sd-act{width:100%;background:none;border:0;color:var(--blue);font:600 13px 'Outfit',sans-serif;text-align:left;padding:0 12px;cursor:pointer;text-decoration:underline}
+.sd-real{width:100%;margin-top:12px}

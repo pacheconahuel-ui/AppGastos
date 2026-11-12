@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.14**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.14.1**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -98,6 +98,7 @@ Estado a **noviembre 2026**: versión **3.14**. El código está en `index.html`
 
 - [x] "¿Por qué este saldo?" en cada billetera, con la lista de gastos divididos y ajustes que pesan.
 - [x] El total negativo conserva su signo.
+- [x] Desde esa pantalla: corregir con el saldo real, sacar un gasto dividido de la billetera y borrar un ajuste.
 
 ## Ideas para después
 

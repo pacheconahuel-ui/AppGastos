@@ -572,6 +572,7 @@ async function saveExpense(){
     installmentCurrent:cardExpType==='installment'?installmentCurrent:null,
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
     ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
+    ...(prev?.sinBilletera&&!accountId?{sinBilletera:true}:{}),
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
     updatedAt:Date.now()

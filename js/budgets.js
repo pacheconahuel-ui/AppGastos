@@ -186,7 +186,7 @@ function renderPatrimonioCard(){
   };
   const arsRows=arsAccs.map(a=>makeRow(a,false)).join('');
   const usdRows=usdAccs.map(a=>makeRow(a,true)).join('');
-  const unassigned=expenses.filter(e=>!e.accountId&&e.type==='Egreso').length+expenses.filter(e=>!e.accountId&&e.type==='Ingreso').length;
+  const unassigned=expenses.filter(e=>!e.accountId&&!e.sinBilletera).length;
   const warn=unassigned>0?`<div onclick="openUnassigned(event)" style="font-size:11px;color:var(--yellow);margin-top:6px;padding:7px 10px;min-height:44px;display:flex;align-items:center;cursor:pointer;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:8px;border:1px solid color-mix(in srgb,var(--warn) 20%,transparent)">${ic('warn')} ${unassigned} movimiento${unassigned>1?'s':''} sin billetera · asignar ›</div>`:'';
   el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
     <div class="pat-header"><span class="pat-label">${ic('wallet')} Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">${ic('chevron')}</span></div>
