@@ -1,5 +1,14 @@
 # Cambios
 
+## 3.14.1 — noviembre 2026
+
+Para arreglar un saldo desde la misma pantalla "¿Por qué este saldo?" (surgió de analizar los saldos de una usuaria después de la 3.12).
+
+- **Corregir con el saldo real:** abre el ajuste de esa billetera. Un solo ajuste cierra lo que quede (los ajustes no suman a ingresos ni gastos del mes).
+- **Sacar de esta billetera**, en cada gasto dividido de la lista: el gasto deja de restar de la billetera y queda **fuera de las billeteras** (etiqueta en la Lista). Sirve para cargas viejas que registraban una deuda sin que saliera plata de la billetera. La deuda de los demás sigue en Saldos. Estos movimientos **no cuentan** en el aviso de "N movimientos sin billetera", porque se dejaron afuera a propósito, y siguen así al editarlos mientras no se les elija una billetera.
+- **Borrar este ajuste**, en cada ajuste de saldo de la lista: borra el ajuste y recalcula el saldo (por ejemplo, ajustes que compensaban el error viejo de los gastos divididos).
+- Pruebas nuevas: los tres botones en pantalla, que la pantalla se refresque sola, que los movimientos fuera de las billeteras no disparen el aviso y que sigan así al editarlos.
+
 ## 3.14 — noviembre 2026
 
 - **"¿Por qué este saldo?"** en cada billetera (Cuentas): desarma el saldo en renglones (saldo inicial, ingresos, tus gastos, lo que pagaste por otros, cobros y pagos de deudas, ajustes de saldo, pagos de tarjeta, compra y venta de dólares, transferencias) y suma exacto el saldo que se ve. Abajo lista lo que más pesa: los **gastos divididos** (con cuánto de eso todavía te deben según Saldos) y los **ajustes de saldo**; tocar uno lo abre para editarlo o borrarlo.

@@ -63,19 +63,42 @@ function openSaldoDetalle(accId,ev){
   const ids=new Set(b.porOtrosItems.map(x=>x.e.id));
   const debenTodavia=debts.filter(d=>!d.settled&&d.amount>0&&ids.has(d.linkedExpenseId)).reduce((s,d)=>s+d.amount,0);
   const lista=(its,fn)=>its.map(fn).join('');
-  const itemFila=(e,derecha,nota)=>`<button class="sd-item" onclick="closeLk();editExp('${e.id}',event)"><span class="sd-item-t"><span>${esc(e.description||e.category)}</span><span class="sd-nota">${fmtDate(e.date)}${nota?' · '+nota:''}</span></span><b>${derecha}</b></button>`;
+  const itemFila=(e,derecha,nota,accion)=>`<div class="sd-box"><button class="sd-item" onclick="closeLk();editExp('${e.id}',event)"><span class="sd-item-t"><span>${esc(e.description||e.category)}</span><span class="sd-nota">${fmtDate(e.date)}${nota?' · '+nota:''}</span></span><b>${derecha}</b></button>${accion||''}</div>`;
   const otros=[...b.porOtrosItems].sort((x,y)=>y.otros-x.otros).slice(0,10);
   lkModal('saldo',`<div class="m-title">${ic('scale')} ${esc(a.name)}</div>
     <div class="sd-ttl">¿Por qué este saldo?</div>
     ${rows}
     <div class="sd-row sd-total"><div>Saldo</div><b class="${b.saldo<0?'neg':'pos'}">${(b.saldo<0?'−':'')+fm(Math.abs(b.saldo))}</b></div>
+    <button class="btn-hist sd-real" onclick="corregirSaldoReal('${accId}')">${ic('scale')} Corregir con el saldo real</button>
     ${b.programados?`<div class="sd-nota" style="margin-top:6px">Hay ${sdMonto(b,b.programados)} programado para más adelante: todavía no cuenta.</div>`:''}
     ${nOtros?`<div class="sd-sec">Gastos divididos que pesan en este saldo</div>
       <div class="sd-ayuda">Si ya te devolvieron esa plata, entrá a Saldos y marcá la deuda como cobrada: vuelve a tu billetera.${debenTodavia?` Según Saldos, todavía te deben ${fm(debenTodavia)}; el resto ya figura cobrado o no tiene deuda cargada.`:' En Saldos no figura ninguna deuda pendiente de estos gastos.'}</div>
-      ${lista(otros,x=>itemFila(x.e,'−'+fm(x.otros),`pagaste ${fm(total_(x.e,b))} · tu parte ${fm(mio_(x.e,b))}`))}`:''}
+      ${lista(otros,x=>itemFila(x.e,'−'+fm(x.otros),`pagaste ${fm(total_(x.e,b))} · tu parte ${fm(mio_(x.e,b))}`,`<button class="sd-act" onclick="sacarDeBilletera('${accId}','${x.e.id}')">Sacar de esta billetera</button>`))}`:''}
     ${nAj?`<div class="sd-sec">Ajustes de saldo</div>
       <div class="sd-ayuda">Si los hiciste para igualar el banco antes de que el saldo de los gastos divididos se arreglara (versión 3.12), pueden estar restando de más. Tocá uno para verlo o borrarlo.</div>
-      ${lista(b.ajusteItems,e=>itemFila(e,(e.type==='Ingreso'?'+':'−')+fm(b.isUSD?e.amount:amtArs(e)),''))}`:''}`);
+      ${lista(b.ajusteItems,e=>itemFila(e,(e.type==='Ingreso'?'+':'−')+fm(b.isUSD?e.amount:amtArs(e)),'',`<button class="sd-act" onclick="borrarAjuste('${accId}','${e.id}')">Borrar este ajuste</button>`))}`:''}`);
 }
 function total_(e,b){return b.isUSD?e.amount:amtArs(e);}
 function mio_(e,b){return b.isUSD?effAmt(e):effArs(e);}
+
+// --- Acciones desde la pantalla (3.14.1) ---
+function corregirSaldoReal(accId){closeLk();openAdjustModal(accId);}
+// El gasto deja de restar de la billetera (queda "fuera de las billeteras"); la deuda de los demás sigue en Saldos
+function sacarDeBilletera(accId,id){
+  const e=expenses.find(x=>x.id===id),a=accounts.find(x=>x.id===accId);
+  if(!e||!a)return;
+  showConf('wallet','Sacar de esta billetera',`"${e.description||e.category}" deja de restar de ${a.name} y queda fuera de las billeteras. Si se dividió con otras personas, su deuda sigue en Saldos.`,async()=>{
+    e.accountId=null;e.sinBilletera=true;e.updatedAt=Date.now();
+    renderAll();skipNextArs=fbOnline;await persistArs(e,null);
+    openSaldoDetalle(accId);toast(`✅ "${e.description||e.category}" ya no resta de ${a.name}`);
+  },'Sacar');
+}
+function borrarAjuste(accId,id){
+  const e=expenses.find(x=>x.id===id);
+  if(!e)return;
+  showConf('trash','Borrar ajuste',`Se borra "${e.description}" (${fmt(e.amount)}). El saldo de la billetera se recalcula sin él.`,async()=>{
+    expenses=expenses.filter(x=>x.id!==id);
+    renderAll();skipNextArs=fbOnline;await persistArs(null,id);
+    openSaldoDetalle(accId);toast('🗑️ Ajuste borrado');
+  },'Borrar');
+}

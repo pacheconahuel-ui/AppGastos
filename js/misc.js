@@ -341,7 +341,7 @@ function bulkAssignHTML(rows){
 }
 function confirmBulkAssign(){
   const acc=accounts.find(a=>a.id===document.getElementById('bulk-acc')?.value);
-  const rows=expenses.filter(e=>!e.accountId&&(e.currency||'ARS')!=='USD');
+  const rows=expenses.filter(e=>!e.accountId&&!e.sinBilletera&&(e.currency||'ARS')!=='USD');
   if(!acc||!rows.length)return;
   const delta=rows.reduce((s,e)=>s+(e.type==='Ingreso'?1:-1)*effAmt(e),0);
   showConf('wallet','Asignar a '+acc.name,
@@ -364,7 +364,7 @@ function openUnassigned(ev){
 function renderUnassigned(){
   const box=document.getElementById('gsearch-results');
   const keep=box.scrollTop;
-  const rows=expenses.filter(e=>!e.accountId).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const rows=expenses.filter(e=>!e.accountId&&!e.sinBilletera).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const wallets=arsWallets();
   box.innerHTML=rows.length
     ?`<div class="div-lbl" style="margin-top:0">Sin billetera (${rows.length})</div>
@@ -391,7 +391,7 @@ async function assignOne(id,accId){
 function backToUnassigned(){
   if(!_backToUnassigned)return;
   _backToUnassigned=false;
-  if(expenses.some(e=>!e.accountId))setTimeout(openUnassigned,0);
+  if(expenses.some(e=>!e.accountId&&!e.sinBilletera))setTimeout(openUnassigned,0);
   else toast('✅ Todos los movimientos tienen billetera');
 }
 function closeGlobalSearch(){document.getElementById('gsearch-overlay').classList.remove('on');}
