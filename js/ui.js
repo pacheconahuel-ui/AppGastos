@@ -91,6 +91,9 @@ function openProfilePanel(){
     <button class="profile-action-row" onclick="closeProfilePanel();switchTab('cuentas')">
       <span class="par-ico">${ic('card')}</span>Cuentas y tarjetas<span class="par-chevron">›</span>
     </button>
+    ${ES_ADMIN?`<button class="profile-action-row" onclick="closeProfilePanel();openAdmin()">
+      <span class="par-ico">${ic('users')}</span>Administración · quién usa la app<span class="par-chevron">›</span>
+    </button>`:''}
     <div class="profile-sec-lbl">Ayuda</div>
     <button class="profile-action-row" onclick="closeProfilePanel();openHelpModal()">
       <span class="par-ico">${ic('help')}</span>Guía rápida<span class="par-chevron">›</span>

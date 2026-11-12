@@ -774,3 +774,15 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* 3.16 */
 #payer-panel .f-hint{color:var(--txt2)}
+
+/* 3.17 · Administración y cuenta sin acceso */
+#sin-acceso{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+#sin-acceso.hidden{display:none}
+.ad-switch{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--bdr);border-radius:12px;padding:12px;margin:8px 0 4px}
+.ad-switch.on{border-color:color-mix(in srgb,var(--warn) 40%,transparent);background:color-mix(in srgb,var(--warn) 6%,transparent)}
+.ad-user{border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.ad-t{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ad-s{font-size:12px;color:var(--txt3);margin-top:2px;overflow-wrap:anywhere}
+.ad-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--bdr2)}
+.ad-chip.ok{color:var(--green)}
+.ad-chip.no{color:var(--red)}

@@ -2,8 +2,8 @@
   "rules": {
     "usuarios": {
       "$uid": {
-        ".read": "auth !== null && auth.uid === $uid",
-        ".write": "auth !== null && auth.uid === $uid",
+        ".read": "auth !== null && auth.uid === $uid && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid)",
+        ".write": "auth !== null && auth.uid === $uid && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid)",
         "gastos": {
           "$id": {
             ".validate": "newData.hasChildren(['id', 'type', 'amount', 'date']) && newData.child('id').val() === $id",
@@ -50,14 +50,14 @@
     },
     "vinculos": {
       "$owner": {
-        ".read": "auth !== null && auth.uid === $owner",
-        ".write": "auth !== null && auth.uid === $owner",
+        ".read": "auth !== null && auth.uid === $owner && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid)",
+        ".write": "auth !== null && auth.uid === $owner && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid)",
         "secreto": {
           ".validate": "newData.isString() && newData.val().length >= 12 && newData.val().length <= 40"
         },
         "aceptados": {
           "$uid": {
-            ".write": "auth !== null && auth.uid === $uid && newData.exists() && newData.child('secreto').val() === root.child('vinculos/' + $owner + '/secreto').val()",
+            ".write": "auth !== null && auth.uid === $uid && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid) && newData.exists() && newData.child('secreto').val() === root.child('vinculos/' + $owner + '/secreto').val()",
             ".validate": "newData.hasChildren(['nombre', 'secreto', 'miCodigo'])",
             "nombre": {
               ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
@@ -80,9 +80,9 @@
     },
     "avisos": {
       "$to": {
-        ".read": "auth !== null && auth.uid === $to",
+        ".read": "auth !== null && auth.uid === $to && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid)",
         "$id": {
-          ".write": "auth !== null && (auth.uid === $to || (!data.exists() && newData.child('de').val() === auth.uid && root.child('vinculos/' + $to + '/aceptados/' + auth.uid).exists()))",
+          ".write": "auth !== null && (root.child('config/restringido').val() !== true || root.child('permitidos/' + auth.uid).val() === true || root.child('admin/uid').val() === auth.uid) && (auth.uid === $to || (!data.exists() && newData.child('de').val() === auth.uid && root.child('vinculos/' + $to + '/aceptados/' + auth.uid).exists()))",
           ".validate": "newData.hasChildren(['tipo', 'de', 'ref', 'creado'])",
           "tipo": {
             ".validate": "newData.val() === 'deuda' || newData.val() === 'cambio' || newData.val() === 'baja' || newData.val() === 'pago' || newData.val() === 'confirmado' || newData.val() === 'rechazado'"
@@ -126,6 +126,55 @@
           "id": {
             ".validate": "newData.isString() && newData.val() === $id"
           }
+        }
+      }
+    },
+    "admin": {
+      ".read": "auth !== null"
+    },
+    "config": {
+      ".read": "auth !== null",
+      ".write": "auth !== null && root.child('admin/uid').val() === auth.uid",
+      "restringido": {
+        ".validate": "newData.isBoolean()"
+      },
+      "$otro": {
+        ".validate": false
+      }
+    },
+    "permitidos": {
+      ".read": "auth !== null && root.child('admin/uid').val() === auth.uid",
+      "$uid": {
+        ".read": "auth !== null && auth.uid === $uid",
+        ".write": "auth !== null && root.child('admin/uid').val() === auth.uid",
+        ".validate": "newData.isBoolean()"
+      }
+    },
+    "actividad": {
+      ".read": "auth !== null && root.child('admin/uid').val() === auth.uid",
+      "$uid": {
+        ".write": "auth !== null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['ultimo', 'version'])",
+        "ultimo": {
+          ".validate": "newData.isNumber()"
+        },
+        "primero": {
+          ".validate": "newData.isNumber()"
+        },
+        "version": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "nombre": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "email": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "movs": {
+          ".validate": "newData.isNumber()"
+        },
+        "$o": {
+          ".validate": false
         }
       }
     }
