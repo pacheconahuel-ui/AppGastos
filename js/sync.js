@@ -150,7 +150,7 @@ function initFirebase(){
         lkAttach();
         showApp(user);
         // Acceso restringido (3.17): si el administrador lo prendió y esta cuenta no está autorizada, se corta acá
-        verificarAcceso().then(ok=>{if(!ok&&currentUID===user.uid)bloquearAcceso();else{setTimeout(()=>{registrarActividad();registrarDia();},3000);setTimeout(renderBackupAviso,2500);}});
+        alEntrar(user.uid);
         // Push a state now that we're inside the app — back button stays here
         history.replaceState({app:true}, '');
         // Only push settings on login if there are LOCAL changes pending upload

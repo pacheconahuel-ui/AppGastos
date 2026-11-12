@@ -1,5 +1,10 @@
 # Cambios
 
+## 3.21.1 — noviembre 2026
+
+- **Arreglo en el acceso restringido:** una cuenta bloqueada (no autorizada) ahora también deja su registro, así que **aparece en la lista del administrador** y se la puede autorizar. Antes, con la restricción prendida, quien no estaba autorizado quedaba afuera sin figurar en ninguna lista.
+- Prueba contra el emulador de Firebase: la persona bloqueada ve el aviso, aparece como «Sin autorizar», se la autoriza y entra.
+
 ## 3.21 — noviembre 2026
 
 Menos ruido: menos texto repetido y menos controles iguales (a partir de una revisión de las pantallas en el celular).
