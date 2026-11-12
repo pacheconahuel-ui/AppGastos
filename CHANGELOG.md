@@ -1,5 +1,12 @@
 # Cambios
 
+## 3.16 — noviembre 2026
+
+- **«+» va directo al gasto** (pedido de una usuaria): un toque abre el formulario de gasto, con «Gasto» por defecto (y «Ingreso» en la pestaña de arriba). **Mantenido apretado** abre el menú con todo lo demás (gasto rápido, dólares, deuda, transferencia). En la compu, «＋ Gasto» va directo y la flecha ▾ de al lado abre el menú. Un aviso único explica dónde quedó el resto.
+- **Lo pagó otra persona** (en «Más opciones» del formulario): elegís quién pagó y cuánto es tu parte. El gasto **no sale de ninguna billetera tuya** (queda «fuera de las billeteras»), cuenta tu parte en los gastos del mes y queda una deuda tuya con esa persona en Saldos («le debés»). Al editar, la deuda se actualiza; al sacar la opción, se borra. Sirve para lo que paga la otra persona con su tarjeta y vos reintegrás. No se combina con dividir ni con repetir meses.
+- Categoría de ingreso **Reintegro**.
+- Pruebas nuevas del «+», del pago por otra persona y de la compu.
+
 ## 3.15.1 — noviembre 2026
 
 Para limpiar el historial de usuarios que arrancaron antes de existir "Ajustar saldo" (surgió del audio de una usuaria que no encontraba cómo sacar gastos de relleno).

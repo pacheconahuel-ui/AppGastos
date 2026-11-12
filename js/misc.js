@@ -1,5 +1,28 @@
 // Pestañas, aviso, migración, teclado, tema, CSV, recurrentes, gráficos, búsqueda, deslizar
 // --- "+" (agregar) ---
+// "+": un toque abre el gasto (lo más usado); mantenido, o la flecha ▾ de la compu, abre todo lo demás
+function wirePlus(){
+  const LONG=450;
+  [['bnav-plus',true],['tabs-new',false]].forEach(([id,long])=>{
+    const b=document.getElementById(id);if(!b)return;
+    let t=null,fired=false;
+    b.addEventListener('click',()=>{if(fired){fired=false;return;}openModal();});
+    if(!long)return;
+    const start=()=>{fired=false;clearTimeout(t);t=setTimeout(()=>{fired=true;haptic();openNewSheet();},LONG);};
+    const stop=()=>clearTimeout(t);
+    b.addEventListener('pointerdown',start);
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+    b.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+  // Una sola vez, para que se sepa dónde quedó lo demás
+  try{
+    if(!localStorage.getItem('plus_tip')){
+      localStorage.setItem('plus_tip','1');
+      setTimeout(()=>{if(typeof toast==='function')toast('💡 Con ＋ cargás un gasto. Mantenelo apretado para ingreso, dólares, deuda o transferencia',6000);},4000);
+    }
+  }catch(e){}
+}
+wirePlus();
 function openNewSheet(){document.getElementById('new-overlay').classList.add('on');history.pushState({modal:true},'');}
 function closeNewSheet(){document.getElementById('new-overlay').classList.remove('on');}
 
