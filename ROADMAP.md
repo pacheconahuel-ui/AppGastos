@@ -1,6 +1,6 @@
 # Roadmap
 
-Estado a **noviembre 2026**: versión **3.13**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
+Estado a **noviembre 2026**: versión **3.14**. El código está en `index.html`, `css/app.css` y `js/` (ver README).
 
 ## Fase 1 — Ordenar ✅ (2.9)
 
@@ -93,6 +93,11 @@ Estado a **noviembre 2026**: versión **3.13**. El código está en `index.html`
 - [x] Lista, Cuentas, proyección y Resumen en dos columnas en escritorio.
 - [ ] Idea: carga parcial de movimientos (solo los últimos meses) cuando haya más de 10.000.
 - [ ] Idea: botón de borrar billetera dentro de su pantalla de edición, no en la tarjeta.
+
+## 3.14 — saldos que se explican ✅
+
+- [x] "¿Por qué este saldo?" en cada billetera, con la lista de gastos divididos y ajustes que pesan.
+- [x] El total negativo conserva su signo.
 
 ## Ideas para después
 

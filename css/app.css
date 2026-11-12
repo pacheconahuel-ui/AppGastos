@@ -716,3 +716,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   #tab-dashboard{max-width:1240px}
   .dash-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
 }
+/* ¿Por qué este saldo? (3.14) */
+.pat-total.neg{color:var(--red)}
+.acc-why{background:none;border:0;padding:0;color:var(--blue);font:600 12px 'Outfit',sans-serif;cursor:pointer;text-align:left;text-decoration:underline}
+.sd-ttl{font-size:13px;color:var(--txt3);margin:-10px 0 12px}
+.sd-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:14px}
+.sd-row b{font-family:var(--num);white-space:nowrap}
+.sd-row .neg{color:var(--red)} .sd-row .pos{color:var(--green)}
+.sd-total{border-bottom:0;border-top:2px solid var(--bdr2);font-size:16px;margin-top:2px}
+.sd-nota{font-size:12px;color:var(--txt3);margin-top:2px}
+.sd-sec{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 6px}
+.sd-ayuda{font-size:13px;color:var(--txt2);margin-bottom:8px;line-height:1.4}
+.sd-item{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;padding:8px 12px;margin-bottom:6px;border-radius:12px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);font:500 14px 'Outfit',sans-serif;cursor:pointer}
+.sd-item-t{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.sd-item b{font-family:var(--num);white-space:nowrap;color:var(--red)}

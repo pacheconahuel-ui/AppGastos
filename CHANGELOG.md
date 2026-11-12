@@ -1,5 +1,12 @@
 # Cambios
 
+## 3.14 — noviembre 2026
+
+- **"¿Por qué este saldo?"** en cada billetera (Cuentas): desarma el saldo en renglones (saldo inicial, ingresos, tus gastos, lo que pagaste por otros, cobros y pagos de deudas, ajustes de saldo, pagos de tarjeta, compra y venta de dólares, transferencias) y suma exacto el saldo que se ve. Abajo lista lo que más pesa: los **gastos divididos** (con cuánto de eso todavía te deben según Saldos) y los **ajustes de saldo**; tocar uno lo abre para editarlo o borrarlo.
+  - Nació de un caso real: después de la 3.12 las billeteras de una usuaria quedaron en negativo. Los saldos de gastos divididos ahora descuentan el total pagado, y los ajustes hechos antes para igualar el banco pueden quedar restando de más. Esta pantalla muestra cuál es el caso en cada billetera.
+- **Arreglo:** el "Disponible ahora" (Resumen) y el total de Cuentas mostraban un total negativo **sin el signo menos** (−$163.068 salía como "$163.068"). Ahora salen con signo y en rojo.
+- Pruebas nuevas: los renglones suman siempre el saldo de la billetera (con gastos divididos, liquidaciones, ajustes, pagos de tarjeta, dólares, transferencias y programados), el total negativo y la pantalla a 320 y 390 px.
+
 ## 3.13 — noviembre 2026
 
 Auditoría completa: sincronización con Firebase, caché, rendimiento y pantallas (celular y escritorio), revisada con tus datos reales de noviembre.

@@ -5,6 +5,8 @@ function closeHelpModal(){document.getElementById('help-overlay').classList.remo
 function helpOverlayClick(ev){if(ev.target===document.getElementById('help-overlay'))closeHelpModal();}
 
 // --- HELPERS ---
+// Con signo: fmt() devuelve siempre el valor sin signo
+function fmtS(n){return(n<0?'−':'')+fmt(n);}
 function fmt(n){return'$'+Math.round(Math.abs(n)).toLocaleString('es-AR');}
 function fmtU(n){return'U$D '+(Math.round(n*100)/100).toLocaleString('es-AR');}
 function fmtTC(n){return'$'+Math.round(n).toLocaleString('es-AR');}
