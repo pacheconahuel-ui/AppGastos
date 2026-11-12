@@ -103,6 +103,7 @@ function renderCuentasTab(){
       <div class="account-info">
         <div class="account-name">${esc(a.name)}${isUsd?' <span style="font-size:10px;color:var(--gold);font-weight:700">USD</span>':''}</div>
         <div class="account-type">${movCount} mov. este mes ${negAlert}</div>
+        <button class="acc-why" onclick="openSaldoDetalle('${a.id}',event)">¿Por qué este saldo?</button>
       </div>
       <div class="account-bal">
         ${balStr}
@@ -179,7 +180,7 @@ function renderCuentasTab(){
   }
 
   document.getElementById('cuentas-total-ars').textContent=
-    fmt(totalARS)+(totalUSD>0?` + ${fmtU(totalUSD)}`:'');
+    fmtS(totalARS)+(totalUSD>0?` + ${fmtU(totalUSD)}`:'');
   const mTf=transfers.filter(t=>monthKey(t.date)===mk);
   document.getElementById('cuentas-transfers-count').textContent=mTf.length;
   const tHtml=transfers.length?[...transfers].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(t=>{

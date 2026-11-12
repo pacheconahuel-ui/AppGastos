@@ -322,3 +322,65 @@ describe('gastos divididos, liquidaciones y ajustes (3.12)', () => {
     expect(Math.round(app.run('accountBalance("acc_mp")') * 100) / 100).toBe(1402281.95);
   });
 });
+
+describe('¿Por qué este saldo? (accountBreakdown)', () => {
+  const cargar = () => {
+    app.set('accounts', [
+      { id: 'w', name: 'Banco', emoji: '🏦', type: 'wallet', currency: 'ARS', initialBalance: -100 },
+      { id: 'w2', name: 'Otra', emoji: '💵', type: 'wallet', currency: 'ARS', initialBalance: 0 },
+      { id: 'u', name: 'Wise', emoji: '🌐', type: 'wallet', currency: 'USD', initialBalance: 10 },
+      { id: 'cc', name: 'Visa', emoji: '💳', type: 'credit' },
+    ]);
+    const E = (o) => ({ type: 'Egreso', myAmount: o.amount, category: 'Otro', description: o.id, accountId: 'w', date: '2020-01-05', ...o });
+    app.set('expenses', [
+      E({ id: 'sueldo', type: 'Ingreso', amount: 1000 }),
+      E({ id: 'gasto', amount: 200 }),
+      E({ id: 'dividido', amount: 1000, myAmount: 600, splits: [{ personId: 'v', amount: 400 }] }),
+      E({ id: 'liq', type: 'Ingreso', amount: 400, liquidacion: true }),
+      E({ id: 'aj', amount: 50, ajuste: true }),
+      E({ id: 'pagotc', amount: 300, ccPayment: true }),
+      E({ id: 'fx', type: 'Egreso', amount: 150, fxOp: true }),
+      E({ id: 'futuro', amount: 999, date: '2099-01-01' }),
+      E({ id: 'usd-gasto', amount: 5, currency: 'USD', accountId: 'u' }),
+    ]);
+    app.set('usdTx', [{ id: 't1', type: 'ingreso', usdAmount: 100, usdAccountId: 'u', date: '2020-01-01' }, { id: 't2', type: 'venta', usdAmount: 30, usdAccountId: 'u', date: '2020-01-02' }]);
+    app.set('transfers', [{ id: 'x', fromId: 'w', toId: 'w2', amount: 70, date: '2020-01-06' }]);
+    app.set('debts', [{ id: 'd1', personId: 'v', amount: 400, settled: false, linkedExpenseId: 'dividido' }]);
+  };
+  it('los renglones suman exactamente el saldo de la billetera', () => {
+    cargar();
+    for (const id of ['w', 'w2', 'u']) {
+      const saldo = app.run(`accountBalance('${id}')`), b = app.run(`accountBreakdown('${id}')`);
+      expect(Math.round(b.saldo * 100) / 100, id).toBe(Math.round(saldo * 100) / 100);
+    }
+  });
+  it('cada movimiento cae en su renglón', () => {
+    cargar();
+    const b = app.run("accountBreakdown('w')");
+    expect(b.inicial).toBe(-100);
+    expect(b.ingresos).toBe(1000);
+    expect(b.gastos).toBe(-(200 + 600)); // solo tu parte
+    expect(b.porOtros).toBe(-400); // lo que pagaste por otros
+    expect(b.liquidaciones).toBe(400);
+    expect(b.ajustes).toBe(-50);
+    expect(b.pagosTarjeta).toBe(-300);
+    expect(b.cambioMoneda).toBe(-150);
+    expect(b.transferencias).toBe(-70);
+    expect(b.programados).toBe(-999); // todavía no cuenta
+    expect(b.porOtrosItems.length).toBe(1);
+    expect(b.ajusteItems.length).toBe(1);
+    expect(app.run("accountBreakdown('w2')").transferencias).toBe(70);
+    expect(app.run("accountBreakdown('cc')")).toBeNull(); // las tarjetas no tienen saldo
+  });
+  it('en una billetera de dólares: ingresos, ventas y gastos en USD', () => {
+    cargar();
+    const b = app.run("accountBreakdown('u')");
+    expect([b.inicial, b.usd, b.gastos]).toEqual([10, 70, -5]);
+    expect(b.saldo).toBe(75);
+  });
+  it('fmtS conserva el signo (fmt lo pierde)', () => {
+    expect(app.run('fmt(-163068)')).toBe('$163.068');
+    expect(app.run('fmtS(-163068)')).toBe('−$163.068');
+    expect(app.run('fmtS(5)')).toBe('$5');
+  });
+});

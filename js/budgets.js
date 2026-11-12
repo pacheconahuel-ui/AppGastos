@@ -191,7 +191,7 @@ function renderPatrimonioCard(){
   el.innerHTML=`<div class="pat-card" onclick="togglePatrimonio()">
     <div class="pat-header"><span class="pat-label">${ic('wallet')} Disponible ahora</span><span class="pat-chevron ${patrimonioExpanded?'open':''}" id="pat-chev">${ic('chevron')}</span></div>
     <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin-bottom:4px">
-      <div class="pat-total">${fmt(totalARS)}</div>
+      <div class="pat-total${totalARS<0?' neg':''}">${fmtS(totalARS)}</div>
       ${totalUSD>0?`<div style="font-family:var(--num);font-size:22px;font-weight:700;color:var(--gold)">${fmtU(totalUSD)}</div>`:''}
     </div>
     <div class="pat-hint">${arsAccs.length+usdAccs.length} billetera${arsAccs.length+usdAccs.length!==1?'s':''}</div>
