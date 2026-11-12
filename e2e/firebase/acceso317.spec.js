@@ -84,7 +84,8 @@ test('la restricción también cubre vínculos y avisos', async ({ browser }) =>
 
 
 test('actividad por día: cada uno marca el suyo, solo el administrador lo lee y se ve en la pantalla', async ({ browser }) => {
-  const A = await device(browser, await newUser()), B = await device(browser, await newUser());
+  const emailA = await newUser(), emailB = await newUser();
+  const A = await device(browser, emailA), B = await device(browser, emailB);
   const a = await uidTok(A), b = await uidTok(B);
   await owner('admin/uid', a.uid);
   for (const P of [A, B]) await P.evaluate(async () => { localStorage.removeItem('gp_dia_' + currentUID); await registrarDia(); });
@@ -100,8 +101,12 @@ test('actividad por día: cada uno marca el suyo, solo el administrador lo lee y
   await A.evaluate(() => openAdmin());
   await expect(A.locator('.ad-kpis')).toContainText('entraron hoy');
   await expect(A.locator('.ad-bar')).toHaveCount(30);
-  await expect(A.locator('.ad-user')).toHaveCount(2);
-  await expect(A.locator('.ad-strip i.on').first()).toBeVisible();
+  // el emulador conserva a los usuarios de las pruebas anteriores: se busca a estos dos
+  await expect(A.locator('.ad-user').filter({ hasText: emailA })).toHaveCount(1);
+  await expect(A.locator('.ad-user').filter({ hasText: emailB })).toHaveCount(1);
+  await expect(A.locator('.ad-user').filter({ hasText: emailB }).locator('.ad-strip i.on')).toHaveCount(1); // hoy
+  await A.locator('#admin-buscar').fill(emailB);
+  await expect(A.locator('.ad-user')).toHaveCount(1);
   const csv = await A.evaluate(() => adminCSV(adminEstado.d.users, adminEstado.d.dias, todayStr()));
-  expect(csv.split('\n')).toHaveLength(3);
+  expect(csv).toContain(emailB);
 });
