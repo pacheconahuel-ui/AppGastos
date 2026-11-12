@@ -88,7 +88,7 @@ for (const ancho of [320, 360, 390]) {
     await page.locator('#admin-buscar').fill('vic');
     await expect(page.locator('.ad-user')).toHaveCount(1);
     await page.locator('#admin-buscar').fill('');
-    for (const sel of ['#admin-chips button', '.ad-switch button', '.sd-act', '.ad-foot button', '#admin-page .back-link']) {
+    for (const sel of ['#admin-chips button', '.ad-switch button', '.sd-act', '.ad-foot button', '.admin-back']) {
       for (const b of await page.locator(sel).all()) { const r = await b.boundingBox(); expect(Math.min(r.width, r.height), sel).toBeGreaterThanOrEqual(43.5); }
     }
     expect(await page.evaluate(() => document.getElementById('admin-page').scrollWidth <= window.innerWidth)).toBe(true);
@@ -103,5 +103,20 @@ test('administración: exportar CSV y volver con Escape', async ({ page }) => {
   expect(d.suggestedFilename()).toMatch(/^personas-\d{4}-\d{2}-\d{2}\.csv$/);
   await page.keyboard.press('Escape');
   await expect(page.locator('#admin-page')).toBeHidden();
+  noErrors(page);
+});
+
+
+test('administración: el botón «Volver» se ve y funciona también en la compu', async ({ page }) => {
+  for (const ancho of [390, 1280, 1440]) {
+    await page.setViewportSize({ width: ancho, height: 900 });
+    await openApp(page);
+    await cargarAdmin(page);
+    const volver = page.getByRole('button', { name: 'Volver' });
+    await expect(volver).toBeVisible();
+    expect((await volver.boundingBox()).height).toBeGreaterThanOrEqual(43.5);
+    await volver.click();
+    await expect(page.locator('#admin-page')).toBeHidden();
+  }
   noErrors(page);
 });
