@@ -53,3 +53,55 @@ test('cuenta sin acceso: pantalla clara con salida', async ({ page }) => {
   for (const n of ['Ya me autorizaron', 'Cerrar sesión']) expect((await s.getByRole('button', { name: n }).boundingBox()).height).toBeGreaterThanOrEqual(43.5);
   noErrors(page);
 });
+
+// 3.19: pantalla completa del administrador, con datos de ejemplo (sin Firebase)
+const cargarAdmin = page => page.evaluate(() => {
+  ES_ADMIN = true; db = {};
+  const hoy = todayStr(), ms = d => new Date(d + 'T12:00:00').getTime();
+  adminEstado.d = {
+    restringido: false,
+    dias: { b: { [hoy]: true }, c: {} },
+    users: [
+      { uid: 'a', nombre: 'Nahuel', email: 'n@x.com', yo: true, permitido: false, ultimo: ms(hoy), version: '3.19', movs: 70 },
+      { uid: 'b', nombre: 'Vicky', email: 'v@x.com', permitido: true, ultimo: ms(hoy), primero: ms('2026-10-01'), version: '3.18', movs: 120 },
+      { uid: 'c', nombre: 'Mamá', email: 'mama@x.com', permitido: false, ultimo: ms('2026-08-01'), version: '3.14', movs: 9 },
+    ],
+  };
+  document.getElementById('admin-page').classList.remove('hidden');
+  adminPintar();
+});
+
+for (const ancho of [320, 360, 390]) {
+  test(`administración completa a ${ancho} px: resumen, gráfico, filtros y controles de 44`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: 800 });
+    await openApp(page);
+    await cargarAdmin(page);
+    const kpis = page.locator('.ad-kpi');
+    await expect(kpis).toHaveCount(5);
+    await expect(kpis.nth(0)).toContainText('3');
+    await expect(page.locator('.ad-bar')).toHaveCount(30);
+    await expect(page.locator('.ad-user')).toHaveCount(3);
+    await page.locator('#admin-chips button', { hasText: 'Sin autorizar' }).click();
+    await expect(page.locator('.ad-user')).toHaveCount(1);
+    await expect(page.locator('.ad-user')).toContainText('Mamá');
+    await page.locator('#admin-chips button', { hasText: 'Todos' }).click();
+    await page.locator('#admin-buscar').fill('vic');
+    await expect(page.locator('.ad-user')).toHaveCount(1);
+    await page.locator('#admin-buscar').fill('');
+    for (const sel of ['#admin-chips button', '.ad-switch button', '.sd-act', '.ad-foot button', '#admin-page .back-link']) {
+      for (const b of await page.locator(sel).all()) { const r = await b.boundingBox(); expect(Math.min(r.width, r.height), sel).toBeGreaterThanOrEqual(43.5); }
+    }
+    expect(await page.evaluate(() => document.getElementById('admin-page').scrollWidth <= window.innerWidth)).toBe(true);
+    noErrors(page);
+  });
+}
+
+test('administración: exportar CSV y volver con Escape', async ({ page }) => {
+  await openApp(page);
+  await cargarAdmin(page);
+  const [d] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Exportar lista/ }).click()]);
+  expect(d.suggestedFilename()).toMatch(/^personas-\d{4}-\d{2}-\d{2}\.csv$/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#admin-page')).toBeHidden();
+  noErrors(page);
+});

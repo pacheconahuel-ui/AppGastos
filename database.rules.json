@@ -177,6 +177,15 @@
           ".validate": false
         }
       }
+    },
+    "actividad_dias": {
+      ".read": "auth !== null && root.child('admin/uid').val() === auth.uid",
+      "$uid": {
+        ".write": "auth !== null && auth.uid === $uid",
+        "$dia": {
+          ".validate": "$dia.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.val() === true"
+        }
+      }
     }
   }
 }

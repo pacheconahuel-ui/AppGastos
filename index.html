@@ -950,6 +950,14 @@
 <div class="toast" id="toast"></div>
 <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="onBackupFile(this)">
 
+<!-- Administración: pantalla completa, solo para el administrador -->
+<div id="admin-page" class="hidden" role="dialog" aria-label="Administración">
+  <div class="admin-wrap">
+    <div class="admin-top"><button class="back-link" onclick="closeAdmin()">‹ Volver</button><h2>Administración</h2></div>
+    <div id="admin-body"></div>
+  </div>
+</div>
+
 <!-- Cuenta sin autorización (solo si el administrador prendió la restricción) -->
 <div id="sin-acceso" class="hidden" role="alert">
   <div class="login-card">
@@ -987,6 +995,7 @@
 <script defer src="js/linked.js"></script>
 <script defer src="js/linked-ui.js"></script>
 <script defer src="js/admin.js"></script>
+<script defer src="js/admin-ui.js"></script>
 <script defer src="js/init.js"></script>
 </body>
 </html>

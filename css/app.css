@@ -802,3 +802,28 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   .dash-seg{display:none}
   #tab-dashboard[data-vista] .dash-side,#tab-dashboard[data-vista] .dash-main{display:block}
 }
+
+/* 3.19 · Administración completa */
+#admin-page{position:fixed;inset:0;z-index:2500;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#admin-page.hidden{display:none}
+.admin-wrap{max-width:860px;margin:0 auto;padding:12px 16px calc(40px + env(safe-area-inset-bottom))}
+.admin-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.admin-top h2{font-size:18px;margin:0}
+.ad-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin:12px 0}
+.ad-kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ad-kpi b{font-size:22px;font-family:var(--num)}
+.ad-kpi span{font-size:12px;color:var(--txt3)}
+.ad-bars{display:flex;align-items:flex-end;gap:3px;height:84px;padding:6px 8px;background:var(--surf);border:1px solid var(--bdr);border-radius:12px}
+.ad-bar{flex:1;min-width:2px;background:var(--acc);border-radius:3px 3px 0 0;opacity:.85}
+.ad-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);margin:4px 2px 0}
+.ad-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.ad-chips button{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--bdr2);background:transparent;color:var(--txt2);font:600 13px 'Outfit',sans-serif;cursor:pointer}
+.ad-chips button.on{background:var(--surf2);color:var(--txt);border-color:var(--acc)}
+.ad-act{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ad-strip{display:inline-flex;gap:2px}
+.ad-strip i{width:5px;height:14px;border-radius:2px;background:var(--bdr2)}
+.ad-strip i.on{background:var(--pos)}
+.ad-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ad-foot .btn-hist{flex:1;min-width:180px}
+#admin-buscar{margin-top:6px}
+.ad-foot button{min-height:44px;justify-content:center}
