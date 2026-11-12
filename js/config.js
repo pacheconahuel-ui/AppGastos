@@ -1,6 +1,6 @@
 // Versión, configuración de Firebase, constantes y estado global
 // --- VERSION (única fuente: la usan el encabezado y el service worker) ---
-const APP_VERSION='3.19';
+const APP_VERSION='3.20';
 
 // --- FIREBASE CONFIG ---
 const FB_CONFIG={apiKey:"AIzaSyAMUb7e_ngGiTc9lRTazNf290bKKRGvZN0",authDomain:"gastos-pache.firebaseapp.com",databaseURL:"https://gastos-pache-default-rtdb.firebaseio.com",projectId:"gastos-pache",storageBucket:"gastos-pache.firebasestorage.app",messagingSenderId:"151998147367",appId:"1:151998147367:web:6918969bcadef03048d702"};
@@ -14,9 +14,13 @@ const HCK='gp_hidden_cats_v1'; // hidden default cats
 const RCK='gp_renamed_cats_v1'; // renamed default cats {original: newName}
 const CT_SK='gp_cat_types_v1'; // {categoryName: 'egreso'|'ingreso'}
 
-const DEF_CATS=['Supermercado','Restaurante','Padel','Mascotas','Servicios','Gimnasio','Farmacia','Compras','Salario','Fútbol','Educador Canino','Alquiler','Luz','Gas','Internet','Seguros','Streaming','Zurich','Consultas Médicas','Venta USD','Otro'];
+// De fábrica (3.20): lo común a cualquiera. El resto lo crea cada uno; las que antes venían de fábrica y alguien ya usa se conservan (LEGACY_*)
+const DEF_CATS=['Supermercado','Restaurante','Mascotas','Servicios','Gimnasio','Farmacia','Compras','Alquiler','Luz','Gas','Internet','Seguros','Streaming','Consultas Médicas','Venta USD','Otro'];
 const ICONS={'Supermercado':'🛒','Restaurante':'🍽️','Padel':'🎾','Mascotas':'🐕','Servicios':'⚡','Gimnasio':'💪','Farmacia':'💊','Compras':'🛍️','Salario':'💰','Fútbol':'⚽','Educador Canino':'🐾','Alquiler':'🏠','Luz':'💡','Gas':'🔥','Internet':'📡','Seguros':'🛡️','Streaming':'🎬','Zurich':'🏥','Consultas Médicas':'🩺','Venta USD':'💵','Otro':'📌'};
-const DEF_ING_CATS=['Sueldo','SAC','Transferencia','Regalo','Sueldo 2','Freelance / Honorarios','Comisión','Aguinaldo / Bono','Alquiler cobrado','Reintegro','Otros ingresos'];
+const DEF_ING_CATS=['Sueldo','Transferencia','Regalo','Alquiler cobrado','Reintegro','Otros ingresos'];
+// Dejaron de venir de fábrica en la 3.20. A quien tiene movimientos con ellas le siguen apareciendo como propias (ver armarCats en calc.js)
+const LEGACY_CATS=['Padel','Fútbol','Educador Canino','Zurich'];
+const LEGACY_ING_CATS=['Salario','SAC','Sueldo 2','Comisión','Aguinaldo / Bono','Freelance / Honorarios'];
 const ING_ICONS={'Sueldo':'💼','SAC':'🎁','Transferencia':'↘️','Regalo':'🎀','Sueldo 2':'💼','Freelance / Honorarios':'💻','Comisión':'🤝','Aguinaldo / Bono':'🎁','Alquiler cobrado':'🏠','Reintegro':'↩️','Otros ingresos':'💚'};
 Object.assign(ICONS,ING_ICONS);
 // Torta por categoría: tonos apagados que se distinguen entre sí en los dos temas

@@ -370,7 +370,7 @@ async function doDelete(){
   const{type,id,name}=pendingDel;closeConf();
   if(type==='cat'){
     haptic([30,30,60]);
-    cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
+    olvidarCatLegacy(name);cats=cats.filter(c=>c!==name);delete catTypes[name];saveLocal();pushSettings();buildCatSelect(null);renderCatManager();toast(`🗑️ Categoría "${name}" eliminada`);
     return;
   }
   if(type==='contact'){
