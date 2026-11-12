@@ -64,11 +64,15 @@ function accountBalance(accId){
 }
 
 // Returns all unpaid CC expenses for a card, with ARS equivalents
-function ccEstimated(accId){
+// scope 'closed': solo el resumen que ya cerró (el que hay que pagar); sin scope, todo lo no pagado
+function ccEstimated(accId,scope){
+  const a0=accounts.find(x=>x.id===accId);
+  const closedIds=scope==='closed'&&a0?new Set((cardStatements(a0).closed?.lines||[]).map(e=>e.id)):null;
   const items=expenses.filter(e=>
     e.accountId===accId &&
     e.type==='Egreso' &&
-    e.ccPaid !== true  // handle both false and undefined (old expenses without field)
+    e.ccPaid !== true &&  // handle both false and undefined (old expenses without field)
+    (!closedIds||closedIds.has(e.id))
   );
   let totalARS=0,totalUSD=0;
   const lines=items.map(e=>{
@@ -80,6 +84,64 @@ function ccEstimated(accId){
     return{...e,arsAmt};
   });
   return{lines,totalARS,totalUSD};
+}
+
+// Tarjetas plegables: se recuerda cuáles quedaron cerradas en este dispositivo
+function ccCollapsedSet(){try{return new Set(JSON.parse(localStorage.getItem('cc_collapsed')||'[]'));}catch(e){return new Set();}}
+function toggleCardBox(id){
+  const s=ccCollapsedSet();s.has(id)?s.delete(id):s.add(id);
+  try{localStorage.setItem('cc_collapsed',JSON.stringify([...s]));}catch(e){}
+  renderCuentasTab();
+}
+function stLinesHTML(st){
+  const row=e=>{
+    const isRec=e.cardExpType==='recurring',isInst=e.cardExpType==='installment',isUSD=e.currency==='USD';
+    const badges=[
+      isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':'',
+      isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
+      isUSD?`<span class="cc-line-badge cc-badge-usd">U$D ${e.amount}</span>`:'',
+    ].join('');
+    return`<div class="cc-line"><span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badges}</span><span class="cc-line-amt">${isUSD?'~':''}${fmt(e.arsAmt)}</span></div>`;
+  };
+  const head=st.lines.slice(0,5).map(row).join(''),rest=st.lines.slice(5);
+  return head+(rest.length?`<details class="cc-more"><summary>Ver ${rest.length} más</summary>${rest.map(row).join('')}</details>`:'');
+}
+function stBlockHTML(a,st,tipo){
+  if(!st)return'';
+  const per=st.from?`compras del ${fmtDate(st.from)} al ${fmtDate(st.to)}`:'todo lo que todavía no pagaste';
+  const dias=st.due?daysBetween(todayStr(),st.due):null;
+  const cuando=st.due?`vence el ${fmtDate(st.due)}${dias===0?' (hoy)':dias>0?` (en ${dias} día${dias>1?'s':''})`:` (hace ${-dias} día${dias<-1?'s':''})`}`:'';
+  const usd=st.usd>0?`<div style="font-size:11px;color:var(--gold)">+ U$D ${st.usd}</div>`:'';
+  const titulo=tipo==='closed'?'Ya cerró · para pagar':st.from?'En curso · todavía abierto':'Próximo resumen';
+  return`<div class="cc-st ${tipo}">
+    <div class="cc-st-head"><div><div class="cc-st-t">${titulo}</div><div class="cc-st-s">${per}${cuando?' · '+cuando:''}</div></div>
+      <div class="cc-estimated-val">~${fmt(st.ars)}${usd}</div></div>
+    ${stLinesHTML(st)}
+    ${tipo==='closed'?`<div class="cc-st-act"><button class="btn-pay-cc" onclick="openCCPayModal('${a.id}')">${ic('card')} Pagar este resumen</button><button class="btn-fecha" onclick="openDueModal('${a.id}','${st.to}')">${ic('calendar')} Cambiar fecha</button></div>`:''}
+  </div>`;
+}
+function cardBoxHTML(a){
+  const sts=cardStatements(a),col=ccCollapsedSet().has(a.id);
+  const main=sts.closed||sts.open;
+  const sub=sts.cyc?`Cierra el ${fmtDate(sts.cyc.nextClosing)} · vence el ${fmtDate(sts.cyc.nextDue)}`:'Sin día de cierre configurado';
+  const lbl=sts.closed?'Para pagar':'Próximo resumen';
+  const total=`~${fmt(main.ars)}${main.usd>0?` + U$D ${main.usd}`:''}`;
+  const n=sts.open.lines.length+(sts.closed?sts.closed.lines.length:0);
+  const body=col?'':`${stBlockHTML(a,sts.closed,'closed')}${stBlockHTML(a,sts.open,'open')}
+      ${!sts.closed&&!sts.open.lines.length?'<div class="cc-empty">Sin consumos pendientes</div>':''}
+      ${cardProjectionHTML(a)}
+      <div class="cc-box-act">
+        ${!sts.closed&&sts.open.lines.length?`<button class="btn-pay-cc" onclick="openCCPayModal('${a.id}')">${ic('card')} Pagar resumen</button>`:''}
+        <button onclick="openAccountModal('${a.id}')" class="btn-fecha">${ic('edit')} Editar tarjeta</button>
+      </div>`;
+  return`<div class="cc-summary-box ${col?'col':''}">
+    <button class="cc-summary-header cc-toggle" onclick="toggleCardBox('${a.id}')" aria-expanded="${!col}">
+      <span style="font-size:22px">${a.emoji}</span>
+      <span class="cc-tg-main"><span class="cc-summary-name">${esc(a.name)}</span><span class="cc-summary-dates">${sub} · ${n} consumo${n!==1?'s':''}</span></span>
+      <span class="cc-estimated"><span class="cc-estimated-lbl">${lbl}</span><span class="cc-estimated-val">${total}</span></span>
+      <span class="cc-chev" aria-hidden="true">${col?'▸':'▾'}</span>
+    </button>${body}
+  </div>`;
 }
 
 function renderCuentasTab(){
@@ -107,7 +169,6 @@ function renderCuentasTab(){
       </div>
       <div class="account-bal">
         ${balStr}
-        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="margin:2px 0 0 auto;width:44px;height:44px;font-size:14px">${ic('trash')}</button>
       </div>
     </div>`;
   };
@@ -117,52 +178,7 @@ function renderCuentasTab(){
   const usdWalletHtml=usdAccs.map(a=>makeWalletCard(a,true)).join('');
 
   let ccHtml='';
-  cards.forEach(a=>{
-    const{lines,totalARS,totalUSD}=ccEstimated(a.id);
-    const closingDay=a.closingDay||0;
-    const closingDate=closingDay?`Cierra día ${closingDay}`:'Sin fecha configurada';
-    const lineItems=lines.slice(0,5).map(e=>{
-      const isRec=e.cardExpType==='recurring';
-      const isInst=e.cardExpType==='installment';
-      const isUSD=e.currency==='USD';
-      const badges=[
-        isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':'',
-        isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
-        isUSD?`<span class="cc-line-badge cc-badge-usd">U$D ${e.amount}</span>`:'',
-      ].join('');
-      const displayAmt=isUSD?`~${fmt(e.arsAmt)}`:`${fmt(e.arsAmt)}`;
-      return`<div class="cc-line">
-        <span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badges}</span>
-        <span class="cc-line-amt">${displayAmt}</span>
-      </div>`;
-    }).join('');
-    const moreCount=lines.length-5;
-    const usdLine=totalUSD>0?`<div style="font-size:11px;color:var(--gold);margin-top:4px">+ U$D ${totalUSD} en dólares</div>`:'';
-    ccHtml+=`<div class="cc-summary-box">
-      <div class="cc-summary-header">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:22px">${a.emoji}</span>
-          <div>
-            <div class="cc-summary-name">${esc(a.name)}</div>
-            <div class="cc-summary-dates">${closingDate} · ${lines.length} consumo${lines.length!==1?'s':''}</div>
-          </div>
-        </div>
-        <div class="cc-estimated">
-          <div class="cc-estimated-lbl">Próximo resumen</div>
-          <div class="cc-estimated-val">~${fmt(totalARS)}</div>
-          ${usdLine}
-        </div>
-      </div>
-      ${lineItems}
-      ${moreCount>0?`<div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:6px">+ ${moreCount} más</div>`:''}
-      ${cardProjectionHTML(a)}
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn-pay-cc" onclick="openCCPayModal('${a.id}')">${ic('card')} Pagar resumen</button>
-        <button onclick="openAccountModal('${a.id}')" class="btn-ico edit" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">${ic('edit')}</button>
-        <button onclick="confirmDeleteAccount('${a.id}',event)" class="btn-ico del" style="width:40px;height:40px;flex-shrink:0;border-radius:10px">${ic('trash')}</button>
-      </div>
-    </div>`;
-  });
+  cards.forEach(a=>{ccHtml+=cardBoxHTML(a);});
 
   const totalARS=arsAccs.reduce((s,a)=>{const b=accountBalance(a.id);return s+(b||0);},0);
   const totalUSD=usdAccs.reduce((s,a)=>{const b=accountBalance(a.id);return s+(b||0);},0);
@@ -215,7 +231,9 @@ function openAccountModal(id=null,ev=null){
   document.getElementById('acc-initial').value=Math.abs(a?.initialBalance||0);
   document.getElementById('acc-initial-neg').checked=(a?.initialBalance||0)<0;
   document.getElementById('acc-closing-day').value=a?.closingDay||'';
-  document.getElementById('acc-due-offset').value=a?.dueOffset||10;
+  const _cl=a?.closingDay;
+  document.getElementById('acc-due-day').value=a?.dueDay||(a&&_cl?parseYmd(cardCycle(a).due).getDate():'');
+  document.getElementById('acc-delete-btn').style.display=a?'flex':'none';
   const pw=document.getElementById('acc-pay-wallet');
   pw.innerHTML='<option value="">— Sin asignar —</option>'+
     walletAccounts().filter(w=>w.id!==id).map(w=>`<option value="${w.id}">${w.emoji} ${esc(w.name)}</option>`).join('');
@@ -251,14 +269,16 @@ function saveAccount(){
   const neg=document.getElementById('acc-initial-neg').checked?-1:1;
   const initial=(parseFloat(document.getElementById('acc-initial').value)||0)*neg; // el teclado del celular no siempre trae el signo −
   const closingDay=parseInt(document.getElementById('acc-closing-day').value)||0;
-  const dueOffset=parseInt(document.getElementById('acc-due-offset').value)||10;
+  const dueDay=parseInt(document.getElementById('acc-due-day').value)||0;
   const payWalletId=document.getElementById('acc-pay-wallet').value||null;
   if(!name){toast('⚠️ Escribí un nombre');return;}
   const acc={
     id:id||'acc_'+newId(),name,emoji,type,currency,
     initialBalance:type==='wallet'?initial:0,
     closingDay:type==='credit'?closingDay:0,
-    dueOffset:type==='credit'?dueOffset:10,
+    dueDay:type==='credit'?dueDay:0,
+    dueOffset:accounts.find(a=>a.id===id)?.dueOffset||10,
+    dueOv:type==='credit'?(accounts.find(a=>a.id===id)?.dueOv||{}):{},
     payWalletId:type==='credit'?payWalletId:null,
     lastPaid:type==='credit'?(accounts.find(a=>a.id===id)?.lastPaid||null):null,
     createdAt:id?accounts.find(a=>a.id===id)?.createdAt||Date.now():Date.now()
@@ -273,6 +293,7 @@ function saveAccount(){
     toast('❌ '+errMsg(err));
   }
 }
+function deleteAccountFromModal(){const id=document.getElementById('acc-id').value;if(!id)return;closeAccountModal();confirmDeleteAccount(id);}
 function confirmDeleteAccount(id,ev){
   ev?.stopPropagation?.();const a=accounts.find(x=>x.id===id);
   pendingDel={type:'account',id};
@@ -288,9 +309,12 @@ function setCCPayMode(mode){
   document.getElementById('ccp-usd-row').style.display=mode==='mix'?'block':'none';
 }
 
+let _ccpScope=null;
 function openCCPayModal(accId){
   const a=accounts.find(x=>x.id===accId);if(!a)return;
-  const{lines,totalARS,totalUSD}=ccEstimated(accId);
+  // Con un resumen cerrado sin pagar, se paga ese; lo del resumen en curso queda para el próximo vencimiento
+  _ccpScope=cardStatements(a).closed?'closed':null;
+  const{lines,totalARS,totalUSD}=ccEstimated(accId,_ccpScope);
   document.getElementById('ccp-acc-id').value=accId;
   document.getElementById('cc-pay-title').innerHTML=ic('card')+' Pagar '+esc(a.name);
   document.getElementById('ccp-real-ars').value='';
@@ -336,7 +360,7 @@ async function saveCCPayment(){
   const walletArsId=document.getElementById('ccp-wallet-ars').value;
   const walletUsdId=document.getElementById('ccp-wallet-usd').value;
   const a=accounts.find(x=>x.id===accId);
-  const{totalARS,totalUSD,lines}=ccEstimated(accId);
+  const{totalARS,totalUSD,lines}=ccEstimated(accId,_ccpScope);
 
   // ARS amount — use entered or estimated
   const enteredARS=parseFloat(document.getElementById('ccp-real-ars').value);

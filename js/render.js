@@ -223,7 +223,7 @@ function renderSaldosTab(){
       const cardId=`pc_${p.id}`;
       const histId=`ph_${p.id}`;
 
-      html+=`<div class="person-card" id="${cardId}">
+      html+=`<div class="person-card${activeDebts.length===0?' vacia':''}" id="${cardId}">
         <div class="person-header">
           <div class="person-ava">${p.emoji}</div>
           <div class="person-info">

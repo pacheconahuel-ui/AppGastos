@@ -224,7 +224,10 @@
   <div class="sec" id="tab-cuentas">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:14px;font-weight:700;color:var(--txt2)">Mis billeteras</div>
-      <button onclick="openAccountModal()" style="padding:7px 14px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent);border-radius:10px;color:var(--blue);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">＋ Nueva</button>
+      <div class="cuentas-actions">
+        <button class="cuentas-btn" onclick="openTransferModal()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg> Transferir</button>
+        <button class="cuentas-btn" onclick="openAccountModal()">＋ Nueva</button>
+      </div>
     </div>
     <button class="usd-link" onclick="switchTab('usd')"><span><b>Dólares</b><small>Stock, compras, ventas y tipo de cambio</small></span><span aria-hidden="true">›</span></button>
     <div class="cuentas-total">
@@ -278,13 +281,14 @@
     <!-- El monto primero, grande -->
     <div class="amt-block">
       <div class="amt-row">
-        <input type="number" class="amt-input" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" aria-labelledby="f-amt-lbl" oninput="recalcSplit();onAmtOrCurrencyChange()">
+        <input type="number" class="amt-input" id="f-amt" placeholder="0" inputmode="decimal" step="any" min="0" aria-labelledby="f-amt-lbl" oninput="recalcSplit();onAmtOrCurrencyChange();updateAmtFmt()">
         <select class="amt-cur" id="f-currency" onchange="onAmtOrCurrencyChange()" aria-label="Moneda">
           <option value="ARS">ARS</option>
           <option value="USD">USD</option>
         </select>
       </div>
       <div class="amt-lbl" id="f-amt-lbl">Monto total ($)</div>
+      <div class="amt-fmt" id="f-amt-fmt"></div>
     </div>
     <!-- USD TC row — only shown when currency=USD -->
     <div id="f-tc-wrap" style="display:none">
@@ -359,13 +363,13 @@
       <div class="f-grp" style="margin-bottom:0">
         <label class="f-lbl" for="f-date">Fecha</label>
         <input type="date" class="f-ctrl" id="f-date" oninput="updateFutureHint()">
-        <div class="f-hint" id="f-future-hint"></div>
       </div>
       <div class="f-grp" style="margin-bottom:0">
         <label class="f-lbl" for="f-desc">Descripción</label>
         <input type="text" class="f-ctrl" id="f-desc" placeholder="Opcional (ej: Coto)">
       </div>
     </div>
+    <div class="f-hint" id="f-future-hint"></div>
     <!-- Lo menos usado, plegado -->
     <details class="more-opts" id="f-more">
       <summary>Más opciones <span>notas, repetir, dividir</span></summary>
@@ -690,8 +694,8 @@
           <input type="number" class="f-ctrl" id="acc-closing-day" placeholder="ej: 15" min="1" max="31" inputmode="numeric">
         </div>
         <div class="f-grp" style="margin-bottom:0">
-          <label class="f-lbl">Vencimiento (días después)</label>
-          <input type="number" class="f-ctrl" id="acc-due-offset" placeholder="ej: 10" min="1" max="30" inputmode="numeric">
+          <label class="f-lbl">Vence el día</label>
+          <input type="number" class="f-ctrl" id="acc-due-day" placeholder="ej: 9" min="1" max="31" inputmode="numeric">
         </div>
       </div>
       <div class="f-grp">
@@ -702,6 +706,7 @@
       </div>
     </div>
     <button class="btn-save" onclick="saveAccount()"><i data-ico="save"></i> Guardar</button>
+    <button class="btn-del-acc" id="acc-delete-btn" style="display:none" onclick="deleteAccountFromModal()"><i data-ico="trash"></i> Eliminar esta cuenta</button>
     <button class="btn-cancel" onclick="closeAccountModal()">Cancelar</button>
   </div>
 </div>

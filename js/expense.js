@@ -335,6 +335,12 @@ function openModal(data=null){
   document.getElementById('m-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('f-amt').focus(),200);
 }
+// Monto con puntos de miles debajo del campo: "20990" se lee peor que "20.990"
+function updateAmtFmt(){
+  const el=document.getElementById('f-amt-fmt');if(!el)return;
+  const v=parseFloat(document.getElementById('f-amt').value)||0;
+  el.textContent=v>=10000?v.toLocaleString('es-AR',{maximumFractionDigits:2}):'';
+}
 // Con fecha futura el movimiento queda programado: no toca el saldo hasta ese día
 function updateFutureHint(){
   const el=document.getElementById('f-future-hint');if(!el)return;

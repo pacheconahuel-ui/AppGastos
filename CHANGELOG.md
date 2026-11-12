@@ -1,5 +1,19 @@
 # Cambios
 
+## 3.15 — noviembre 2026
+
+Cuentas más claras (surgió de revisar capturas en celular y en la compu).
+
+- **Vencimiento de tarjeta por día fijo:** la tarjeta ahora pide "Vence el día X" (como figura en el resumen) en lugar de "N días después del cierre", que nunca coincidía. Las tarjetas viejas siguen con sus días hasta que se edita la tarjeta (el campo viene con el día que ya se estaba usando).
+- **Cambiar la fecha de un resumen puntual** (feriados, cambios del banco): botón "Fecha" en el aviso de vencimiento y "Cambiar fecha" en la tarjeta. Solo afecta a ese resumen; "Lo que viene" usa la fecha corregida.
+- **Resumen cerrado y resumen en curso:** cada tarjeta muestra por separado lo que ya cerró (para pagar) y lo que va del período abierto, cada uno con su período ("compras del 27/09 al 26/10"), cierre y vencimiento. El aviso rojo de vencimiento cuenta solo el resumen cerrado (antes sumaba también lo del período abierto y avisaba de más). **Pagar** paga el resumen cerrado y deja lo del período en curso para el próximo vencimiento.
+- **Tarjetas plegables**, con el estado recordado en el dispositivo: plegada muestra una línea (nombre, cierre, vencimiento y total).
+- **Transferir** a la vista en Cuentas (antes solo estaba en el botón ＋).
+- **Los tachos de eliminar** salieron de las tarjetas de billetera y de tarjeta de crédito: ahora "Eliminar esta cuenta" está dentro de la edición.
+- **Arreglo:** "Gestionar" y "Ajustar saldo" se cortaban dentro de "Disponible ahora" con 5 o más billeteras (alto máximo fijo).
+- El aviso de "Programado para…" ocupa todo el ancho del formulario; el monto muestra los miles debajo del campo; en Saldos las personas en cero y sin movimientos ocupan menos, y Saldos y Cuentas aprovechan mejor las pantallas grandes.
+- Pruebas: vencimiento por día y por corrección, resúmenes cerrado/en curso, pago acotado al resumen cerrado, plegado, transferir, botones de Disponible ahora.
+
 ## 3.14.1 — noviembre 2026
 
 Para arreglar un saldo desde la misma pantalla "¿Por qué este saldo?" (surgió de analizar los saldos de una usuaria después de la 3.12).

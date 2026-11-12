@@ -7,6 +7,22 @@ function parseYmd(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1
 function dayInMonth(y,m,day){const last=new Date(y,m+1,0).getDate();return new Date(y,m,Math.min(day,last));}
 function daysBetween(a,b){return Math.round((parseYmd(b)-parseYmd(a))/86400000);}
 
+// Vencimiento de un resumen (3.15): la fecha corregida a mano para ese resumen, si no el "día X" de la tarjeta
+// (primer día X después del cierre) y, para las tarjetas viejas, N días después del cierre.
+function cardDue(a,closing){
+  const ov=a.dueOv&&a.dueOv[closing];
+  if(ov)return ov;
+  const c=parseYmd(closing);
+  if(a.dueDay){
+    let d=dayInMonth(c.getFullYear(),c.getMonth(),a.dueDay);
+    if(d<=c)d=dayInMonth(c.getFullYear(),c.getMonth()+1,a.dueDay);
+    return ymd(d);
+  }
+  c.setDate(c.getDate()+(a.dueOffset||10));
+  return ymd(c);
+}
+function addDays(s,n){const d=parseYmd(s);d.setDate(d.getDate()+n);return ymd(d);}
+
 // Cierre anterior (≤ hoy), próximo cierre (> hoy) y vencimiento del resumen ya cerrado.
 // null si la tarjeta no tiene día de cierre.
 function cardCycle(a,today=todayStr()){
@@ -15,8 +31,32 @@ function cardCycle(a,today=todayStr()){
   let last=dayInMonth(t.getFullYear(),t.getMonth(),a.closingDay);
   if(last>t)last=dayInMonth(t.getFullYear(),t.getMonth()-1,a.closingDay);
   const next=dayInMonth(last.getFullYear(),last.getMonth()+1,a.closingDay);
-  const due=new Date(last);due.setDate(due.getDate()+(a.dueOffset||10));
-  return{lastClosing:ymd(last),nextClosing:ymd(next),due:ymd(due)};
+  const prev=dayInMonth(last.getFullYear(),last.getMonth()-1,a.closingDay);
+  return{lastClosing:ymd(last),nextClosing:ymd(next),prevClosing:ymd(prev),due:cardDue(a,ymd(last)),nextDue:cardDue(a,ymd(next))};
+}
+
+// Lo no pagado de una tarjeta, separado en el resumen que ya cerró (hay que pagarlo) y el que está en curso (3.15)
+function cardStatements(a,today=todayStr()){
+  const cyc=cardCycle(a,today);
+  const pend=expenses.filter(e=>e.accountId===a.id&&e.type==='Egreso'&&e.ccPaid!==true);
+  const mk=(items,extra)=>{
+    let ars=0,usd=0;
+    const lines=items.map(e=>{
+      const isUSD=e.currency==='USD';
+      const arsAmt=isUSD?(e.arsEquiv||(e.amount*(e.exchangeRate||0))):e.amount;
+      if(isUSD)usd+=e.amount;else ars+=arsAmt;
+      return{...e,arsAmt};
+    });
+    return{lines,ars,usd,...extra};
+  };
+  if(!cyc)return{cyc:null,closed:null,open:mk(pend,{})};
+  const closedPending=lastCardPayment(a)>=cyc.lastClosing?[]:pend.filter(e=>(e.date||'')<=cyc.lastClosing);
+  const ids=new Set(closedPending.map(e=>e.id));
+  return{
+    cyc,
+    closed:closedPending.length?mk(closedPending,{from:addDays(cyc.prevClosing,1),to:cyc.lastClosing,due:cyc.due}):null,
+    open:mk(pend.filter(e=>!ids.has(e.id)),{from:addDays(cyc.lastClosing,1),to:cyc.nextClosing,due:cyc.nextDue}),
+  };
 }
 
 // Lo que va a pagar la tarjeta en los próximos n resúmenes. El 0 es el próximo
@@ -62,12 +102,11 @@ function cardReminders(today=todayStr()){
   ccAccounts().forEach(a=>{
     const cyc=cardCycle(a,today);
     if(!cyc)return;
-    if(lastCardPayment(a)>=cyc.lastClosing)return;
-    const{totalARS,totalUSD}=ccEstimated(a.id);
-    if(totalARS<=0&&totalUSD<=0)return;
+    const st=cardStatements(a,today).closed;
+    if(!st||(st.ars<=0&&st.usd<=0))return;
     const daysLeft=daysBetween(today,cyc.due);
     if(daysLeft<-10)return;
-    out.push({acc:a,due:cyc.due,daysLeft,totalARS,totalUSD});
+    out.push({acc:a,due:cyc.due,closing:cyc.lastClosing,daysLeft,totalARS:st.ars,totalUSD:st.usd});
   });
   return out.sort((x,y)=>x.daysLeft-y.daysLeft);
 }
@@ -91,6 +130,7 @@ function renderCardReminders(){
         <div style="font-size:13px;font-weight:700;color:${col}">${r.acc.emoji} Resumen ${esc(r.acc.name)} · ${when}</div>
         <div style="font-size:12px;color:var(--txt2);margin-top:2px">~${amt}</div>
       </div>
+      <button class="card-reminder-btn alt" onclick="openDueModal('${r.acc.id}','${r.closing}')">Fecha</button>
       <button class="card-reminder-btn" onclick="openCCPayModal('${r.acc.id}')">Pagar</button>
     </div>`;
   }).join('');
@@ -102,10 +142,32 @@ function cardProjectionHTML(a){
   const max=Math.max(...rows.map(r=>r.ars),1);
   return`<details class="cc-proj">
     <summary>${ic('calendar')} Próximos resúmenes (cuotas y fijos)</summary>
+    <div class="cc-proj-note">Cada fila es un resumen, por mes de cierre.</div>
     ${rows.map((r,k)=>`<div class="cc-proj-row">
       <span class="cc-proj-lbl">${r.label}${k===0?' · próximo':''}</span>
       <span class="cc-proj-bar"><span style="width:${Math.round(r.ars/max*100)}%"></span></span>
       <span class="cc-proj-amt">${fmt(r.ars)}${r.usd?` <span style="color:var(--gold)">+ ${fmtU(r.usd)}</span>`:''}</span>
     </div>`).join('')}
   </details>`;
+}
+
+// Cambiar la fecha de vencimiento de un resumen puntual (feriados, cambios del banco)
+function openDueModal(accId,closing){
+  const a=accounts.find(x=>x.id===accId);if(!a)return;
+  const due=cardDue(a,closing);
+  lkModal('due',`<div class="m-title">${ic('calendar')} Vencimiento · ${esc(a.name)}</div>
+    <p class="due-note">Resumen que cerró el ${fmtDate(closing)}. Cambiá solo este mes; los demás siguen con el día de siempre.</p>
+    <div class="f-grp"><label class="f-lbl" for="due-date">Vence el</label><input type="date" class="f-ctrl" id="due-date" value="${due}"></div>
+    <button class="btn-save" onclick="saveDue('${accId}','${closing}')">Guardar</button>
+    ${a.dueOv&&a.dueOv[closing]?`<button class="btn-cancel" style="margin-top:8px" onclick="saveDue('${accId}','${closing}',true)">Volver a la fecha habitual</button>`:''}`);
+}
+function saveDue(accId,closing,reset){
+  const a=accounts.find(x=>x.id===accId);if(!a)return;
+  const v=document.getElementById('due-date')?.value;
+  if(!reset&&!v){toast('⚠️ Elegí una fecha');return;}
+  a.dueOv={...(a.dueOv||{})};
+  if(reset)delete a.dueOv[closing];else a.dueOv[closing]=v;
+  // Solo quedan las correcciones de los últimos resúmenes
+  Object.keys(a.dueOv).filter(k=>daysBetween(k,todayStr())>200).forEach(k=>delete a.dueOv[k]);
+  saveAccounts();pushSettings();closeLk();renderAll();renderCuentasTab();haptic();toast('✅ Vencimiento actualizado');
 }
