@@ -29,9 +29,7 @@ function fcCards(today=todayStr()){
     const dueOf=m=>{
       if(!cyc)return ymd(new Date(next.getFullYear(),next.getMonth()+m,1));
       if(m<0)return cyc.due;
-      const c=dayInMonth(next.getFullYear(),next.getMonth()+m,a.closingDay);
-      c.setDate(c.getDate()+(a.dueOffset||10));
-      return ymd(c);
+      return cardDue(a,ymd(dayInMonth(next.getFullYear(),next.getMonth()+m,a.closingDay)));
     };
     // m=-1: resumen ya cerrado; m=0: el próximo; m=1…: los que siguen
     const startOf=e=>cyc&&(e.date||'')<=cyc.lastClosing?-1:0;

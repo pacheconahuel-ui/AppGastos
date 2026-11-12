@@ -15,7 +15,7 @@ App de gastos personales: PWA que se instala en el celular, con login de Google 
 - **Movimientos programados:** con fecha futura no tocan el saldo hasta ese día. Los gastos fijos se marcan como "Se repite todos los meses" y la app los recuerda cada mes.
 - **Lo que viene:** el mínimo ya comprometido para el mes que viene y los próximos 5 (tarjetas, cuotas, programados y fijos), con detalle; opcionalmente suma los servicios que cambian y lo compara con tus ingresos.
 - **Lista** con búsqueda, filtros (billetera, ingreso o egreso, categoría) y exportación a CSV.
-- **Tarjetas:** aviso de vencimiento del resumen y próximos 6 resúmenes (cuotas y fijos).
+- **Tarjetas:** resumen cerrado (para pagar) y en curso con su período, vencimiento por día fijo (corregible mes a mes), aviso de vencimiento y próximos 6 resúmenes (cuotas y fijos); se pliegan.
 - **Dólar del día** al cargar movimientos en USD.
 - Modo claro u oscuro (se cambia desde el perfil), botón atrás de Android, aviso de versión nueva.
 

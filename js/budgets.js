@@ -196,7 +196,7 @@ function renderPatrimonioCard(){
     </div>
     <div class="pat-hint">${arsAccs.length+usdAccs.length} billetera${arsAccs.length+usdAccs.length!==1?'s':''}</div>
     ${warn}
-    <div class="pat-detail ${patrimonioExpanded?'open':''}" id="pat-detail">
+    <div class="pat-detail ${patrimonioExpanded?'open':''}" id="pat-detail"><div class="pat-inner">
       <div class="pat-divider"></div>
       ${arsRows?`<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Pesos ARS</div>${arsRows}`:''}
       ${usdRows?`<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px">Dolares USD</div>${usdRows}`:''}
@@ -204,7 +204,7 @@ function renderPatrimonioCard(){
         <button class="pat-btn primary" onclick="switchTab('cuentas');event.stopPropagation()">${ic('wallet')} Gestionar</button>
         <button class="pat-btn secondary" onclick="openAdjustModal(null,event)">${ic('scale')} Ajustar saldo</button>
       </div>
-    </div>
+    </div></div>
   </div>`;
 }
 
