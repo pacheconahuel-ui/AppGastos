@@ -1,5 +1,18 @@
 # Cambios
 
+## 3.19 — noviembre 2026
+
+Administración completa (pantalla aparte, solo para el administrador: perfil → «Administración · quién usa la app»).
+
+- **Resumen de uso:** personas, cuántas entraron hoy, en 7 y en 30 días, y cuántas están sin autorizar.
+- **Gráfico de los últimos 30 días:** cuántas personas entraron cada día.
+- **Lista de personas** con estado (administrador, autorizado, sin autorizar), email, último acceso, desde cuándo usa la app, versión, cantidad de movimientos y una tira de los últimos 30 días con los días que entró. **Búsqueda** por nombre o email y filtros: todos, autorizados, sin autorizar, sin entrar en 30 días.
+- **Exportar la lista** a CSV.
+- **Historial diario:** una marca por día y por persona (solo la fecha, nada más) en `actividad_dias/{uid}/{fecha}`. Empieza el día que se publica esta versión; para quien todavía no tiene marcas se usa el día de su último acceso.
+- Sigue siendo solo actividad: nunca montos ni descripciones.
+- **Hay que publicar `database.rules.json`** (nodo nuevo `actividad_dias`: cada uno escribe el suyo, solo el administrador lo lee).
+- Pruebas: cálculos (resumen, días, filtros, CSV), pantalla a 320, 360 y 390 px con controles de 44, exportar y Escape, y contra el emulador de Firebase las reglas del historial diario y la pantalla con datos reales.
+
 ## 3.18 — noviembre 2026
 
 Resumen más limpio (pedido de un usuario: "me confunde tanto texto y números").
