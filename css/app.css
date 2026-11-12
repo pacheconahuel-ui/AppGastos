@@ -765,3 +765,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .btn-del-acc{width:100%;min-height:44px;margin-top:8px;background:none;border:1px solid color-mix(in srgb,var(--neg) 35%,transparent);border-radius:12px;color:var(--red);font:600 13px 'Outfit',sans-serif;cursor:pointer;align-items:center;justify-content:center;gap:8px}
 .person-card.vacia{padding:10px 14px}
 @media (min-width:900px){#tab-saldos,#tab-cuentas{max-width:1240px}}
+/* 3.15.1 */
+.sd-act{min-height:44px;display:flex;align-items:center}
+.sd-acts{display:flex;gap:4px}
+.sd-acts .sd-act{width:auto;flex:1}

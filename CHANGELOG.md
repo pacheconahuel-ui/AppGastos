@@ -1,5 +1,13 @@
 # Cambios
 
+## 3.15.1 — noviembre 2026
+
+Para limpiar el historial de usuarios que arrancaron antes de existir "Ajustar saldo" (surgió del audio de una usuaria que no encontraba cómo sacar gastos de relleno).
+
+- **Ajustes viejos reconocidos:** los gastos cargados a mano como "Ajuste de saldo — <billetera>" ahora cuentan como ajuste: salen de la lista de gastos del mes, llevan la etiqueta "Ajuste de saldo" y aparecen en "¿Por qué este saldo?" con su botón "Borrar este ajuste". El saldo de la billetera no cambia.
+- **"Los gastos más grandes de esta billetera"** en "¿Por qué este saldo?": los 5 gastos comunes que más pesan, cada uno con **Sacar de esta billetera** y **Borrar** (antes "Sacar" solo existía para gastos divididos).
+- Pruebas nuevas para ambos.
+
 ## 3.15 — noviembre 2026
 
 Cuentas más claras (surgió de revisar capturas en celular y en la compu).
