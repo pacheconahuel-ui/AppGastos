@@ -47,7 +47,7 @@ async function restoreBackup(b){
     const st=b.settings;
     expenses=b.expenses.filter(x=>x&&x.id);usdTx=b.usdTx.filter(x=>x&&x.id);debts=b.debts.filter(x=>x&&x.id);
     pendingQ=[];usdPendQ=[];debtPendQ=[];
-    cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(st.customCats||[])])];
+    cats=armarCats(st.customCats||[]);
     hiddenCats=new Set(st.hiddenCats||[]);renamedCats=st.renamedCats||{};
     catTypes=normalizeCatTypes(st.catTypes||{});saveIconOverrides(st.catIcons||{});
     budgets=st.budgets||{};persons=st.persons||[];accounts=st.accounts||[];

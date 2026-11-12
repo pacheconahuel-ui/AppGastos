@@ -25,7 +25,7 @@ function buildSettingsPayload(ts){
 function applySettings(raw){
   const full=(raw.v||0)>=2;
   const has=k=>full||raw[k]!=null;
-  if(has('customCats'))  cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...(raw.customCats||[])])];
+  if(has('customCats'))  cats=armarCats(raw.customCats||[]);
   if(has('hiddenCats'))  hiddenCats=new Set(raw.hiddenCats||[]);
   if(has('renamedCats')) renamedCats=decKeys(raw.renamedCats);
   if(has('catTypes'))    catTypes=normalizeCatTypes(decKeys(raw.catTypes));

@@ -1,5 +1,15 @@
 # Cambios
 
+## 3.20 — noviembre 2026
+
+Categorías de fábrica más neutras: lo personal lo crea cada uno.
+
+- **Gastos de fábrica:** Supermercado, Restaurante, Mascotas, Servicios, Gimnasio, Farmacia, Compras, Alquiler, Luz, Gas, Internet, Seguros, Streaming, Consultas Médicas, Venta USD y Otro. **Ingresos:** Sueldo, Transferencia, Regalo, Alquiler cobrado, Reintegro y Otros ingresos.
+- **Salen de fábrica:** Padel, Fútbol, Educador Canino, Zurich (gastos) y Salario, SAC, Sueldo 2, Comisión, Aguinaldo / Bono y Freelance / Honorarios (ingresos).
+- **Nadie pierde nada:** quien tiene movimientos con alguna de esas categorías la sigue viendo, ahora como **propia** (se puede renombrar y eliminar). Si la elimina, no vuelve a aparecer. Las que la persona no usa dejan de mostrarse. Los ingresos que salieron de fábrica siguen contando como ingresos.
+- Las que la app usa sola (Otro, Servicios, Otros ingresos, Venta USD) no se tocan.
+- Pruebas: lista de fábrica, conservar lo usado, eliminar sin que vuelva, tipos de categoría, usuario nuevo y usuario con movimientos en el navegador.
+
 ## 3.19 — noviembre 2026
 
 Administración completa (pantalla aparte, solo para el administrador: perfil → «Administración · quién usa la app»).

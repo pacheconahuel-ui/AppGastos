@@ -7,8 +7,8 @@ function loadLocal(){
   try{debts=JSON.parse(localStorage.getItem(lsKey(DSK)))||[];}catch{debts=[];}
   try{
     const custom=JSON.parse(localStorage.getItem(lsKey(CK)))||[];
-    cats=[...new Set([...DEF_CATS,...DEF_ING_CATS,...custom])];
-  }catch{cats=[...new Set([...DEF_CATS,...DEF_ING_CATS])];}
+    cats=armarCats(custom);
+  }catch{cats=armarCats();}
   try{
     const saved=JSON.parse(localStorage.getItem(lsKey(PSK)))||[];
     persons=saved;

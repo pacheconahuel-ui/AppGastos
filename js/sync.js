@@ -66,6 +66,7 @@ function attachListeners(){
       rows=rows.filter(e=>!pRem.has(e.id));
       for(const p of pendingQ.filter(p=>p.op==='set')){const id=p.path.split('/').pop();const i=rows.findIndex(e=>e.id===id);if(i>-1)rows[i]=p.data;else rows.push(p.data);}
       expenses=rows;
+      actualizarCatsLegacy(); // lo que antes venía de fábrica y esta persona usa
       localStorage.setItem(syncedKey('ars'),'1');
       saveLocal();renderAllSoon();
     }else if(expenses.length>0){

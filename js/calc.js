@@ -45,11 +45,30 @@ function jsArg(s){return esc(JSON.stringify(String(s)));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function newId(){return String(Date.now())+Math.random().toString(36).slice(2,6);}
 function customCats(){return cats.filter(c=>!DEF_CATS.includes(c)&&!DEF_ING_CATS.includes(c));}
+// Categorías que ya no vienen de fábrica pero la persona usa (3.20): se conservan como propias, salvo las que ella misma eliminó
+function legacyRemoved(){try{return new Set(JSON.parse(localStorage.getItem(lsKey('gp_legacy_removed'))||'[]'));}catch{return new Set();}}
+function legacyEnUso(){
+  const rm=legacyRemoved(),usadas=new Set(expenses.map(e=>e.category));
+  return[...LEGACY_CATS,...LEGACY_ING_CATS].filter(c=>usadas.has(c)&&!rm.has(c));
+}
+function armarCats(custom=[]){return[...new Set([...DEF_CATS,...DEF_ING_CATS,...custom,...legacyEnUso()])];}
+// Después de que llegan los movimientos: suma las que falten. Devuelve si cambió algo
+function actualizarCatsLegacy(){
+  const faltan=legacyEnUso().filter(c=>!cats.includes(c));
+  if(faltan.length)cats=[...cats,...faltan];
+  return faltan.length>0;
+}
+function olvidarCatLegacy(name){
+  if(![...LEGACY_CATS,...LEGACY_ING_CATS].includes(name))return;
+  const rm=legacyRemoved();rm.add(name);
+  try{localStorage.setItem(lsKey('gp_legacy_removed'),JSON.stringify([...rm]));}catch{}
+}
+function esCatIngreso(c){return DEF_ING_CATS.includes(c)||LEGACY_ING_CATS.includes(c)||c==='Venta USD';}
 function displayName(cat){return renamedCats[cat]||cat;} // show renamed label for default cats
 function normalizeCatTypes(map={}){
   const out={...map};
-  [...DEF_ING_CATS,'Salario','Venta USD'].forEach(c=>{if(!out[c])out[c]='ingreso';});
-  cats.forEach(c=>{if(!out[c])out[c]=DEF_ING_CATS.includes(c)||c==='Salario'||c==='Venta USD'?'ingreso':'egreso';});
+  [...DEF_ING_CATS,...LEGACY_ING_CATS,'Venta USD'].forEach(c=>{if(!out[c])out[c]='ingreso';});
+  cats.forEach(c=>{if(!out[c])out[c]=esCatIngreso(c)?'ingreso':'egreso';});
   return out;
 }
 function loadCatTypes(){try{catTypes=normalizeCatTypes(JSON.parse(localStorage.getItem(lsKey(CT_SK)))||{});}catch{catTypes=normalizeCatTypes({});}}
