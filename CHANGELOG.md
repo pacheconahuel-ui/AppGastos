@@ -1,5 +1,16 @@
 # Cambios
 
+## 3.17 — noviembre 2026
+
+Quién usa la app y respaldo (para el grupo familiar).
+
+- **Administración** (solo el administrador, en el perfil): lista de personas con último acceso, versión y cantidad de movimientos (sin montos ni descripciones), y si están autorizadas.
+- **Acceso restringido opcional:** interruptor «Solo personas autorizadas», apagado por defecto. Prendido, las reglas de Firebase dejan entrar solo a los autorizados y al administrador (datos, vínculos y avisos). Quien no está autorizado ve una pantalla clara con «Ya me autorizaron» y «Cerrar sesión», y figura en la lista para ser autorizado. «Autorizar a las N que faltan» y «Quitar acceso».
+- **Alta del administrador a mano** en la consola (`admin/uid`); el repositorio no lleva datos personales. Ver README, «Quién usa la app».
+- **Aviso de respaldo:** si pasaron más de 30 días (o nunca se bajó uno) y hay datos, un aviso arriba del Resumen con «Descargar» y «Después» (una semana).
+- Las reglas nuevas son compatibles hacia atrás: con la restricción apagada nada cambia. **Hay que publicar `database.rules.json`.**
+- Pruebas: acceso restringido contra el emulador (autorizado, sin autorizar, administrador, vínculos y avisos), aviso de respaldo, pantalla sin acceso, fila de administración.
+
 ## 3.16 — noviembre 2026
 
 - **«+» va directo al gasto** (pedido de una usuaria): un toque abre el formulario de gasto, con «Gasto» por defecto (y «Ingreso» en la pestaña de arriba). **Mantenido apretado** abre el menú con todo lo demás (gasto rápido, dólares, deuda, transferencia). En la compu, «＋ Gasto» va directo y la flecha ▾ de al lado abre el menú. Un aviso único explica dónde quedó el resto.
