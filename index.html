@@ -82,6 +82,7 @@
   <div class="sec on" id="tab-dashboard">
     <div class="dash-grid"><div class="dash-main">
     <!-- Avisos primero: vencimientos de tarjeta y recurrentes pendientes -->
+    <div id="backup-aviso"></div>
     <div id="card-reminders"></div>
     <div id="recurring-reminders"></div>
     <!-- Disponible (billeteras) -->
@@ -938,6 +939,17 @@
 <div class="toast" id="toast"></div>
 <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="onBackupFile(this)">
 
+<!-- Cuenta sin autorización (solo si el administrador prendió la restricción) -->
+<div id="sin-acceso" class="hidden" role="alert">
+  <div class="login-card">
+    <h2 style="margin-bottom:8px">Esta cuenta todavía no tiene acceso</h2>
+    <p style="color:var(--txt2);font-size:14px;line-height:1.5;margin-bottom:6px">Pedile a quien administra la app que te autorice y después tocá «Ya me autorizaron».</p>
+    <p id="sin-acceso-cuenta" style="color:var(--txt3);font-size:13px;margin-bottom:18px"></p>
+    <button class="btn-save" id="sin-acceso-retry" onclick="reintentarAcceso()">Ya me autorizaron</button>
+    <button class="btn-cancel" style="margin-top:8px" onclick="salirSinAcceso()">Cerrar sesión</button>
+  </div>
+</div>
+
 <!-- La app: scripts clásicos que comparten el ámbito global, en este orden (ver README) -->
 <script defer src="js/config.js"></script>
 <script defer src="js/icons.js"></script>
@@ -963,6 +975,7 @@
 <script defer src="js/saldo.js"></script>
 <script defer src="js/linked.js"></script>
 <script defer src="js/linked-ui.js"></script>
+<script defer src="js/admin.js"></script>
 <script defer src="js/init.js"></script>
 </body>
 </html>

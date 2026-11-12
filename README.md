@@ -70,6 +70,7 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `saldo.js` | "¿Por qué este saldo?": el saldo de una billetera desarmado en renglones |
 | `linked.js` | vínculo con otras personas, avisos de deudas y pagos (lógica y Firebase) |
 | `linked-ui.js` | bandeja de avisos, pagar y confirmar, mi código, vincular un contacto |
+| `admin.js` | acceso restringido opcional, pantalla de administración, actividad de uso y aviso de respaldo |
 | `init.js` | arranque |
 
 - **Datos:** Firebase Realtime Database, en `usuarios/{uid}/...`. Cada usuario solo lee y escribe lo suyo. También hay una copia local en `localStorage` para abrir rápido y funcionar sin conexión.
@@ -83,6 +84,14 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 ## Si el tema claro se ve oscuro
 
 Chrome y Samsung Internet en Android tienen un «modo oscuro para sitios web» que oscurece páginas claras. La app declara `color-scheme` para que no lo aplique, pero si en tu celular sigue pasando: Chrome → `chrome://flags` → «Auto Dark Mode for Web Contents» → Disabled; o Samsung Internet → Ajustes → Pantalla → Tema oscuro/«Usar modo oscuro en sitios web».
+
+## Quién usa la app (administración)
+Opcional y pensado para un grupo chico (familia, amigos). Solo el administrador la ve: perfil → **Administración · quién usa la app**.
+- **Actividad:** cada persona deja su último acceso, la versión y cuántos movimientos tiene. Nunca montos ni descripciones.
+- **Acceso:** el interruptor «Solo personas autorizadas» está apagado por defecto (entra cualquier cuenta de Google). Prendido, solo entran los autorizados y el administrador; los demás ven una pantalla que les pide acceso y aparecen en la lista para autorizarlos. Lo hacen cumplir las reglas de Firebase (`database.rules.json`), no solo la pantalla.
+- **Alta del administrador (una sola vez, a mano en la consola de Firebase):** Realtime Database → agregar el nodo `admin` con un hijo `uid` cuyo valor es el «User UID» de tu cuenta (Authentication → Users). No va en el código porque el repositorio es público.
+- **Orden seguro:** publicar las reglas → cargar `admin/uid` → esperar que cada persona abra la versión nueva (así figura en la lista) → «Autorizar a las N que faltan» → prender el interruptor.
+- Cada 30 días la app avisa que conviene **descargar un respaldo** (se puede posponer una semana).
 
 ## Vincular con otras personas
 

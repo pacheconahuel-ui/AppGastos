@@ -17,6 +17,7 @@ function downloadJSON(obj,name){
 }
 function exportBackup(){
   downloadJSON(backupData(),`mis-gastos-respaldo-${todayStr()}.json`);
+  backupMarcar();
   toast(`💾 Respaldo descargado · ${expenses.length} movimientos`);
 }
 function onBackupFile(input){

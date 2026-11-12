@@ -37,7 +37,7 @@ function doLogout(){
   expenses=[];usdTx=[];debts=[];cats=[...DEF_CATS];persons=[...DEF_PERSONS];
   pendingQ=[];usdPendQ=[];debtPendQ=[];
   hiddenCats=new Set();renamedCats={};catTypes={};
-  currentUID=null;
+  currentUID=null;ES_ADMIN=false;
   auth.signOut();
 }
 
@@ -148,6 +148,8 @@ function initFirebase(){
         attachListeners();
         lkAttach();
         showApp(user);
+        // Acceso restringido (3.17): si el administrador lo prendió y esta cuenta no está autorizada, se corta acá
+        verificarAcceso().then(ok=>{if(!ok&&currentUID===user.uid)bloquearAcceso();else{setTimeout(registrarActividad,3000);setTimeout(renderBackupAviso,2500);}});
         // Push a state now that we're inside the app — back button stays here
         history.replaceState({app:true}, '');
         // Only push settings on login if there are LOCAL changes pending upload
