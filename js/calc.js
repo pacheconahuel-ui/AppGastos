@@ -34,7 +34,9 @@ function effArs(e){return effAmt(e)*usdRate(e);}
 function isCCPayment(e){return !!e.ccPayment||(e.description||'').startsWith('Pago resumen ');}
 function isFxEntry(e){return !!e.fxOp||usdTx.some(t=>t.linkedArsId===e.id);}
 // Liquidar una deuda (lo que te devuelven o devolvés) y los ajustes de saldo mueven plata pero no son gasto ni ingreso
-function isLiquidation(e){return !!e.liquidacion||!!e.ajuste;}
+// Los ajustes viejos (antes de la 3.12) se cargaron como un gasto común llamado "Ajuste de saldo — <billetera>"
+function isAjuste(e){return !!e.ajuste||(!e.liquidacion&&/^Ajuste de saldo( —|$)/.test(e.description||''));}
+function isLiquidation(e){return !!e.liquidacion||isAjuste(e);}
 function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e)&&!isLiquidation(e);}
 function amtArs(e){return e.amount*usdRate(e);}
 function allMonths(){const s=new Set(expenses.map(e=>monthKey(e.date)).filter(Boolean));s.add(nowKey());return[...s].sort((a,b)=>b.localeCompare(a));}

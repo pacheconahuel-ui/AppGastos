@@ -6,7 +6,7 @@ function accountBreakdown(accId){
   if(!acc||acc.type==='credit')return null;
   const isUSD=(acc.currency||'ARS')==='USD';
   const b={isUSD,inicial:acc.initialBalance||0,ingresos:0,gastos:0,porOtros:0,liquidaciones:0,ajustes:0,
-    pagosTarjeta:0,cambioMoneda:0,transferencias:0,usd:0,programados:0,porOtrosItems:[],ajusteItems:[]};
+    pagosTarjeta:0,cambioMoneda:0,transferencias:0,usd:0,programados:0,porOtrosItems:[],ajusteItems:[],grandesItems:[]};
   const total=e=>isUSD?e.amount:amtArs(e);   // lo que salió o entró de la billetera
   const mio=e=>isUSD?effAmt(e):effArs(e);     // la parte tuya
   expenses.forEach(e=>{
@@ -14,13 +14,14 @@ function accountBreakdown(accId){
     if(isUSD&&e.currency!=='USD')return;
     const ing=e.type==='Ingreso',t=total(e);
     if(esFuturo(e)){b.programados+=ing?t:-t;return;}
-    if(e.ajuste){b.ajustes+=ing?t:-t;b.ajusteItems.push(e);return;}
+    if(isAjuste(e)){b.ajustes+=ing?t:-t;b.ajusteItems.push(e);return;}
     if(e.liquidacion){b.liquidaciones+=ing?t:-t;return;}
     if(isCCPayment(e)){b.pagosTarjeta+=ing?t:-t;return;}
     if(isFxEntry(e)){b.cambioMoneda+=ing?t:-t;return;}
     if(ing){b.ingresos+=t;return;}
     const m=mio(e),otros=t-m;
     b.gastos-=m;
+    if(otros<=0.005)b.grandesItems.push({e,v:m});
     if(otros>0.005){b.porOtros-=otros;b.porOtrosItems.push({e,otros});}
   });
   if(isUSD){
@@ -35,6 +36,7 @@ function accountBreakdown(accId){
       if(x.toId===accId)b.transferencias+=x.amount;
     });
   }
+  b.grandesItems.sort((x,y)=>y.v-x.v);b.grandesItems.length=Math.min(b.grandesItems.length,5);
   b.saldo=b.inicial+b.ingresos+b.gastos+b.porOtros+b.liquidaciones+b.ajustes+b.pagosTarjeta+b.cambioMoneda+b.transferencias+b.usd;
   return b;
 }
@@ -54,7 +56,7 @@ function openSaldoDetalle(accId,ev){
     fila('Tus gastos',b.gastos,'solo tu parte de cada gasto'),
     fila('Lo que pagaste por otros',b.porOtros,nOtros?`${nOtros} gasto${nOtros>1?'s':''} dividido${nOtros>1?'s':''}: la parte de los demás sale de tu billetera hasta que te la devuelvan`:''),
     fila('Cobros y pagos de deudas',b.liquidaciones),
-    fila('Ajustes de saldo',b.ajustes,nAj?`${nAj} ajuste${nAj>1?'s':''} hecho${nAj>1?'s':''} con "Ajustar saldo"`:''),
+    fila('Ajustes de saldo',b.ajustes,nAj?`${nAj} ajuste${nAj>1?'s':''} hecho${nAj>1?'s':''} con "Ajustar saldo" (o cargado${nAj>1?'s':''} a mano)`:''),
     fila('Pagos de tarjeta',b.pagosTarjeta),
     fila('Compra y venta de dólares',b.cambioMoneda),
     fila(b.isUSD?'Ingresos, compras y ventas de USD':'Transferencias',b.isUSD?b.usd:b.transferencias),
@@ -76,7 +78,10 @@ function openSaldoDetalle(accId,ev){
       ${lista(otros,x=>itemFila(x.e,'−'+fm(x.otros),`pagaste ${fm(total_(x.e,b))} · tu parte ${fm(mio_(x.e,b))}`,`<button class="sd-act" onclick="sacarDeBilletera('${accId}','${x.e.id}')">Sacar de esta billetera</button>`))}`:''}
     ${nAj?`<div class="sd-sec">Ajustes de saldo</div>
       <div class="sd-ayuda">Si los hiciste para igualar el banco antes de que el saldo de los gastos divididos se arreglara (versión 3.12), pueden estar restando de más. Tocá uno para verlo o borrarlo.</div>
-      ${lista(b.ajusteItems,e=>itemFila(e,(e.type==='Ingreso'?'+':'−')+fm(b.isUSD?e.amount:amtArs(e)),'',`<button class="sd-act" onclick="borrarAjuste('${accId}','${e.id}')">Borrar este ajuste</button>`))}`:''}`);
+      ${lista(b.ajusteItems,e=>itemFila(e,(e.type==='Ingreso'?'+':'−')+fm(b.isUSD?e.amount:amtArs(e)),'',`<button class="sd-act" onclick="borrarAjuste('${accId}','${e.id}')">Borrar este ajuste</button>`))}`:''}
+    ${b.grandesItems.length?`<div class="sd-sec">Los gastos más grandes de esta billetera</div>
+      <div class="sd-ayuda">Si alguno no corresponde (por ejemplo, plata de antes de usar la app), sacalo de la billetera o borralo y corregí con el saldo real.</div>
+      ${lista(b.grandesItems,x=>itemFila(x.e,'−'+fm(x.v),esc(x.e.category||''),`<div class="sd-acts"><button class="sd-act" onclick="sacarDeBilletera('${accId}','${x.e.id}')">Sacar de esta billetera</button><button class="sd-act" onclick="borrarMov('${accId}','${x.e.id}')">Borrar</button></div>`))}`:''}`);
 }
 function total_(e,b){return b.isUSD?e.amount:amtArs(e);}
 function mio_(e,b){return b.isUSD?effAmt(e):effArs(e);}
@@ -93,12 +98,13 @@ function sacarDeBilletera(accId,id){
     openSaldoDetalle(accId);toast(`✅ "${e.description||e.category}" ya no resta de ${a.name}`);
   },'Sacar');
 }
-function borrarAjuste(accId,id){
+function borrarAjuste(accId,id){borrarMov(accId,id,true);}
+function borrarMov(accId,id,esAjuste){
   const e=expenses.find(x=>x.id===id);
   if(!e)return;
-  showConf('trash','Borrar ajuste',`Se borra "${e.description}" (${fmt(e.amount)}). El saldo de la billetera se recalcula sin él.`,async()=>{
+  showConf('trash',esAjuste?'Borrar ajuste':'Borrar movimiento',`Se borra "${e.description||e.category}" (${fmt(e.amount)}). El saldo de la billetera se recalcula sin él.`,async()=>{
     expenses=expenses.filter(x=>x.id!==id);
     renderAll();skipNextArs=fbOnline;await persistArs(null,id);
-    openSaldoDetalle(accId);toast('🗑️ Ajuste borrado');
+    openSaldoDetalle(accId);toast(esAjuste?'🗑️ Ajuste borrado':'🗑️ Movimiento borrado');
   },'Borrar');
 }
