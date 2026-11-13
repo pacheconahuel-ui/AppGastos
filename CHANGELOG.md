@@ -1,5 +1,13 @@
 # Cambios
 
+## 3.22 — noviembre 2026
+
+Arreglo: los «Fijos de tarjeta pendientes de agregar» volvían a pedirse después de confirmarlos.
+
+- **Causa 1:** «Confirmar» u «Omitir» se anotaba solo en el dispositivo donde se tocaba (en el celular, por ejemplo), así que en la compu, o después de actualizar, el aviso aparecía de nuevo. Ahora se anota **en el propio movimiento** (`fijoOk` = el mes) y se sincroniza: confirmado en un dispositivo, confirmado en todos. Al mes siguiente se vuelve a pedir una sola vez, como antes.
+- **Causa 2:** el lápiz de un fijo de tarjeta de este mes **creaba otro movimiento igual** en vez de editar el que ya estaba (quedaba duplicado y el original seguía pendiente). Ahora edita ese mismo movimiento y lo da por confirmado; guardar el monto no lo vuelve a pedir.
+- Pruebas: lógica de qué fijos se piden (confirmado, mes siguiente, billetera, tarjeta, ya pagado, marca vieja del dispositivo) y en el navegador confirmar, «otro dispositivo» y editar el monto sin duplicar.
+
 ## 3.21.1 — noviembre 2026
 
 - **Arreglo en el acceso restringido:** una cuenta bloqueada (no autorizada) ahora también deja su registro, así que **aparece en la lista del administrador** y se la puede autorizar. Antes, con la restricción prendida, quien no estaba autorizado quedaba afuera sin figurar en ninguna lista.

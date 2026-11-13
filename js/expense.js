@@ -623,6 +623,7 @@ async function saveExpense(){
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
     ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
     ...((prev?.sinBilletera||payerSel)&&!accountId?{sinBilletera:true}:{}),
+    ...(prev?.fijoOk?{fijoOk:prev.fijoOk}:{}), // ya confirmado este mes: editar el monto no lo vuelve a pedir
     ...(payerSel?{pagoPor:{personId:payerSel.id,personName:payerSel.name}}:{}),
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
