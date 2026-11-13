@@ -171,3 +171,14 @@ function saveDue(accId,closing,reset){
   Object.keys(a.dueOv).filter(k=>daysBetween(k,todayStr())>200).forEach(k=>delete a.dueOv[k]);
   saveAccounts();pushSettings();closeLk();renderAll();renderCuentasTab();haptic();toast('✅ Vencimiento actualizado');
 }
+
+// Fijos pendientes de confirmar este mes (aviso del Resumen). Lo que ya se confirmó u omitió queda anotado en el propio
+// movimiento (fijoOk = el mes), que se sincroniza entre dispositivos; antes solo se anotaba en el dispositivo (3.22).
+function fijosPendientes(mk,prevMk,omitidosLocal=new Set()){
+  const hecho=e=>e.fijoOk===mk||omitidosLocal.has(e.id);
+  const esTarjeta=e=>!!accounts.find(a=>a.id===e.accountId&&a.type==='credit');
+  const delMes=new Set(expenses.filter(e=>monthKey(e.date)===mk).map(e=>e.description));
+  const faltan=expenses.filter(e=>e.recurring&&monthKey(e.date)===prevMk&&!hecho(e)&&!delMes.has(e.description));
+  const fijosTarjeta=expenses.filter(e=>e.cardExpType==='recurring'&&!e.ccPaid&&!hecho(e)&&monthKey(e.date)===mk);
+  return{billetera:faltan.filter(e=>!esTarjeta(e)),tarjeta:[...faltan.filter(esTarjeta),...fijosTarjeta]};
+}

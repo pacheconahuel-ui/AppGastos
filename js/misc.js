@@ -127,10 +127,18 @@ function skippedRecurring(){
   const mk=nowKey();
   try{return new Set(JSON.parse(localStorage.getItem(lsKey(SKIP_SK+mk)))||[]);}catch{return new Set();}
 }
+// Confirmar u omitir un fijo se anota en el propio movimiento (se sincroniza: en el otro dispositivo no vuelve a aparecer)
+async function marcarFijoOk(templateId){
+  const e=expenses.find(x=>x.id===templateId);
+  if(!e)return;
+  e.fijoOk=nowKey();e.updatedAt=Date.now();
+  skipNextArs=fbOnline;await persistArs(e,null);
+}
 function skipRecurring(templateId){
   const mk=nowKey();
   const set=skippedRecurring();set.add(templateId);
   localStorage.setItem(lsKey(SKIP_SK+mk),JSON.stringify([...set]));
+  marcarFijoOk(templateId);
   renderRecurringReminders();
   toast('⏭ Saltado este mes');
 }
@@ -138,27 +146,9 @@ function skipRecurring(templateId){
 function renderRecurringReminders(){
   const mk=nowKey();
   const prevMk=getPrevMonth(mk);
-  const skipped=skippedRecurring();
-
-  // All recurring templates from last month
-  const templates=expenses.filter(e=>e.recurring&&monthKey(e.date)===prevMk&&!skipped.has(e.id));
-  const thisMonthDescs=new Set(expenses.filter(e=>monthKey(e.date)===mk).map(e=>e.description));
-  const missing=templates.filter(e=>!thisMonthDescs.has(e.description));
-
-  // Also include CC fijos from any CC card that are due this month (ccPaid=false, recurring)
-  const ccFijos=expenses.filter(e=>
-    e.cardExpType==='recurring' &&
-    !e.ccPaid &&
-    !skipped.has(e.id) &&
-    monthKey(e.date)===mk
-  );
-
+  const{billetera:walletMissing,tarjeta:allCCItems}=fijosPendientes(mk,prevMk,skippedRecurring());
   const el=document.getElementById('recurring-reminders');
-  if(!missing.length&&!ccFijos.length){el.innerHTML='';return;}
-
-  // Separate CC vs wallet recurring
-  const walletMissing=missing.filter(e=>!accounts.find(a=>a.id===e.accountId&&a.type==='credit'));
-  const ccMissing=missing.filter(e=>!!accounts.find(a=>a.id===e.accountId&&a.type==='credit'));
+  if(!walletMissing.length&&!allCCItems.length){el.innerHTML='';return;}
 
   let html='';
 
@@ -171,7 +161,6 @@ function renderRecurringReminders(){
   }
 
   // --- CC fijos ---
-  const allCCItems=[...ccMissing,...ccFijos];
   if(allCCItems.length){
     // Group by card
     const byCard={};
@@ -245,6 +234,7 @@ async function confirmRecurring(templateId){
     cardExpType:tmpl.cardExpType==='recurring'?'one':tmpl.cardExpType,
     createdAt:Date.now(),updatedAt:Date.now()
   };
+  delete exp.fijoOk;
   expenses.push(exp);
   haptic();renderAll();
   toast(`✅ ${esc(exp.description||exp.category)} confirmado`);
@@ -255,6 +245,14 @@ async function confirmRecurring(templateId){
 function editRecurringAmt(templateId){
   const tmpl=expenses.find(e=>e.id===templateId);
   if(!tmpl)return;
+  // Un fijo de tarjeta de este mes ya existe en el resumen: se edita ese mismo (antes se creaba otro igual y quedaba duplicado)
+  if(tmpl.cardExpType==='recurring'&&monthKey(tmpl.date)===nowKey()&&accounts.find(a=>a.id===tmpl.accountId&&a.type==='credit')){
+    marcarFijoOk(templateId);
+    renderRecurringReminders();
+    editExp(templateId);
+    toast('✏️ Editá el monto y guardá');
+    return;
+  }
   const today=todayStr();
   // Open pre-filled modal — user can change amount, then save
   openModal({...tmpl,id:null,date:today,ccPaid:false});

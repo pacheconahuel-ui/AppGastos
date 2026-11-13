@@ -1,5 +1,22 @@
 # Cambios
 
+## 3.23 — noviembre 2026
+
+Arreglo: al pagar el resumen de una tarjeta, los **fijos y las cuotas dejaban de figurar en el mes en que se cargaron**.
+
+- **Antes:** «Pagar resumen» movía el mismo movimiento al mes siguiente (por ejemplo, el seguro de octubre pasaba a noviembre), así que los gastos de los meses pasados, en el Resumen y en los gráficos, no incluían los fijos ni las cuotas de tarjeta ya pagados.
+- **Ahora:** al pagar, el movimiento **sigue al mes siguiente** como siempre (con el monto y la cuota que corresponde) y queda además **una copia pagada** en el mes en que se cargó. Los meses pasados muestran todo lo que se gastó. La última cuota queda paga, sin copia nueva. Lo ya pagado antes de esta versión **no se puede reconstruir**; vale desde el próximo pago.
+- Las copias pagadas no vuelven a aparecer como pendientes ni en «Lo que viene», ni en los avisos de fijos, ni en los próximos resúmenes.
+- Prueba: pagar un resumen con un fijo, una cuota, una última cuota y un gasto único, y verificar las copias, lo que sigue pendiente y el total de octubre.
+
+## 3.22 — noviembre 2026
+
+Arreglo: los «Fijos de tarjeta pendientes de agregar» volvían a pedirse después de confirmarlos.
+
+- **Causa 1:** «Confirmar» u «Omitir» se anotaba solo en el dispositivo donde se tocaba (en el celular, por ejemplo), así que en la compu, o después de actualizar, el aviso aparecía de nuevo. Ahora se anota **en el propio movimiento** (`fijoOk` = el mes) y se sincroniza: confirmado en un dispositivo, confirmado en todos. Al mes siguiente se vuelve a pedir una sola vez, como antes.
+- **Causa 2:** el lápiz de un fijo de tarjeta de este mes **creaba otro movimiento igual** en vez de editar el que ya estaba (quedaba duplicado y el original seguía pendiente). Ahora edita ese mismo movimiento y lo da por confirmado; guardar el monto no lo vuelve a pedir.
+- Pruebas: lógica de qué fijos se piden (confirmado, mes siguiente, billetera, tarjeta, ya pagado, marca vieja del dispositivo) y en el navegador confirmar, «otro dispositivo» y editar el monto sin duplicar.
+
 ## 3.21.1 — noviembre 2026
 
 - **Arreglo en el acceso restringido:** una cuenta bloqueada (no autorizada) ahora también deja su registro, así que **aparece en la lista del administrador** y se la puede autorizar. Antes, con la restricción prendida, quien no estaba autorizado quedaba afuera sin figurar en ninguna lista.
