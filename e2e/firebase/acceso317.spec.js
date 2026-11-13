@@ -110,3 +110,22 @@ test('actividad por día: cada uno marca el suyo, solo el administrador lo lee y
   const csv = await A.evaluate(() => adminCSV(adminEstado.d.users, adminEstado.d.dias, todayStr()));
   expect(csv).toContain(emailB);
 });
+
+
+test('quien queda bloqueado aparece en la lista del administrador para poder autorizarlo', async ({ browser }) => {
+  const A = await device(browser, await newUser()), D = await device(browser, await newUser());
+  const a = await uidTok(A), d = await uidTok(D);
+  await owner('admin/uid', a.uid);
+  await owner('config/restringido', true);
+  await D.evaluate(() => { localStorage.removeItem('gp_act_ts_' + currentUID); });
+  // lo que hace la app al iniciar sesión (js/sync.js llama a alEntrar)
+  await D.evaluate(uid => alEntrar(uid), d.uid);
+  await expect(D.locator('#sin-acceso')).toBeVisible();
+  await expect.poll(() => as(a.tok).get(`actividad/${d.uid}`)).toBe(200);
+  await A.evaluate(() => verificarAcceso());
+  await A.evaluate(() => openAdmin());
+  await expect(A.locator('.ad-user').filter({ hasText: 'Sin autorizar' }).first()).toBeVisible();
+  await A.evaluate(uid => adminAutorizar(uid, true), d.uid);
+  expect(await as(d.tok).get(`usuarios/${d.uid}`)).toBe(200);
+  await owner('config/restringido', false);
+});

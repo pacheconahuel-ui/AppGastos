@@ -873,3 +873,6 @@ details.fc-item[open] summary::after{content:'▴'}
 .profile-adv summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--txt3)}
 .profile-adv summary::after{content:'▾';margin-left:8px}
 .profile-adv[open] summary::after{content:'▴'}
+
+/* El "Volver" de Administración se ve también en la compu (.back-link se oculta ahí: la sección de dólares ya tiene el menú lateral) */
+.admin-back{min-height:44px;min-width:44px;padding:0 12px 0 4px;background:none;border:0;color:var(--acc);font:600 15px 'Outfit',sans-serif;cursor:pointer;display:inline-flex;align-items:center}

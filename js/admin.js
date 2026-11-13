@@ -33,6 +33,15 @@ async function verificarAcceso(){
     return r.val()!==true||p.val()===true||ES_ADMIN;
   }catch(e){return true;}
 }
+// Al iniciar sesión: si el acceso está restringido y la cuenta no está autorizada, se corta; si no, se registra la actividad.
+// Quien queda bloqueado también deja su registro, para que el administrador lo vea en la lista y lo pueda autorizar.
+async function alEntrar(uid){
+  const ok=await verificarAcceso();
+  if(currentUID!==uid)return; // cerró sesión o cambió de cuenta mientras tanto
+  if(!ok){bloquearAcceso();registrarActividad();return;}
+  setTimeout(()=>{registrarActividad();registrarDia();},3000);
+  setTimeout(renderBackupAviso,2500);
+}
 function bloquearAcceso(){
   if(arsListener)db?.ref(arsBase()).off('value',arsListener);
   if(usdListener)db?.ref(usdBase()).off('value',usdListener);
