@@ -43,3 +43,36 @@ test('3.22 el lápiz de un fijo de tarjeta edita ese mismo movimiento (no crea o
   await expect(page.locator('#recurring-reminders')).not.toContainText('Apple');
   noErrors(page);
 });
+
+// 3.23: al pagar un resumen, las cuotas y los fijos dejan una copia pagada en su mes y siguen adelante
+test('3.23 pagar el resumen deja una copia pagada de cada fijo y cuota en su mes, y el movimiento sigue al mes siguiente', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-13T12:00:00') });
+  await openApp(page);
+  await page.evaluate(() => {
+    accounts.push({ id: 'visa', name: 'Visa', emoji: '💳', type: 'credit', closingDay: 26, dueDay: 9 });
+    saveAccounts();
+    const e = (id, o) => ({ id, type: 'Egreso', amount: 1000, myAmount: 1000, category: 'Seguros', description: id, accountId: 'visa', ccPaid: false, date: '2026-10-14', ...o });
+    expenses = [
+      e('seguro', { amount: 84810, myAmount: 84810, cardExpType: 'recurring' }),
+      e('cuota', { amount: 70833, myAmount: 70833, cardExpType: 'installment', installmentCurrent: 6, installmentTotal: 12 }),
+      e('ultima', { amount: 500, myAmount: 500, cardExpType: 'installment', installmentCurrent: 3, installmentTotal: 3 }),
+      e('unica', { amount: 300, myAmount: 300 }),
+    ];
+    saveLocal(); renderAll(); openCCPayModal('visa');
+  });
+  await page.evaluate(async () => { await saveCCPayment(); });
+  const r = await page.evaluate(() => expenses.filter(x => !x.ccPayment).map(x => [x.description, x.date, x.ccPaid, x.installmentCurrent || 0]).sort());
+  expect(r).toEqual([
+    ['cuota', '2026-10-14', true, 6],   // la copia pagada, en octubre
+    ['cuota', '2026-11-14', false, 7],  // la que sigue
+    ['seguro', '2026-10-14', true, 0],
+    ['seguro', '2026-11-14', false, 0],
+    ['ultima', '2026-10-14', true, 3],  // la última cuota: queda paga, sin copia
+    ['unica', '2026-10-14', true, 0],
+  ]);
+  // octubre sigue mostrando todo lo que se gastó en octubre
+  expect(await page.evaluate(() => calcSummary('2026-10').real)).toBe(84810 + 70833 + 500 + 300);
+  // y lo pendiente es solo lo que sigue
+  expect(await page.evaluate(() => expenses.filter(x => !x.ccPaid && !x.ccPayment).map(x => x.description).sort())).toEqual(['cuota', 'seguro']);
+  noErrors(page);
+});

@@ -1,5 +1,14 @@
 # Cambios
 
+## 3.23 — noviembre 2026
+
+Arreglo: al pagar el resumen de una tarjeta, los **fijos y las cuotas dejaban de figurar en el mes en que se cargaron**.
+
+- **Antes:** «Pagar resumen» movía el mismo movimiento al mes siguiente (por ejemplo, el seguro de octubre pasaba a noviembre), así que los gastos de los meses pasados, en el Resumen y en los gráficos, no incluían los fijos ni las cuotas de tarjeta ya pagados.
+- **Ahora:** al pagar, el movimiento **sigue al mes siguiente** como siempre (con el monto y la cuota que corresponde) y queda además **una copia pagada** en el mes en que se cargó. Los meses pasados muestran todo lo que se gastó. La última cuota queda paga, sin copia nueva. Lo ya pagado antes de esta versión **no se puede reconstruir**; vale desde el próximo pago.
+- Las copias pagadas no vuelven a aparecer como pendientes ni en «Lo que viene», ni en los avisos de fijos, ni en los próximos resúmenes.
+- Prueba: pagar un resumen con un fijo, una cuota, una última cuota y un gasto único, y verificar las copias, lo que sigue pendiente y el total de octubre.
+
 ## 3.22 — noviembre 2026
 
 Arreglo: los «Fijos de tarjeta pendientes de agregar» volvían a pedirse después de confirmarlos.

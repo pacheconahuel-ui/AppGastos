@@ -404,32 +404,42 @@ async function saveCCPayment(){
     skipNextArs=fbOnline;await persistArs(usdEntry,null);
   }
 
-  // Mark all CC expenses as paid
+  // Marcar lo del resumen como pago. Las cuotas y los fijos siguen al mes siguiente, pero (3.23) dejan una COPIA pagada
+  // en el mes en que se cargaron: antes se movía el mismo movimiento y ese mes dejaba de mostrarlo en el Resumen y los gráficos.
   const ids=new Set(lines.map(e=>e.id));
+  const copias=[];
+  const copiaPaga=e=>{
+    const c={...e,id:newId(),ccPaid:true,ccPaidDate:date,createdAt:Date.now(),updatedAt:Date.now()};
+    delete c.fijoOk;
+    return c;
+  };
   expenses=expenses.map(e=>{
     if(!ids.has(e.id))return e;
     if(e.cardExpType==='installment'){
       const nextCurrent=(e.installmentCurrent||1)+1;
       if(nextCurrent>e.installmentTotal){
-        // All installments done — keep as paid
+        // Última cuota — queda paga
         return{...e,ccPaid:true,ccPaidDate:date,updatedAt:Date.now()};
       }
-      // Advance to next installment, reset to unpaid
+      copias.push(copiaPaga(e));
+      // La que sigue: cuota siguiente, sin pagar
       return{...e,ccPaid:false,ccPaidDate:null,
         installmentCurrent:nextCurrent,
         date:nextMonthDate(e.date),updatedAt:Date.now()};
     }
     if(e.cardExpType==='recurring'){
-      // Recurring: reset to unpaid (will appear in next cycle)
+      copias.push(copiaPaga(e));
+      // El fijo del mes que viene: mismo movimiento, sin pagar
       return{...e,ccPaid:false,ccPaidDate:null,
         date:nextMonthDate(e.date),updatedAt:Date.now()};
     }
     // One-time: mark paid permanently
     return{...e,ccPaid:true,ccPaidDate:date,updatedAt:Date.now()};
   });
+  expenses.push(...copias);
 
   // Persist all updated expenses
-  for(const e of expenses.filter(e=>ids.has(e.id))){
+  for(const e of expenses.filter(e=>ids.has(e.id)||copias.includes(e))){
     skipNextArs=fbOnline;await persistArs(e,null);
   }
 
