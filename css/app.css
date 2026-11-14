@@ -876,3 +876,10 @@ details.fc-item[open] summary::after{content:'▴'}
 
 /* El "Volver" de Administración se ve también en la compu (.back-link se oculta ahí: la sección de dólares ya tiene el menú lateral) */
 .admin-back{min-height:44px;min-width:44px;padding:0 12px 0 4px;background:none;border:0;color:var(--acc);font:600 15px 'Outfit',sans-serif;cursor:pointer;display:inline-flex;align-items:center}
+
+/* 3.24 · Deshacer */
+.undo-bar{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);z-index:3100;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:6px 6px 6px 16px;border-radius:14px;background:var(--modal-bg);border:1px solid var(--bdr2);color:var(--txt);font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.undo-bar.on{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.undo-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.undo-btn{min-height:44px;min-width:44px;padding:0 14px;border-radius:10px;border:0;background:var(--acc-btn);color:var(--on-acc);font:700 13px 'Outfit',sans-serif;cursor:pointer;flex-shrink:0}
+.transfer-box[role="button"]{cursor:pointer}
