@@ -67,6 +67,7 @@ No hay compilación: GitHub Pages sirve los archivos tal cual. Son **scripts cl�
 | `dolar.js` | cotización del día (dolarapi.com) para gastos en USD y compra/venta |
 | `forecast.js` | "Lo que viene": el mínimo comprometido por mes (lógica) |
 | `forecast-ui.js` | pantalla de "Lo que viene" y su línea en el Resumen |
+| `seguro.js` | «Deshacer» al borrar, eliminar billeteras sin dejar movimientos huérfanos, avisos de presupuesto |
 | `saldo.js` | "¿Por qué este saldo?": el saldo de una billetera desarmado en renglones |
 | `linked.js` | vínculo con otras personas, avisos de deudas y pagos (lógica y Firebase) |
 | `linked-ui.js` | bandeja de avisos, pagar y confirmar, mi código, vincular un contacto |

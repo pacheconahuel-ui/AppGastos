@@ -1,5 +1,15 @@
 # Cambios
 
+## 3.24 — noviembre 2026
+
+Red de seguridad para los datos (salió de un análisis completo de la app).
+
+- **«Deshacer» al borrar:** después de borrar un movimiento, una deuda, un movimiento en dólares, una transferencia o una billetera, aparece unos segundos una barra con **Deshacer** que deja todo como estaba (incluidas las deudas de un gasto dividido).
+- **Eliminar una billetera o tarjeta ya no deja movimientos huérfanos:** si tiene movimientos o transferencias, la app dice cuántos y deja elegir entre **pasarlos a otra billetera** (del mismo tipo y moneda) o **dejarlos sin billetera** (quedan a la vista para reasignar desde «Disponible ahora»). Antes se borraba sin avisar y los movimientos quedaban apuntando a una billetera inexistente. Las tarjetas que la usaban para pagar se actualizan.
+- **Editar una transferencia:** se toca en «Transferencias recientes» y se cambia monto, fecha, billeteras o nota. Antes había que borrarla y rehacerla.
+- **Avisos de presupuesto:** al guardar un gasto que hace cruzar el 80% o el 100% del presupuesto de su categoría, la app lo avisa (una vez por umbral).
+- Pruebas: lógica de uso de una billetera, destinos posibles y umbrales de presupuesto; en el navegador, deshacer, eliminar pasando a otra / sin mover / vacía, editar transferencia y el aviso de presupuesto.
+
 ## 3.23 — noviembre 2026
 
 Arreglo: al pagar el resumen de una tarjeta, los **fijos y las cuotas dejaban de figurar en el mes en que se cargaron**.

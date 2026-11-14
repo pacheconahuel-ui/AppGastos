@@ -798,7 +798,8 @@
 <div class="m-overlay" id="transfer-overlay" onclick="transferOverlayClick(event)">
   <div class="modal">
     <div class="m-handle"></div>
-    <div class="m-title">⇄ Transferir entre billeteras</div>
+    <div class="m-title" id="tf-title">⇄ Transferir entre billeteras</div>
+    <input type="hidden" id="tf-id">
     <div class="f-row">
       <div class="f-grp" style="margin-bottom:0">
         <label class="f-lbl">Desde</label>
@@ -823,7 +824,7 @@
       <label class="f-lbl">Nota (opcional)</label>
       <input type="text" class="f-ctrl" id="tf-desc" placeholder="ej: Pasé de Santander a MP">
     </div>
-    <button class="btn-save" onclick="saveTransfer()"><i data-ico="save"></i> Transferir</button>
+    <button class="btn-save" id="tf-save" onclick="saveTransfer()">Transferir</button>
     <button class="btn-cancel" onclick="closeTransferModal()">Cancelar</button>
   </div>
 </div>
@@ -949,6 +950,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="undo-bar" id="undo-bar" role="status" aria-live="polite"></div>
 <input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="onBackupFile(this)">
 
 <!-- Administración: pantalla completa, solo para el administrador -->
@@ -993,6 +995,7 @@
 <script defer src="js/forecast.js"></script>
 <script defer src="js/forecast-ui.js"></script>
 <script defer src="js/saldo.js"></script>
+<script defer src="js/seguro.js"></script>
 <script defer src="js/linked.js"></script>
 <script defer src="js/linked-ui.js"></script>
 <script defer src="js/admin.js"></script>
