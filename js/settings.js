@@ -55,10 +55,15 @@ function _cfgNorm(v){
 }
 // Lo que llegó del servidor es la base contra la que se compara
 function cfgRecordarBase(raw){_cfgBase={};_CFG_CLAVES.forEach(k=>{_cfgBase[k]=_cfgNorm(raw[k]);});}
-// Devuelve solo las secciones que difieren de la base; sin base conocida (primer envío), todas
-function cambiosDeConfig(full,base=_cfgBase){
+// Devuelve solo las secciones que difieren de la base. Si no se sabe qué hay en el servidor (base desconocida) se suben
+// las secciones con contenido, pero una sección vacía NO se manda: sería borrar algo que no se sabe si existe.
+function cambiosDeConfig(full,base=_cfgBase,forzar=false){
   const out={};
-  _CFG_CLAVES.forEach(k=>{if(base[k]===undefined||base[k]!==_cfgNorm(full[k]))out[k]=full[k];});
+  _CFG_CLAVES.forEach(k=>{
+    const n=_cfgNorm(full[k]);
+    if(base[k]===undefined){if(n!==''||forzar)out[k]=full[k];}
+    else if(base[k]!==n)out[k]=full[k];
+  });
   return out;
 }
 async function pushSettings(){

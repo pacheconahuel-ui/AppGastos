@@ -143,7 +143,6 @@ function closeProfilePanel(){document.getElementById('profile-overlay').classLis
 function profileOverlayClick(ev){if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();}
 
 async function forcePushSettings(btn){
-  _cfgBase={}; // subir TODO lo local, sin comparar con lo último que llegó
   const statusEl=document.getElementById('force-push-status');
   if(statusEl)statusEl.textContent='⏳';
   if(btn)btn.style.opacity='.6';
@@ -165,7 +164,9 @@ async function forcePushSettings(btn){
     const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
     _myPushIds.add(pushId);
     localStorage.setItem(lsKey('gp_settings_ts'),String(ts));
-    const ok=await fbSet(settingsPath(),{...buildSettingsPayload(ts),_pushId:pushId});
+    const completo=buildSettingsPayload(ts);
+    const ok=await fbSet(settingsPath(),{...completo,_pushId:pushId});
+    if(ok)cfgRecordarBase(completo); // el servidor quedó igual a lo local
     if(!ok)throw Object.assign(new Error('fbSet failed'),{userMsg:'No se pudo subir la configuración. Cerrá sesión y volvé a entrar.'});
     localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.innerHTML=ic('check');
