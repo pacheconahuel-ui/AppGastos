@@ -84,6 +84,18 @@ function errMsg(e,fallback='No se pudo guardar. Probá de nuevo en un rato.'){
   return fallback;
 }
 async function fbSet(path,data){if(!db)return false;try{await db.ref(path).set(data==null?data:JSON.parse(JSON.stringify(data)));return true;}catch(e){console.warn('[fbSet]',e.code||e.message);return false;}}
+// Escribe solo las claves indicadas, sin tocar las demás; las listas y objetos vacíos se piden como borrado
+async function fbUpdate(path,data){
+  if(!db)return false;
+  try{
+    const limpio={};
+    Object.entries(data).forEach(([k,v])=>{
+      const vacio=v==null||(Array.isArray(v)&&!v.length)||(typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length);
+      limpio[k]=vacio?null:JSON.parse(JSON.stringify(v));
+    });
+    await db.ref(path).update(limpio);return true;
+  }catch(e){console.warn('[fbUpdate]',e.code||e.message);return false;}
+}
 async function fbRemove(path){if(!db)return false;try{await db.ref(path).remove();return true;}catch(e){console.warn('fbRemove',path,e);return false;}}
 
 // --- QUEUE HELPERS ---

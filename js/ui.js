@@ -27,7 +27,7 @@ window.addEventListener('popstate', e => {
     'cat-overlay','contacts-overlay','add-contact-overlay',
     'gsearch-overlay','qa-overlay','transfer-overlay','account-overlay',
     'goal-overlay','budget-overlay','cc-pay-overlay','profile-overlay',
-    'help-overlay','adjust-overlay','conf-overlay','new-overlay','lk-overlay'
+    'help-overlay','adjust-overlay','conf-overlay','new-overlay','lk-overlay','ask-overlay'
   ].some(id => document.getElementById(id)?.classList.contains('on'))
     || document.getElementById('admin-page')?.classList.contains('hidden') === false;
 
@@ -36,7 +36,7 @@ window.addEventListener('popstate', e => {
     closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
     closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
     closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
-    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();closeAdmin();
+    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();closeAdmin();cerrarAsk(null);
     history.pushState({modal:true}, '');
     return;
   }
@@ -164,7 +164,9 @@ async function forcePushSettings(btn){
     const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
     _myPushIds.add(pushId);
     localStorage.setItem(lsKey('gp_settings_ts'),String(ts));
-    const ok=await fbSet(settingsPath(),{...buildSettingsPayload(ts),_pushId:pushId});
+    const completo=buildSettingsPayload(ts);
+    const ok=await fbSet(settingsPath(),{...completo,_pushId:pushId});
+    if(ok)cfgRecordarBase(completo); // el servidor quedó igual a lo local
     if(!ok)throw Object.assign(new Error('fbSet failed'),{userMsg:'No se pudo subir la configuración. Cerrá sesión y volvé a entrar.'});
     localStorage.removeItem('gp_settings_pending');
     if(statusEl)statusEl.innerHTML=ic('check');
@@ -189,6 +191,7 @@ async function forceSyncSettings(btn){
     const snap=await db.ref(settingsPath()).once('value');
     const raw=snap.val();
     if(raw){
+      cfgRecordarBase(raw);
       applySettings(raw);
       toast('✅ Datos actualizados desde el servidor');
     } else {

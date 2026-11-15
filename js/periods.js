@@ -32,7 +32,8 @@ function periodTotals(mode,n,today=todayStr()){
     let gastos=0,ingresos=0;
     expenses.forEach(e=>{
       if(!ks.has(monthKey(e.date))||!countsInMonth(e))return;
-      if(e.type==='Ingreso')ingresos+=amtArs(e);else gastos+=effArs(e);
+      if(e.devolucion)gastos-=effArs(e);
+      else if(e.type==='Ingreso')ingresos+=amtArs(e);else gastos+=effArs(e);
     });
     return{label:p.label,gastos,ingresos};
   });

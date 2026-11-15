@@ -103,12 +103,13 @@ function attachListeners(){
   // Cross-device: Firebase is source of truth — updates from other devices always apply
   db.ref(settingsPath()).on('value',snap=>{
     const raw=snap.val();
-    if(!raw)return;
+    if(!raw){cfgRecordarBase({});return;} // el servidor no tiene configuración (borrada o nueva): la base es "vacío"
 
     // Eco de un envío propio: lo local ya está igual o más nuevo
     if(raw._pushId && _myPushIds.has(raw._pushId))return;
     // Hay cambios locales sin subir: no pisarlos; se suben al reconectar
     if(localStorage.getItem('gp_settings_pending'))return;
+    cfgRecordarBase(raw);
     applySettings(raw);
   },err=>console.warn('[FB] settings:',err));
 }

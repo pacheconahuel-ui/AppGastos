@@ -43,6 +43,29 @@ function applySettings(raw){
 }
 // Todos los envíos de esta pestaña: su eco se ignora aunque lleguen varios seguidos
 const _myPushIds=new Set();
+// Qué sección de la configuración hay en el servidor (3.27): solo se sube lo que cambió, así dos dispositivos que
+// tocan secciones distintas (transferencias y presupuestos, por ejemplo) no se pisan. Vacío y ausente son lo mismo.
+const _CFG_CLAVES=['customCats','hiddenCats','renamedCats','catTypes','catIcons','budgets','persons','accounts','transfers','goals'];
+let _cfgBase={};
+function _cfgNorm(v){
+  if(v==null)return'';
+  if(Array.isArray(v))return v.length?JSON.stringify(v):'';
+  if(typeof v==='object')return Object.keys(v).length?JSON.stringify(v):'';
+  return JSON.stringify(v);
+}
+// Lo que llegó del servidor es la base contra la que se compara
+function cfgRecordarBase(raw){_cfgBase={};_CFG_CLAVES.forEach(k=>{_cfgBase[k]=_cfgNorm(raw[k]);});}
+// Devuelve solo las secciones que difieren de la base. Si no se sabe qué hay en el servidor (base desconocida) se suben
+// las secciones con contenido, pero una sección vacía NO se manda: sería borrar algo que no se sabe si existe.
+function cambiosDeConfig(full,base=_cfgBase,forzar=false){
+  const out={};
+  _CFG_CLAVES.forEach(k=>{
+    const n=_cfgNorm(full[k]);
+    if(base[k]===undefined){if(n!==''||forzar)out[k]=full[k];}
+    else if(base[k]!==n)out[k]=full[k];
+  });
+  return out;
+}
 async function pushSettings(){
   if(!db||!currentUID)return;
   const ts=Date.now();
@@ -55,9 +78,13 @@ async function pushSettings(){
   }
   const pushId=DEVICE_ID+'_'+ts+'_'+Math.random().toString(36).slice(2,6);
   _myPushIds.add(pushId);
-  const payload={...buildSettingsPayload(ts),_pushId:pushId};
-  const ok=await fbSet(settingsPath(),payload);
+  const full=buildSettingsPayload(ts);
+  const cambios=cambiosDeConfig(full);
+  // update() escribe solo estas claves y deja las demás como están en el servidor
+  const payload={...cambios,v:full.v,updatedAt:full.updatedAt,_pushId:pushId};
+  const ok=await fbUpdate(settingsPath(),payload);
   if(ok){
+    _CFG_CLAVES.forEach(k=>{if(k in cambios)_cfgBase[k]=_cfgNorm(full[k]);});
     localStorage.removeItem('gp_settings_pending');
     setStatus('online','● Sincronizado');
   } else {

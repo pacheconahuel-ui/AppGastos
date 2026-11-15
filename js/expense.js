@@ -101,18 +101,17 @@ function recalcSplit(){
   const names=splitRows.map(r=>r.personName).join(', ');
   document.getElementById('split-toggle-lbl').textContent=splitPanelOpen&&names?`Dividido con ${names}`:'Dividir con alguien';
 }
-function addSplitPerson(){
+async function addSplitPerson(){
   const used=new Set(splitRows.map(r=>r.personId));
   const available=persons.filter(p=>!used.has(p.id));
   if(available.length===0){
     openAddContactModal(null,true);return;
   }
-  const names=available.map((p,i)=>`${i+1}. ${p.emoji} ${p.name}`).join('\n');
-  const idx=prompt(`Elegí una persona (número):\n${names}\n${available.length+1}. + Nueva persona`);
-  const n=parseInt(idx);
-  if(n===available.length+1){openAddContactModal(null,true);return;}
-  if(n>=1&&n<=available.length){
-    const p=available[n-1];
+  const id=await elegirOpcion({titulo:'Dividir con',opciones:[...available.map(p=>({id:p.id,texto:`${p.emoji||''} ${p.name}`.trim()})),{id:'__nueva',texto:'+ Nueva persona'}]});
+  if(id===null)return;
+  if(id==='__nueva'){openAddContactModal(null,true);return;}
+  const p=available.find(x=>x.id===id);
+  if(p){
     splitRows.push({personId:p.id,personName:p.name,emoji:p.emoji,amount:0});
     renderSplitRows();
   }
@@ -482,8 +481,8 @@ function selectCat(cat){
   // con la categoría en un botón, el buscador queda limpio para buscar otra
   if(searchEl&&document.getElementById('f-cat-chips')?.querySelector('.chip.on'))searchEl.value='';
 }
-function addCatPrompt(){
-  const name=prompt('Nombre de la nueva categoría:');if(!name?.trim())return;
+async function addCatPrompt(){
+  const name=await pedirTexto({titulo:'Nueva categoría',placeholder:'Nombre',ok:'Crear',validar:v=>!v.trim()?'Escribí un nombre':cats.includes(v.trim())?'Ya existe':''});if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
   const type=(document.getElementById('f-type')?.value||'Egreso')==='Ingreso'?'ingreso':'egreso';
   cats.push(t);setCatType(t,type);saveLocal();pushSettings();buildCatSelect(t);document.getElementById('f-cat').value=t;toast(`✅ Categoría "${t}" creada como ${type==='ingreso'?'ingreso':'egreso'}`);
@@ -524,8 +523,8 @@ function renderCatManager(){
   html+=`</div><button class="btn-save" onclick="addCatTyped('ingreso')" style="margin:0;padding:11px;font-size:13px;background:var(--pos)">＋ Agregar ingreso</button>`;
   document.getElementById('cat-manager-body').innerHTML=html;
 }
-function addCatTyped(type='egreso'){
-  const name=prompt(`Nueva categoría de ${type==='ingreso'?'ingreso':'egreso'}:`);
+async function addCatTyped(type='egreso'){
+  const name=await pedirTexto({titulo:`Nueva categoría de ${type==='ingreso'?'ingreso':'egreso'}`,placeholder:'Nombre',ok:'Crear',validar:v=>!v.trim()?'Escribí un nombre':cats.includes(v.trim())?'Ya existe':''});
   if(!name?.trim())return;
   const t=name.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
   cats.push(t);setCatType(t,type);saveLocal();pushSettings();renderCatManager();buildCatSelect(t);toast(`✅ Categoría "${t}" creada`);
@@ -535,8 +534,8 @@ function toggleCatType(cat){
   setCatType(cat,next);saveLocal();pushSettings();renderCatManager();buildCatSelect(null);
   toast(`✅ "${displayName(cat)}" ahora es ${next==='ingreso'?'Ingreso':'Egreso'}`);
 }
-function renameCat(oldName){
-  const newName=prompt(`Renombrar "${oldName}" a:`,oldName);if(!newName?.trim()||newName.trim()===oldName)return;
+async function renameCat(oldName){
+  const newName=await pedirTexto({titulo:`Renombrar "${oldName}"`,valor:oldName,ok:'Guardar',validar:v=>!v.trim()?'Escribí un nombre':(v.trim()!==oldName&&cats.includes(v.trim()))?'Ya existe':''});if(!newName?.trim()||newName.trim()===oldName)return;
   const t=newName.trim();if(cats.includes(t)){toast('⚠️ Ya existe');return;}
   const idx=cats.indexOf(oldName);if(idx>-1)cats[idx]=t;
   catTypes[t]=catTypeFor(oldName);delete catTypes[oldName];
@@ -545,9 +544,9 @@ function renameCat(oldName){
   buildCatSelect(t);renderCatManager();renderAll();toast(`✅ "${oldName}" → "${t}"`);
 }
 
-function renameDefCat(originalName){
+async function renameDefCat(originalName){
   const current=renamedCats[originalName]||originalName;
-  const newLabel=prompt(`Renombrar "${current}" a:`,current);
+  const newLabel=await pedirTexto({titulo:`Renombrar "${current}"`,valor:current,ok:'Guardar',validar:v=>v.trim()?'':'Escribí un nombre'});
   if(!newLabel?.trim()||newLabel.trim()===current)return;
   renamedCats[originalName]=newLabel.trim();
   saveLocal();pushSettings();buildCatSelect(null);renderCatManager();
@@ -618,12 +617,14 @@ async function saveExpense(){
     accountId:accountId||null,
     currency:currency||'ARS',
     exchangeRate,arsEquiv,
-    cardExpType:acc?.type==='credit'?cardExpType:'one',
+    cardExpType:acc?.type==='credit'&&type==='Egreso'?cardExpType:'one',
     installmentCurrent:cardExpType==='installment'?installmentCurrent:null,
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
     ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
     ...((prev?.sinBilletera||payerSel)&&!accountId?{sinBilletera:true}:{}),
     ...(prev?.fijoOk?{fijoOk:prev.fijoOk}:{}), // ya confirmado este mes: editar el monto no lo vuelve a pedir
+    // Un ingreso en una tarjeta es una devolución: baja el resumen y los gastos del mes, no suma como ingreso (3.25)
+    ...(type==='Ingreso'&&acc?.type==='credit'?{devolucion:true}:{}),
     ...(payerSel?{pagoPor:{personId:payerSel.id,personName:payerSel.name}}:{}),
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
@@ -645,6 +646,7 @@ async function saveExpense(){
   haptic();closeModal();renderAll();
   toast(id?'✅ Gasto actualizado':serieN>1?`✅ ${serieN} movimientos cargados, hasta el ${fechaLarga(serie[serieN-1].date)}`:'✅ Gasto guardado');
   const avisoP=type==='Egreso'?avisoPresupuesto(cat,gastadoAntes):null;
+  if(exp.devolucion&&!id)setTimeout(()=>toast(`↩️ Devolución anotada: baja el resumen de ${acc.name}`,4000),300);
   if(avisoP)setTimeout(()=>toast('⚠️ '+avisoP,5000),1200);
   for(const x of serie){skipNextArs=fbOnline;await persistArs(x,null);}
 

@@ -38,13 +38,14 @@ function cardCycle(a,today=todayStr()){
 // Lo no pagado de una tarjeta, separado en el resumen que ya cerró (hay que pagarlo) y el que está en curso (3.15)
 function cardStatements(a,today=todayStr()){
   const cyc=cardCycle(a,today);
-  const pend=expenses.filter(e=>e.accountId===a.id&&e.type==='Egreso'&&e.ccPaid!==true);
+  // Las devoluciones (ingresos en la tarjeta) restan del resumen
+  const pend=expenses.filter(e=>e.accountId===a.id&&(e.type==='Egreso'||e.devolucion)&&e.ccPaid!==true);
   const mk=(items,extra)=>{
     let ars=0,usd=0;
     const lines=items.map(e=>{
-      const isUSD=e.currency==='USD';
-      const arsAmt=isUSD?(e.arsEquiv||(e.amount*(e.exchangeRate||0))):e.amount;
-      if(isUSD)usd+=e.amount;else ars+=arsAmt;
+      const isUSD=e.currency==='USD',sg=e.devolucion?-1:1;
+      const arsAmt=sg*(isUSD?(e.arsEquiv||(e.amount*(e.exchangeRate||0))):e.amount);
+      if(isUSD)usd+=sg*e.amount;else ars+=arsAmt;
       return{...e,arsAmt};
     });
     return{lines,ars,usd,...extra};

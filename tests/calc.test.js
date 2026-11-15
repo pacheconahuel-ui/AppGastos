@@ -399,3 +399,29 @@ describe('encabezados de día de la Lista (3.21)', () => {
     expect(app.run(`diaLabel('','2026-03-01')`)).toBe('Sin fecha');
   });
 });
+
+describe('configuración: solo se sube lo que cambió (3.27)', () => {
+  const full = { customCats: ['A'], hiddenCats: [], renamedCats: {}, catTypes: { A: 'egreso' }, catIcons: {}, budgets: { Luz: 100 }, persons: [], accounts: [{ id: 'x' }], transfers: [], goals: [] };
+  it('sin base conocida solo se sube lo que tiene contenido (no se borra a ciegas); forzado, todo', () => {
+    const app = loadApp();
+    app.set('__f', full);
+    expect(Object.keys(app.run("cambiosDeConfig(__f,{})")).sort()).toEqual(['accounts', 'budgets', 'catTypes', 'customCats']);
+    expect(Object.keys(app.run("cambiosDeConfig(__f,{},true)")).sort()).toEqual(Object.keys(full).sort());
+    app.run("cfgRecordarBase({customCats:['A'],catTypes:{A:'egreso'},budgets:{Luz:100},accounts:[{id:'x'}]})");
+    expect(app.run("cambiosDeConfig(__f)")).toEqual({}); // ausente y vacío son lo mismo
+  });
+  it('si cambia una sección, solo esa', () => {
+    const app = loadApp();
+    app.run("cfgRecordarBase({customCats:['A'],catTypes:{A:'egreso'},budgets:{Luz:100},accounts:[{id:'x'}]})");
+    app.set('__f', { ...full, transfers: [{ id: 't1' }] });
+    expect(Object.keys(app.run("cambiosDeConfig(__f)"))).toEqual(['transfers']);
+    app.set('__f', { ...full, budgets: { Luz: 200 }, accounts: [] });
+    expect(Object.keys(app.run("cambiosDeConfig(__f)")).sort()).toEqual(['accounts', 'budgets']); // vaciar una sección conocida sí se sube
+  });
+  it('si el servidor quedó vacío (base «vacío»), lo local con contenido se vuelve a subir aunque no haya cambiado', () => {
+    const app = loadApp();
+    app.run("cfgRecordarBase({})");
+    app.set('__f', full);
+    expect(Object.keys(app.run("cambiosDeConfig(__f)")).sort()).toEqual(['accounts', 'budgets', 'catTypes', 'customCats']);
+  });
+});
