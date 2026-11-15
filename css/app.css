@@ -883,3 +883,7 @@ details.fc-item[open] summary::after{content:'▴'}
 .undo-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .undo-btn{min-height:44px;min-width:44px;padding:0 14px;border-radius:10px;border:0;background:var(--acc-btn);color:var(--on-acc);font:700 13px 'Outfit',sans-serif;cursor:pointer;flex-shrink:0}
 .transfer-box[role="button"]{cursor:pointer}
+
+/* 3.25 · diferencia al pagar el resumen */
+.cc-diff{border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);background:color-mix(in srgb,var(--warn) 7%,transparent);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.cc-diff-t{font-size:13px;color:var(--txt2);margin-bottom:8px}

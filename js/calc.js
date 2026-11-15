@@ -37,7 +37,8 @@ function isFxEntry(e){return !!e.fxOp||usdTx.some(t=>t.linkedArsId===e.id);}
 // Los ajustes viejos (antes de la 3.12) se cargaron como un gasto común llamado "Ajuste de saldo — <billetera>"
 function isAjuste(e){return !!e.ajuste||(!e.liquidacion&&/^Ajuste de saldo( —|$)/.test(e.description||''));}
 function isLiquidation(e){return !!e.liquidacion||isAjuste(e);}
-function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e)&&!isLiquidation(e);}
+// arrastre: saldo del resumen que quedó sin pagar (pago parcial). No es un gasto nuevo: ya se contó cuando se compró (3.25)
+function countsInMonth(e){return !isCCPayment(e)&&!isFxEntry(e)&&!isLiquidation(e)&&!e.arrastre;}
 function amtArs(e){return e.amount*usdRate(e);}
 // Encabezado de cada día en la Lista: "Hoy", "Ayer", "12 de noviembre"; lo futuro, "Programado · 19 de noviembre"
 const MESES_LARGO=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -150,13 +151,16 @@ function calcSummary(mk){
   let usdNoRate=0;
   rows.forEach(e=>{
     if(e.currency==='USD'&&!usdRate(e)&&e.type!=='Ingreso')usdNoRate+=effAmt(e);
-    if(e.type==='Ingreso'){ing+=amtArs(e);}else{pag+=amtArs(e);real+=effArs(e);}
+    // Una devolución en la tarjeta baja los gastos del mes (no suma como ingreso)
+    if(e.devolucion){pag-=amtArs(e);real-=effArs(e);}
+    else if(e.type==='Ingreso'){ing+=amtArs(e);}else{pag+=amtArs(e);real+=effArs(e);}
   });
   return{ing,pag,real,bal:ing-real,usdNoRate};
 }
 function calcByCat(mk){
   const map={};
-  expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Egreso'&&countsInMonth(e)).forEach(e=>{map[e.category]=(map[e.category]||0)+effArs(e);});
+  expenses.filter(e=>monthKey(e.date)===mk&&(e.type==='Egreso'||e.devolucion)&&countsInMonth(e)).forEach(e=>{map[e.category]=(map[e.category]||0)+(e.devolucion?-1:1)*effArs(e);});
+  Object.keys(map).forEach(k=>{if(map[k]<=0)delete map[k];}); // una devolución mayor al gasto de la categoría no deja barras negativas
   return map;
 }
 

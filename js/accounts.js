@@ -70,17 +70,17 @@ function ccEstimated(accId,scope){
   const closedIds=scope==='closed'&&a0?new Set((cardStatements(a0).closed?.lines||[]).map(e=>e.id)):null;
   const items=expenses.filter(e=>
     e.accountId===accId &&
-    e.type==='Egreso' &&
+    (e.type==='Egreso'||e.devolucion) &&
     e.ccPaid !== true &&  // handle both false and undefined (old expenses without field)
     (!closedIds||closedIds.has(e.id))
   );
   let totalARS=0,totalUSD=0;
   const lines=items.map(e=>{
-    const isUSD=e.currency==='USD';
-    const arsAmt = isUSD
+    const isUSD=e.currency==='USD',sg=e.devolucion?-1:1;
+    const arsAmt = sg*(isUSD
       ? (e.arsEquiv || (e.amount*(e.exchangeRate||0)))
-      : e.amount; // el resumen cobra el total, aunque la compra se haya dividido
-    if(isUSD)totalUSD+=e.amount; else totalARS+=arsAmt;
+      : e.amount); // el resumen cobra el total, aunque la compra se haya dividido
+    if(isUSD)totalUSD+=sg*e.amount; else totalARS+=arsAmt;
     return{...e,arsAmt};
   });
   return{lines,totalARS,totalUSD};
@@ -101,7 +101,7 @@ function stLinesHTML(st){
       isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'',
       isUSD?`<span class="cc-line-badge cc-badge-usd">U$D ${e.amount}</span>`:'',
     ].join('');
-    return`<div class="cc-line"><span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badges}</span><span class="cc-line-amt">${isUSD?'~':''}${fmt(e.arsAmt)}</span></div>`;
+    return`<div class="cc-line"><span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badges}</span><span class="cc-line-amt">${isUSD?'~':''}${fmtS(e.arsAmt)}</span></div>`;
   };
   const head=st.lines.slice(0,5).map(row).join(''),rest=st.lines.slice(5);
   return head+(rest.length?`<details class="cc-more"><summary>Ver ${rest.length} más</summary>${rest.map(row).join('')}</details>`:'');
@@ -296,6 +296,23 @@ function saveAccount(){
 }
 function deleteAccountFromModal(){const id=document.getElementById('acc-id').value;if(!id)return;closeAccountModal();confirmDeleteAccount(id);}
 // --- CC PAYMENT MODAL ---
+// Si lo que se paga no es lo que figura en el resumen (3.25): diferencia a favor del banco (intereses, impuestos) o pago parcial
+function ccPayDiff(){
+  const box=document.getElementById('ccp-diff');if(!box)return;
+  const accId=document.getElementById('ccp-acc-id').value;
+  const real=parseFloat(document.getElementById('ccp-real-ars').value);
+  const est=ccEstimated(accId,_ccpScope).totalARS;
+  const dif=real>0?Math.round((real-est)*100)/100:0;
+  if(!(real>0)||Math.abs(dif)<1){box.style.display='none';box.innerHTML='';return;}
+  box.style.display='';
+  box.innerHTML=dif>0
+    ?`<div class="cc-diff-t">Pagás <b>${fmt(dif)} más</b> que el resumen estimado (${fmt(est)}).</div>
+       <label class="f-lbl" for="ccp-diff-mode">¿Qué es la diferencia?</label>
+       <select class="f-ctrl" id="ccp-diff-mode"><option value="registrar">Intereses, impuestos o cargos: registrarla como gasto</option><option value="no">No registrarla</option></select>`
+    :`<div class="cc-diff-t">Pagás <b>${fmt(-dif)} menos</b> que el resumen estimado (${fmt(est)}).</div>
+       <label class="f-lbl" for="ccp-diff-mode">¿Qué pasa con lo que falta?</label>
+       <select class="f-ctrl" id="ccp-diff-mode"><option value="pendiente">Pago parcial: queda pendiente para el próximo resumen</option><option value="total">Era el total, no queda deuda</option></select>`;
+}
 function setCCPayMode(mode){
   document.getElementById('ccp-pay-mode').value=mode;
   document.getElementById('ccp-btn-ars').className='type-btn'+(mode==='ars'?' ai':'');
@@ -312,6 +329,7 @@ function openCCPayModal(accId){
   document.getElementById('ccp-acc-id').value=accId;
   document.getElementById('cc-pay-title').innerHTML=ic('card')+' Pagar '+esc(a.name);
   document.getElementById('ccp-real-ars').value='';
+  const bd=document.getElementById('ccp-diff');if(bd){bd.style.display='none';bd.innerHTML='';}
   document.getElementById('ccp-real-usd').value='';
   document.getElementById('ccp-date').value=todayStr();
   document.getElementById('ccp-subtotal-ars').textContent=fmt(totalARS);
@@ -326,7 +344,7 @@ function openCCPayModal(accId){
     const isUSD=e.currency==='USD';
     const badge=isRec?'<span class="cc-line-badge cc-badge-rec">'+ic('repeat')+' fijo</span>':
                  isInst?`<span class="cc-line-badge cc-badge-inst">${ic('calendar')} ${e.installmentCurrent}/${e.installmentTotal}</span>`:'';
-    const amt=isUSD?`<span style="color:var(--gold)">U$D ${e.amount}</span>`:fmt(e.arsAmt);
+    const amt=isUSD?`<span style="color:var(--gold)">U$D ${e.amount}</span>`:fmtS(e.arsAmt);
     return`<div class="cc-line"><span class="cc-line-name">${catIcon(e.category)} ${esc(e.description||e.category)} ${badge}</span><span class="cc-line-amt">${amt}</span></div>`;
   }).join(''):'<div style="color:var(--txt3);font-size:12px;text-align:center;padding:8px">Sin consumos pendientes</div>';
   document.getElementById('ccp-items').innerHTML=itemsHtml;
@@ -397,6 +415,14 @@ async function saveCCPayment(){
     skipNextArs=fbOnline;await persistArs(usdEntry,null);
   }
 
+  // Diferencia entre lo que se paga y lo que decía el resumen
+  const dif=enteredARS>0?Math.round((payARS-totalARS)*100)/100:0;
+  const modoDif=document.getElementById('ccp-diff-mode')?.value;
+  const extra=[];
+  const lineaCuenta=o=>({id:newId(),type:'Egreso',date,category:'Servicios',amount:o.monto,myAmount:o.monto,accountId:accId,currency:'ARS',
+    shared:false,sharedPercent:100,cardExpType:'one',createdAt:Date.now(),updatedAt:Date.now(),...o.campos});
+  if(dif>=1&&modoDif==='registrar')extra.push(lineaCuenta({monto:dif,campos:{description:`Intereses y cargos ${a.name}`,ccPaid:true,ccPaidDate:date,cargosResumen:true}}));
+  if(dif<=-1&&modoDif==='pendiente')extra.push(lineaCuenta({monto:-dif,campos:{description:`Saldo pendiente del resumen ${a.name}`,ccPaid:false,ccPaidDate:null,arrastre:true}}));
   // Marcar lo del resumen como pago. Las cuotas y los fijos siguen al mes siguiente, pero (3.23) dejan una COPIA pagada
   // en el mes en que se cargaron: antes se movía el mismo movimiento y ese mes dejaba de mostrarlo en el Resumen y los gráficos.
   const ids=new Set(lines.map(e=>e.id));
@@ -429,10 +455,10 @@ async function saveCCPayment(){
     // One-time: mark paid permanently
     return{...e,ccPaid:true,ccPaidDate:date,updatedAt:Date.now()};
   });
-  expenses.push(...copias);
+  expenses.push(...copias,...extra);
 
   // Persist all updated expenses
-  for(const e of expenses.filter(e=>ids.has(e.id)||copias.includes(e))){
+  for(const e of expenses.filter(e=>ids.has(e.id)||copias.includes(e)||extra.includes(e))){
     skipNextArs=fbOnline;await persistArs(e,null);
   }
 

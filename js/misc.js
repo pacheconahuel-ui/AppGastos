@@ -345,7 +345,7 @@ function renderProjection(){
   const porDia=(total-fijos)/dia;
   const faltanFijos=fcAll({},todayStr())[0].tot.fijos;
   const projected=Math.round(total+porDia*(dias-dia)+faltanFijos);
-  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
+  const ing=expenses.filter(e=>monthKey(e.date)===mk&&e.type==='Ingreso'&&!e.devolucion&&countsInMonth(e)).reduce((s,e)=>s+amtArs(e),0);
   projCard.style.display='';
   const projVal=document.getElementById('c-proj');
   projVal.textContent=fmt(projected);

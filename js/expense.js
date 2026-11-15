@@ -618,12 +618,14 @@ async function saveExpense(){
     accountId:accountId||null,
     currency:currency||'ARS',
     exchangeRate,arsEquiv,
-    cardExpType:acc?.type==='credit'?cardExpType:'one',
+    cardExpType:acc?.type==='credit'&&type==='Egreso'?cardExpType:'one',
     installmentCurrent:cardExpType==='installment'?installmentCurrent:null,
     installmentTotal:cardExpType==='installment'?installmentTotal:null,
     ccPaid:keepPaid,ccPaidDate:keepPaid?(prev.ccPaidDate||null):null,
     ...((prev?.sinBilletera||payerSel)&&!accountId?{sinBilletera:true}:{}),
     ...(prev?.fijoOk?{fijoOk:prev.fijoOk}:{}), // ya confirmado este mes: editar el monto no lo vuelve a pedir
+    // Un ingreso en una tarjeta es una devolución: baja el resumen y los gastos del mes, no suma como ingreso (3.25)
+    ...(type==='Ingreso'&&acc?.type==='credit'?{devolucion:true}:{}),
     ...(payerSel?{pagoPor:{personId:payerSel.id,personName:payerSel.name}}:{}),
     shared:false,sharedPercent:100,
     createdAt:id?(expenses.find(e=>e.id===id)?.createdAt||Date.now()):Date.now(),
@@ -645,6 +647,7 @@ async function saveExpense(){
   haptic();closeModal();renderAll();
   toast(id?'✅ Gasto actualizado':serieN>1?`✅ ${serieN} movimientos cargados, hasta el ${fechaLarga(serie[serieN-1].date)}`:'✅ Gasto guardado');
   const avisoP=type==='Egreso'?avisoPresupuesto(cat,gastadoAntes):null;
+  if(exp.devolucion&&!id)setTimeout(()=>toast(`↩️ Devolución anotada: baja el resumen de ${acc.name}`,4000),300);
   if(avisoP)setTimeout(()=>toast('⚠️ '+avisoP,5000),1200);
   for(const x of serie){skipNextArs=fbOnline;await persistArs(x,null);}
 

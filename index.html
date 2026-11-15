@@ -770,10 +770,12 @@
     <div class="f-grp" id="ccp-ars-row">
       <label class="f-lbl">Monto ARS <span style="font-weight:400;color:var(--txt3)">(dejá vacío para usar el estimado)</span></label>
       <div style="display:flex;gap:8px">
-        <input type="number" class="f-ctrl" id="ccp-real-ars" placeholder="$0" inputmode="decimal" step="any" min="0" style="flex:1">
+        <input type="number" class="f-ctrl" id="ccp-real-ars" placeholder="$0" inputmode="decimal" step="any" min="0" style="flex:1" oninput="ccPayDiff()">
         <select class="f-ctrl" id="ccp-wallet-ars" style="flex:1"></select>
       </div>
     </div>
+
+    <div class="cc-diff" id="ccp-diff" style="display:none"></div>
 
     <!-- USD row — only in mix mode -->
     <div class="f-grp" id="ccp-usd-row" style="display:none">

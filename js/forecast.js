@@ -106,7 +106,7 @@ function fcServicios(today=todayStr()){
 // Ingresos: promedio de los últimos 3 meses completos
 function fcIngresos(today=todayStr()){
   const ms=fcPrevMonths(today,3);
-  const sum=expenses.filter(e=>e.type==='Ingreso'&&ms.includes(monthKey(e.date))&&countsInMonth(e)&&!(e.currency==='USD'&&!usdRate(e))).reduce((s,e)=>s+amtArs(e),0);
+  const sum=expenses.filter(e=>e.type==='Ingreso'&&!e.devolucion&&ms.includes(monthKey(e.date))&&countsInMonth(e)&&!(e.currency==='USD'&&!usdRate(e))).reduce((s,e)=>s+amtArs(e),0);
   return Math.round(sum/3);
 }
 

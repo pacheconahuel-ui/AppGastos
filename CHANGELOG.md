@@ -1,5 +1,16 @@
 # Cambios
 
+## 3.25 — noviembre 2026
+
+Tarjetas: lo que pasa cuando el pago no coincide con el resumen, y las devoluciones.
+
+- **Diferencia al pagar:** si en «Pagar resumen» escribís un monto distinto del estimado, la app muestra la diferencia y pregunta qué es:
+  - **Pagás de más** (intereses, impuestos, cargos): se registra como un gasto **«Intereses y cargos <tarjeta>»** en el mes del pago, o se puede dejar sin registrar.
+  - **Pagás de menos** (pago parcial): lo que falta queda como **«Saldo pendiente del resumen»** en la tarjeta, para el próximo resumen. No cuenta como gasto nuevo (ya se contó cuando se compró). O se puede marcar «Era el total, no queda deuda».
+  Antes la diferencia se perdía sin avisar.
+- **Devoluciones en la tarjeta:** un **ingreso cargado en una tarjeta** es una devolución: **baja lo que vas a pagar** en el resumen que le corresponde (se ve con signo menos) y **baja los gastos del mes** de su categoría y los gráficos, en lugar de sumar como ingreso. En la Lista lleva la marca «Devolución en la tarjeta».
+- Pruebas: lógica de devoluciones (resumen, gastos del mes, categorías, gráficos por período) y del saldo pendiente; en el navegador, pagar de más, de menos, «era el total», sin diferencia y una devolución completa.
+
 ## 3.24 — noviembre 2026
 
 Red de seguridad para los datos (salió de un análisis completo de la app).
