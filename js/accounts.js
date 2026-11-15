@@ -202,7 +202,7 @@ function renderCuentasTab(){
   document.getElementById('cuentas-transfers-count').textContent=mTf.length;
   const tHtml=transfers.length?[...transfers].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(t=>{
     const fr=accounts.find(a=>a.id===t.fromId),to=accounts.find(a=>a.id===t.toId);
-    return`<div class="transfer-box"><div style="font-size:20px">${fr?.emoji||'💼'}</div>
+    return`<div class="transfer-box" role="button" tabindex="0" onclick="openTransferModal('${t.id}')" onkeydown="if(event.key==='Enter')openTransferModal('${t.id}')" aria-label="Editar transferencia ${esc(t.description||'')}"><div style="font-size:20px">${fr?.emoji||'💼'}</div>
       <div class="exp-info"><div class="exp-desc">${esc(t.description||'Transferencia')}</div><div class="exp-meta">${fmtDate(t.date)} · ${esc(fr?.name||'?')} → ${esc(to?.name||'?')}</div></div>
       <div class="exp-amt e">${fmt(t.amount)}</div>
       <button class="btn-ico del" onclick="deleteTransfer('${t.id}',event)" style="width:28px;height:28px;font-size:12px">${ic('trash')}</button></div>`;
@@ -295,13 +295,6 @@ function saveAccount(){
   }
 }
 function deleteAccountFromModal(){const id=document.getElementById('acc-id').value;if(!id)return;closeAccountModal();confirmDeleteAccount(id);}
-function confirmDeleteAccount(id,ev){
-  ev?.stopPropagation?.();const a=accounts.find(x=>x.id===id);
-  pendingDel={type:'account',id};
-  document.getElementById('conf-txt').textContent=`¿Eliminar "${a?.name}"?\nEsta acción no se puede deshacer.`;
-  openDeleteConf();
-}
-
 // --- CC PAYMENT MODAL ---
 function setCCPayMode(mode){
   document.getElementById('ccp-pay-mode').value=mode;
@@ -462,7 +455,8 @@ function nextMonthDate(dateStr){
   const last=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
   return`${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(Math.min(d,last)).padStart(2,'0')}`;
 }
-function openTransferModal(){
+function openTransferModal(id){
+  const t=id?transfers.find(x=>x.id===id):null;
   const wallets=walletAccounts();
   if(wallets.length<2){toast('⚠️ Necesitás al menos 2 billeteras para transferir');return;}
   const opts=wallets.map(a=>`<option value="${a.id}">${a.emoji} ${esc(a.name)}</option>`).join('');
@@ -470,9 +464,13 @@ function openTransferModal(){
   document.getElementById('tf-to').innerHTML=opts;
   // Fix: use wallets.length not accounts.length
   if(wallets.length>1)document.getElementById('tf-to').selectedIndex=1;
-  document.getElementById('tf-amt').value='';
-  document.getElementById('tf-desc').value='';
-  document.getElementById('tf-date').value=todayStr();
+  document.getElementById('tf-id').value=t?t.id:'';
+  document.getElementById('tf-title').textContent=t?'⇄ Editar transferencia':'⇄ Transferir entre billeteras';
+  document.getElementById('tf-save').textContent=t?'Guardar cambios':'Transferir';
+  if(t){document.getElementById('tf-from').value=t.fromId;document.getElementById('tf-to').value=t.toId;}
+  document.getElementById('tf-amt').value=t?t.amount:'';
+  document.getElementById('tf-desc').value=t?(t.description==='Transferencia'?'':t.description||''):'';
+  document.getElementById('tf-date').value=t?t.date:todayStr();
   document.getElementById('transfer-overlay').classList.add('on');history.pushState({modal:true},'');
   setTimeout(()=>document.getElementById('tf-amt').focus(),200);
 }
@@ -492,7 +490,10 @@ function saveTransfer(){
   showConf('transfer','Confirmar transferencia',
     `${fromAcc?.emoji||''} ${fromAcc?.name||''} → ${toAcc?.emoji||''} ${toAcc?.name||''}\nMonto: ${fmt(amt)}`,
     ()=>{
-      transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
+      const editId=document.getElementById('tf-id').value;
+      const prev=editId?transfers.find(x=>x.id===editId):null;
+      if(prev)Object.assign(prev,{fromId,toId,amount:amt,date,description:desc||'Transferencia',updatedAt:Date.now()});
+      else transfers.push({id:'tf_'+newId(),fromId,toId,amount:amt,date,
         description:desc||'Transferencia',createdAt:Date.now()});
       saveAccounts();pushSettings();
       closeTransferModal();renderCuentasTab();haptic();

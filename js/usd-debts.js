@@ -365,6 +365,7 @@ function closeConf(){
   document.getElementById('conf-overlay').classList.remove('on');
 }
 
+let _arsBorradoConUsd=null;
 async function doDelete(){
   if(!pendingDel){closeConf();return;}
   const{type,id,name}=pendingDel;closeConf();
@@ -379,13 +380,13 @@ async function doDelete(){
     renderContactsList();renderSaldosTab();buildDebtPersonSelect();
     toast('🗑️ Contacto eliminado');return;
   }
-  if(type==='account'){
-    haptic([30,30,60]);
-    accounts=accounts.filter(a=>a.id!==id);saveAccounts();pushSettings();renderCuentasTab();toast('🗑️ Billetera eliminada');return;
-  }
+  if(type==='account'){eliminarCuenta(id,null);return;}
   if(type==='transfer'){
     haptic([30,30,60]);
-    transfers=transfers.filter(x=>x.id!==id);saveAccounts();pushSettings();renderCuentasTab();toast('🗑️ Transferencia eliminada');return;
+    const tf=transfers.find(x=>x.id===id);
+    transfers=transfers.filter(x=>x.id!==id);saveAccounts();pushSettings();renderAll();renderCuentasTab();
+    if(tf)ofrecerDeshacer('Transferencia eliminada',()=>{transfers.push(tf);saveAccounts();pushSettings();renderAll();renderCuentasTab();});
+    return;
   }
   if(type==='goal'){
     haptic([30,30,60]);
@@ -395,20 +396,37 @@ async function doDelete(){
   if(type==='debt'){
     const borrada=debts.find(d=>d.id===id);
     if(borrada&&!borrada.settled)avisarDeuda(borrada,'baja');
-    debts=debts.filter(d=>d.id!==id);renderSaldosTab();toast('🗑️ Deuda eliminada');
+    debts=debts.filter(d=>d.id!==id);renderSaldosTab();
+    if(borrada)ofrecerDeshacer('Deuda eliminada',async()=>{
+      debts.push(borrada);renderSaldosTab();skipNextDebt=fbOnline;await persistDebt(borrada,null);
+      if(!borrada.settled&&borrada.amount>0)avisarDeuda(borrada,'deuda');
+    });
     skipNextDebt=fbOnline;await persistDebt(null,id);
   }else if(type==='ars'){
     // Las deudas del split que todavía no se saldaron se van con el gasto
     const linked=debts.filter(d=>d.linkedExpenseId===id&&!d.settled);
+    const borrado=expenses.find(e=>e.id===id);
     expenses=expenses.filter(e=>e.id!==id);
     debts=debts.filter(d=>!linked.includes(d));
-    renderAll();toast(linked.length?`🗑️ Gasto eliminado (y ${linked.length} deuda${linked.length>1?'s':''} del split)`:'🗑️ Gasto eliminado');
+    renderAll();
+    if(borrado)ofrecerDeshacer(linked.length?`Movimiento eliminado (y ${linked.length} deuda${linked.length>1?'s':''} del split)`:'Movimiento eliminado',async()=>{
+      expenses.push(borrado);debts.push(...linked);renderAll();
+      skipNextArs=fbOnline;await persistArs(borrado,null);
+      for(const d of linked){skipNextDebt=fbOnline;await persistDebt(d,null);if(d.amount>0)avisarDeuda(d,'deuda');}
+    });
     skipNextArs=fbOnline;await persistArs(null,id);
     for(const d of linked){skipNextDebt=fbOnline;await persistDebt(null,d.id);avisarDeuda(d,'baja');}
   }else{
     const t=usdTx.find(x=>x.id===id);
+    _arsBorradoConUsd=t?.linkedArsId?expenses.find(e=>e.id===t.linkedArsId)||null:null;
     if(t?.linkedArsId){expenses=expenses.filter(e=>e.id!==t.linkedArsId);skipNextArs=fbOnline;await persistArs(null,t.linkedArsId);}
-    usdTx=usdTx.filter(x=>x.id!==id);renderAll();toast('🗑️ Movimiento USD eliminado');
+    usdTx=usdTx.filter(x=>x.id!==id);renderAll();
+    const arsLigado=t?.linkedArsId?_arsBorradoConUsd:null;
+    if(t)ofrecerDeshacer('Movimiento USD eliminado',async()=>{
+      usdTx.push(t);if(arsLigado)expenses.push(arsLigado);renderAll();
+      skipNextUsd=fbOnline;await persistUsd(t,null);
+      if(arsLigado){skipNextArs=fbOnline;await persistArs(arsLigado,null);}
+    });
     skipNextUsd=fbOnline;await persistUsd(null,id);
   }
 }

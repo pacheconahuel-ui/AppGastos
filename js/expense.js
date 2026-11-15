@@ -638,11 +638,14 @@ async function saveExpense(){
     for(let k=1;k<serieN;k++)serie.push({...exp,id:newId(),date:dateAddMonths(date,k),serieIdx:k+1,createdAt:Date.now(),updatedAt:Date.now()});
   }
 
+  const gastadoAntes=type==='Egreso'?gastoDeCategoria(cat):0;
   if(id){const i=expenses.findIndex(e=>e.id===id);if(i>-1)expenses[i]=exp;else expenses.push(exp);}
   else expenses.push(...serie);
 
   haptic();closeModal();renderAll();
   toast(id?'✅ Gasto actualizado':serieN>1?`✅ ${serieN} movimientos cargados, hasta el ${fechaLarga(serie[serieN-1].date)}`:'✅ Gasto guardado');
+  const avisoP=type==='Egreso'?avisoPresupuesto(cat,gastadoAntes):null;
+  if(avisoP)setTimeout(()=>toast('⚠️ '+avisoP,5000),1200);
   for(const x of serie){skipNextArs=fbOnline;await persistArs(x,null);}
 
   // Deudas del split: al editar se actualizan las que ya existían (antes se creaban
