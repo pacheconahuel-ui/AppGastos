@@ -101,10 +101,11 @@ function saveGoal(){
   if(id){const i=goals.findIndex(x=>x.id===id);if(i>-1)goals[i]=g;else goals.push(g);}else goals.push(g);
   saveGoals();pushSettings();closeGoalModal();renderGoalsSection();haptic();toast(`✅ Meta "${name}" ${id?'actualizada':'creada'}`);
 }
-function addToGoal(id){
+async function addToGoal(id){
   const g=goals.find(x=>x.id===id);if(!g)return;
-  const amt=parseFloat(prompt(`¿Cuánto agregás a "${g.name}"?\nActual: ${fmt(g.current)} / ${fmt(g.target)}`));
-  if(!amt||amt<=0||isNaN(amt))return;
+  const v=await pedirTexto({titulo:`Agregar a "${g.name}"`,mensaje:`Actual: ${fmt(g.current)} de ${fmt(g.target)}`,tipo:'number',placeholder:'Monto',ok:'Agregar',validar:x=>parseFloat(x)>0?'':'Ingresá un monto mayor a cero'});
+  const amt=parseFloat(v);
+  if(v===null||!amt||amt<=0||isNaN(amt))return;
   g.current=Math.min(g.target,g.current+amt);saveGoals();pushSettings();renderGoalsSection();haptic();toast(`✅ +${fmt(amt)} a "${g.name}"`);
 }
 function deleteGoal(id){

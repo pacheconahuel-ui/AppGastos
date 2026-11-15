@@ -887,3 +887,11 @@ details.fc-item[open] summary::after{content:'▴'}
 /* 3.25 · diferencia al pagar el resumen */
 .cc-diff{border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);background:color-mix(in srgb,var(--warn) 7%,transparent);border-radius:12px;padding:10px 12px;margin-bottom:12px}
 .cc-diff-t{font-size:13px;color:var(--txt2);margin-bottom:8px}
+
+/* 3.26 · diálogos para pedir un dato (reemplazan a prompt) */
+#ask-overlay{z-index:3300}
+.ask-dlg{max-width:360px;width:100%}
+.ask-inp{width:100%;margin:6px 0 4px;min-height:48px}
+.ask-err{color:var(--red);font-size:12px;min-height:16px;margin:2px 0 8px;text-align:left}
+.ask-list{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px;max-height:50vh;overflow-y:auto}
+.ask-opt{min-height:48px;border-radius:12px;border:1px solid var(--bdr2);background:var(--surf);color:var(--txt);font:600 15px 'Outfit',sans-serif;cursor:pointer;text-align:left;padding:0 14px}

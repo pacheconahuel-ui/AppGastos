@@ -76,14 +76,12 @@ function confirmResetAll(){
     'trash',
     'Borrar todos mis datos',
     'Esto eliminará TODOS tus gastos, ingresos, deudas, billeteras y configuración.\n\nEsta acción no se puede deshacer.',
-    ()=>{
-      // Second confirmation with typed word
-      const word=prompt('Para confirmar, escribí exactamente: BORRAR');
-      if(word?.trim().toUpperCase()==='BORRAR'){
-        resetAllData();
-      } else if(word!==null){
-        toast('❌ Cancelado — palabra incorrecta');
-      }
+    async ()=>{
+      // Segunda confirmación: hay que escribir la palabra
+      const word=await pedirTexto({titulo:'Último paso',mensaje:'Para borrar todo, escribí la palabra BORRAR.',placeholder:'BORRAR',ok:'Borrar todo'});
+      if(word===null)return;
+      if(word.trim().toUpperCase()==='BORRAR')resetAllData();
+      else toast('❌ Cancelado — palabra incorrecta');
     },
     'Sí, borrar todo',
     'Cancelar'

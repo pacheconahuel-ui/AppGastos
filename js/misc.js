@@ -50,7 +50,7 @@ function toast(msg,ms=2500){const el=document.getElementById('toast');el.textCon
 
 // --- KEYBOARD ---
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeLk();closeNewSheet();closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();closeAdjustModal();closeAdmin();}
+  if(e.key==='Escape'){closeLk();closeNewSheet();closeModal();closeUsdModal();closeDebtModal();closeSettleModal();closeConf();closeCatManager();closeContactsModal();closeAddContactModal();closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();closeHelpModal();closeAdjustModal();closeAdmin();cerrarAsk(null);}
   if(e.key==='Enter'&&(document.activeElement.id==='login-email'||document.activeElement.id==='login-pass'))loginEmail();
 });
 
@@ -84,10 +84,11 @@ async function sendMagicLink(){
     document.getElementById('login-err').textContent='';
   }catch(e){document.getElementById('login-err').textContent=e.message;}
 }
-function checkMagicLink(){
+async function checkMagicLink(){
   if(!auth||!firebase.auth().isSignInWithEmailLink(window.location.href))return;
   let email=localStorage.getItem('gp_magic_email');
-  if(!email)email=prompt('Confirma tu email:');
+  if(!email)email=await pedirTexto({titulo:'Confirmá tu email',mensaje:'Es el mismo al que te llegó el enlace.',tipo:'email',placeholder:'tu@email.com',ok:'Confirmar',validar:v=>/.+@.+\..+/.test(v.trim())?'':'Escribí un email válido'});
+  if(email)email=email.trim();
   if(email){
     auth.signInWithEmailLink(email,window.location.href)
       .then(()=>{localStorage.removeItem('gp_magic_email');window.history.replaceState({},'',window.location.pathname);})

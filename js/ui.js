@@ -27,7 +27,7 @@ window.addEventListener('popstate', e => {
     'cat-overlay','contacts-overlay','add-contact-overlay',
     'gsearch-overlay','qa-overlay','transfer-overlay','account-overlay',
     'goal-overlay','budget-overlay','cc-pay-overlay','profile-overlay',
-    'help-overlay','adjust-overlay','conf-overlay','new-overlay','lk-overlay'
+    'help-overlay','adjust-overlay','conf-overlay','new-overlay','lk-overlay','ask-overlay'
   ].some(id => document.getElementById(id)?.classList.contains('on'))
     || document.getElementById('admin-page')?.classList.contains('hidden') === false;
 
@@ -36,7 +36,7 @@ window.addEventListener('popstate', e => {
     closeConf();closeCatManager();closeContactsModal();closeAddContactModal();
     closeGlobalSearch();closeQuickAdd();closeTransferModal();closeAccountModal();
     closeGoalModal();closeBudgetModal();closeCCPayModal();closeProfilePanel();
-    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();closeAdmin();
+    closeHelpModal();closeAdjustModal();closeNewSheet();closeLk();closeAdmin();cerrarAsk(null);
     history.pushState({modal:true}, '');
     return;
   }
@@ -143,6 +143,7 @@ function closeProfilePanel(){document.getElementById('profile-overlay').classLis
 function profileOverlayClick(ev){if(ev.target===document.getElementById('profile-overlay'))closeProfilePanel();}
 
 async function forcePushSettings(btn){
+  _cfgBase={}; // subir TODO lo local, sin comparar con lo último que llegó
   const statusEl=document.getElementById('force-push-status');
   if(statusEl)statusEl.textContent='⏳';
   if(btn)btn.style.opacity='.6';
@@ -189,6 +190,7 @@ async function forceSyncSettings(btn){
     const snap=await db.ref(settingsPath()).once('value');
     const raw=snap.val();
     if(raw){
+      cfgRecordarBase(raw);
       applySettings(raw);
       toast('✅ Datos actualizados desde el servidor');
     } else {

@@ -109,6 +109,7 @@ function attachListeners(){
     if(raw._pushId && _myPushIds.has(raw._pushId))return;
     // Hay cambios locales sin subir: no pisarlos; se suben al reconectar
     if(localStorage.getItem('gp_settings_pending'))return;
+    cfgRecordarBase(raw);
     applySettings(raw);
   },err=>console.warn('[FB] settings:',err));
 }

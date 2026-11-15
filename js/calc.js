@@ -107,9 +107,9 @@ function catIcon(cat){const ov=loadIconOverrides();return ov[cat]||ICONS[cat]||'
 // Override the global icon() call used in expHTML etc.
 function icon(cat){return catIcon(cat);}
 
-function editCatIcon(catName){
+async function editCatIcon(catName){
   const current=catIcon(catName);
-  const newIco=prompt(`Cambiar ícono de "${catName}"\nActual: ${current}\n\nPegá un emoji nuevo:`,current);
+  const newIco=await pedirTexto({titulo:`Ícono de "${catName}"`,mensaje:`Actual: ${current}. Pegá un emoji nuevo.`,valor:current,ok:'Cambiar'});
   if(!newIco?.trim()||newIco.trim()===current)return;
   const t=newIco.trim();
   const ov=loadIconOverrides();
