@@ -1,5 +1,20 @@
 # Cambios
 
+## 3.27 — noviembre 2026
+
+Dos dispositivos con la misma cuenta ya no se pisan la configuración.
+
+- **Antes:** cada cambio de configuración (billeteras, transferencias, presupuestos, metas, contactos, categorías) subía **todo el bloque**. Si dos dispositivos cambiaban cosas distintas casi a la vez, el último en guardar borraba lo del otro (por ejemplo, se perdía una transferencia).
+- **Ahora:** se sube **solo la sección que cambió**. Lo que el otro dispositivo tocó queda como está. El formato de los datos no cambia: no hace falta migrar nada ni que todos tengan la misma versión.
+- **Seguridad:** si la app no sabe qué hay en el servidor, **no borra a ciegas** (una sección vacía no se manda); y si el servidor quedó sin configuración (cuenta nueva, «borrar todos mis datos»), lo local se vuelve a subir completo.
+- «Subir mi config al servidor» (en Avanzado) sigue reemplazando todo.
+- Pruebas: la lógica de qué secciones se suben, y contra el emulador de Firebase dos dispositivos tocando secciones distintas sin pisarse, junto con las pruebas de sincronización y de restaurar un respaldo que ya existían.
+
+## 3.26 — noviembre 2026
+
+- **Adiós a las ventanas del navegador (`prompt`)**: los nueve lugares que las usaban ahora usan diálogos de la app, con título, validación («Ya existe», «Ingresá un monto mayor a cero»), Enter para aceptar, Escape o tocar afuera para cancelar y botones de 44 px: nueva categoría (dos lugares), renombrar categorías, cambiar el ícono de una categoría, agregar a una meta, elegir con quién dividir un gasto (ahora una lista), confirmar «Borrar todos mis datos» escribiendo BORRAR y confirmar el email del enlace mágico.
+- Pruebas: cada diálogo en el navegador, con `prompt()` del navegador bloqueado para que falle si algo vuelve a usarlo.
+
 ## 3.25 — noviembre 2026
 
 Tarjetas: lo que pasa cuando el pago no coincide con el resumen, y las devoluciones.
